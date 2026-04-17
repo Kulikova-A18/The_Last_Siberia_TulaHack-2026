@@ -1,0 +1,641 @@
+# .github/workflows/backend-ci.yml
+name: Backend CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend-ci.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "backend/**"
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: "3.11"
+  POSTGRES_USER: test_user
+  POSTGRES_PASSWORD: test_pass_123
+  POSTGRES_DB: test_db
+  POSTGRES_HOST: localhost
+  POSTGRES_PORT: 5432
+  SECRET_KEY: test-secret-key-for-ci-only
+  ALGORITHM: HS256
+  DEBUG: "true"
+
+jobs:
+  # ============================================================
+  # JOB 1: Code Quality - Linting and formatting
+  # ============================================================
+  code-quality:
+    name: Code Quality Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('backend/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+          pip install ruff black mypy
+
+      - name: Run Ruff linter
+        run: |
+          cd backend
+          ruff check app/ --output-format=github
+          echo "Ruff check completed"
+
+      - name: Run Black formatter check
+        run: |
+          cd backend
+          black --check app/ --line-length 88
+          echo "Black check completed"
+
+      - name: Run mypy type checker
+        run: |
+          cd backend
+          mypy app/ --ignore-missing-imports --allow-untyped-decorators
+          echo "Mypy check completed"
+
+      - name: Security scan with bandit
+        run: |
+          cd backend
+          pip install bandit
+          bandit -r app/ -f json -o bandit-report.json || true
+          bandit -r app/ -f screen -ll
+          echo "Bandit security scan completed"
+
+  # ============================================================
+  # JOB 2: Unit Tests - Fast validation on PR/push
+  # ============================================================
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    needs: code-quality
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_pass_123
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('backend/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+          pip install pytest-asyncio pytest-cov
+
+      - name: Wait for PostgreSQL
+        run: |
+          echo "Waiting for PostgreSQL to be ready..."
+          for i in {1..30}; do
+            if PGPASSWORD=${{ env.POSTGRES_PASSWORD }} pg_isready -h localhost -U ${{ env.POSTGRES_USER }} -d ${{ env.POSTGRES_DB }} > /dev/null 2>&1; then
+              echo "PostgreSQL is ready"
+              break
+            fi
+            echo "Attempt $i/30..."
+            sleep 2
+          done
+
+      - name: Initialize test database
+        run: |
+          echo "Initializing test database schema..."
+          if [ -f "database/init/01-init.sql" ]; then
+            PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -U ${{ env.POSTGRES_USER }} -h localhost -d ${{ env.POSTGRES_DB }} -f database/init/01-init.sql
+          fi
+          if [ -f "database/init/02-seed.sql" ]; then
+            PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -U ${{ env.POSTGRES_USER }} -h localhost -d ${{ env.POSTGRES_DB }} -f database/init/02-seed.sql
+          fi
+          if [ -f "database/init/03-indexes.sql" ]; then
+            PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -U ${{ env.POSTGRES_USER }} -h localhost -d ${{ env.POSTGRES_DB }} -f database/init/03-indexes.sql
+          fi
+          echo "Database initialized"
+
+      - name: Run unit tests
+        run: |
+          cd backend
+          pytest tests/ -v \
+            --cov=app \
+            --cov-report=term-missing \
+            --cov-report=xml \
+            --cov-report=html \
+            -k "not integration"
+          echo "Unit tests completed"
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: backend/htmlcov/
+          retention-days: 7
+
+  # ============================================================
+  # JOB 3: Integration Tests - Full API testing
+  # ============================================================
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_pass_123
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Cache pip packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('backend/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+          pip install pytest-asyncio pytest-cov httpx
+
+      - name: Wait for PostgreSQL
+        run: |
+          echo "Waiting for PostgreSQL to be ready..."
+          for i in {1..30}; do
+            if PGPASSWORD=${{ env.POSTGRES_PASSWORD }} pg_isready -h localhost -U ${{ env.POSTGRES_USER }} > /dev/null 2>&1; then
+              echo "PostgreSQL ready"
+              break
+            fi
+            sleep 2
+          done
+
+      - name: Initialize test database
+        run: |
+          echo "Initializing test database schema..."
+          for file in database/init/*.sql; do
+            echo "Running: $(basename $file)"
+            PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -U ${{ env.POSTGRES_USER }} -h localhost -d ${{ env.POSTGRES_DB }} -f "$file"
+            if [ $? -ne 0 ]; then
+              echo "Failed on $(basename $file)"
+              exit 1
+            fi
+          done
+          echo "Database fully initialized"
+
+      - name: Start backend server
+        run: |
+          cd backend
+          nohup uvicorn app.main:app --host 0.0.0.0 --port 8000 > server.log 2>&1 &
+          echo "Waiting for server to start..."
+          for i in {1..30}; do
+            if curl -s http://localhost:8000/health > /dev/null 2>&1; then
+              echo "Server is ready"
+              break
+            fi
+            echo "Attempt $i/30..."
+            sleep 2
+          done
+
+      - name: Run integration tests
+        run: |
+          cd backend
+          pytest tests/ -v \
+            --cov=app \
+            --cov-report=term-missing \
+            --cov-report=xml \
+            -k "integration or api"
+          echo "Integration tests completed"
+
+      - name: Upload test logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-logs
+          path: backend/server.log
+          retention-days: 3
+
+  # ============================================================
+  # JOB 4: API Contract Tests - OpenAPI validation
+  # ============================================================
+  api-contract-tests:
+    name: API Contract Tests
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    timeout-minutes: 15
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_pass_123
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+          pip install openapi-spec-validator pytest-httpx
+
+      - name: Wait for PostgreSQL
+        run: |
+          for i in {1..30}; do
+            if PGPASSWORD=${{ env.POSTGRES_PASSWORD }} pg_isready -h localhost -U ${{ env.POSTGRES_USER }} > /dev/null 2>&1; then
+              echo "PostgreSQL ready"
+              break
+            fi
+            sleep 2
+          done
+
+      - name: Initialize database
+        run: |
+          for file in database/init/*.sql; do
+            PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -U ${{ env.POSTGRES_USER }} -h localhost -d ${{ env.POSTGRES_DB }} -f "$file"
+          done
+
+      - name: Generate OpenAPI schema
+        run: |
+          cd backend
+          python -c "
+          import json
+          from app.main import app
+          from fastapi.openapi.utils import get_openapi
+
+          with open('openapi.json', 'w') as f:
+              json.dump(app.openapi(), f, indent=2)
+          "
+          echo "OpenAPI schema generated"
+
+      - name: Validate OpenAPI schema
+        run: |
+          cd backend
+          python -c "
+          from openapi_spec_validator import validate_spec
+          import json
+
+          with open('openapi.json', 'r') as f:
+              spec = json.load(f)
+
+          try:
+              validate_spec(spec)
+              print('OpenAPI schema is valid')
+          except Exception as e:
+              print(f'OpenAPI schema validation failed: {e}')
+              exit(1)
+          "
+
+      - name: Upload OpenAPI schema
+        uses: actions/upload-artifact@v4
+        with:
+          name: openapi-schema
+          path: backend/openapi.json
+          retention-days: 7
+
+  # ============================================================
+  # JOB 5: Performance Tests - Load testing
+  # ============================================================
+  performance-tests:
+    name: Performance Tests
+    runs-on: ubuntu-latest
+    needs: [integration-tests]
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_pass_123
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+          pip install locust
+
+      - name: Initialize database
+        run: |
+          for file in database/init/*.sql; do
+            PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -U ${{ env.POSTGRES_USER }} -h localhost -d ${{ env.POSTGRES_DB }} -f "$file"
+          done
+
+      - name: Start backend server
+        run: |
+          cd backend
+          nohup uvicorn app.main:app --host 0.0.0.0 --port 8000 > server.log 2>&1 &
+          sleep 10
+
+      - name: Create locustfile
+        run: |
+          cat > locustfile.py << 'EOF'
+          from locust import HttpUser, task, between
+
+          class BackendUser(HttpUser):
+              wait_time = between(1, 3)
+              
+              def on_start(self):
+                  self.client.post("/api/v1/auth/login", json={
+                      "login": "admin",
+                      "password": "Admin123!"
+                  })
+              
+              @task(3)
+              def get_health(self):
+                  self.client.get("/health")
+              
+              @task(2)
+              def get_me(self):
+                  self.client.get("/api/v1/auth/me")
+              
+              @task(1)
+              def get_teams(self):
+                  self.client.get("/api/v1/hackathons/active/teams")
+          EOF
+
+      - name: Run load test
+        run: |
+          locust -f locustfile.py --headless -u 50 -r 10 --run-time 60s --host http://localhost:8000 --html load-test-report.html
+          echo "Load test completed"
+
+      - name: Upload performance report
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-report
+          path: load-test-report.html
+          retention-days: 7
+
+  # ============================================================
+  # JOB 6: Security Tests - OWASP dependency check
+  # ============================================================
+  security-tests:
+    name: Security Tests
+    runs-on: ubuntu-latest
+    needs: code-quality
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install safety
+        run: pip install safety
+
+      - name: Run safety check
+        run: |
+          cd backend
+          safety check -r requirements.txt --full-report
+          echo "Safety check completed"
+
+      - name: Install pip-audit
+        run: pip install pip-audit
+
+      - name: Run pip-audit
+        run: |
+          cd backend
+          pip-audit -r requirements.txt --format json --output audit-report.json || true
+          echo "Pip audit completed"
+
+      - name: Upload security report
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-report
+          path: backend/audit-report.json
+          retention-days: 7
+
+  # ============================================================
+  # JOB 7: Docker Build - Test Docker image
+  # ============================================================
+  docker-build:
+    name: Docker Build Test
+    runs-on: ubuntu-latest
+    needs: [unit-tests, security-tests]
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Cache Docker layers
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: false
+          load: true
+          tags: hackathon-backend:test
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new
+
+      - name: Verify Docker image
+        run: |
+          docker images | grep hackathon-backend
+          docker run --rm hackathon-backend:test python -c "import fastapi; print('FastAPI version:', fastapi.__version__)"
+          echo "Docker image built successfully"
+
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+  # ============================================================
+  # JOB 8: Code Coverage Report
+  # ============================================================
+  coverage-report:
+    name: Coverage Report
+    runs-on: ubuntu-latest
+    needs: [unit-tests, integration-tests]
+    if: always()
+
+    steps:
+      - name: Download coverage reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: coverage-*
+          path: coverage-reports
+          merge-multiple: true
+
+      - name: Display coverage summary
+        run: |
+          echo "=========================================="
+          echo "COVERAGE SUMMARY"
+          echo "=========================================="
+
+          if [ -f "coverage-reports/coverage.xml" ]; then
+            COVERAGE=$(grep -o 'line-rate="[0-9.]*"' coverage-reports/coverage.xml | head -1 | cut -d'"' -f2)
+            PERCENT=$(echo "$COVERAGE * 100" | bc)
+            echo "Code Coverage: ${PERCENT}%"
+          fi
+
+          echo ""
+          echo "Coverage reports available in artifacts"
+
+  # ============================================================
+  # JOB 9: Final Report - Summary report
+  # ============================================================
+  final-report:
+    name: Final Report
+    runs-on: ubuntu-latest
+    needs:
+      [
+        code-quality,
+        unit-tests,
+        integration-tests,
+        api-contract-tests,
+        security-tests,
+        docker-build,
+      ]
+    if: always()
+
+    steps:
+      - name: Generate final report
+        run: |
+          echo "=========================================="
+          echo "FINAL CI/CD REPORT"
+          echo "=========================================="
+
+          cat >> $GITHUB_STEP_SUMMARY << 'EOF'
+          ## Backend CI/CD Pipeline Report
+
+          ### Job Statuses
+
+          | Job | Status | Description |
+          |-----|--------|-------------|
+          EOF
+
+          echo "| Code Quality | ${{ needs.code-quality.result }} | Linting, formatting, type checking |" >> $GITHUB_STEP_SUMMARY
+          echo "| Unit Tests | ${{ needs.unit-tests.result }} | Fast validation tests |" >> $GITHUB_STEP_SUMMARY
+          echo "| Integration Tests | ${{ needs.integration-tests.result }} | Full API testing |" >> $GITHUB_STEP_SUMMARY
+          echo "| API Contract Tests | ${{ needs.api-contract-tests.result }} | OpenAPI validation |" >> $GITHUB_STEP_SUMMARY
+          echo "| Security Tests | ${{ needs.security-tests.result }} | Dependency scanning |" >> $GITHUB_STEP_SUMMARY
+          echo "| Docker Build | ${{ needs.docker-build.result }} | Image build verification |" >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Pipeline Statistics" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Run ID**: ${{ github.run_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Trigger**: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Actor**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Python Version**: ${{ env.PYTHON_VERSION }}" >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Artifacts" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Coverage report" >> $GITHUB_STEP_SUMMARY
+          echo "- OpenAPI schema" >> $GITHUB_STEP_SUMMARY
+          echo "- Performance report" >> $GITHUB_STEP_SUMMARY
+          echo "- Security report" >> $GITHUB_STEP_SUMMARY
+
+          echo ""
+          echo "Final report generated"
