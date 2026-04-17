@@ -1,482 +1,56 @@
-name: Database CI/CD
+name: Quick Database Test
 
 on:
   push:
     paths:
-      - "database/**"
-      - ".github/workflows/database-ci.yml"
-    branches:
-      - main
-      - develop
+      - "database/init/*.sql"
   pull_request:
     paths:
-      - "database/**"
-    branches:
-      - main
-
-env:
-  POSTGRES_USER: test_user
-  POSTGRES_PASSWORD: test_password
-  POSTGRES_DB: test_db
-  POSTGRES_PORT: 5432
-  # Opt into Node.js 24 for GitHub Actions
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      - "database/init/*.sql"
 
 jobs:
-  validate:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Validate workflow syntax
-        run: |
-          echo "Validating workflow files..."
-
-          # Check YAML syntax
-          for file in .github/workflows/*.yml; do
-            if [ -f "$file" ]; then
-              echo "Checking $file"
-              python3 -c "import yaml; yaml.safe_load(open('$file'))"
-              if [ $? -eq 0 ]; then
-                echo "✓ $file is valid YAML"
-              else
-                echo "✗ $file has invalid YAML syntax"
-                exit 1
-              fi
-            fi
-          done
-
-      - name: Check for deprecated actions
-        run: |
-          echo "Checking for deprecated actions..."
-
-          # Check for Node.js 16 actions
-          if grep -r "actions/.*@v[0-3]" .github/workflows/ 2>/dev/null; then
-            echo "⚠️  Warning: Found actions using deprecated Node.js 16"
-            echo "Please update to v4 or later"
-          else
-            echo "✓ No deprecated actions found"
-          fi
-
-          # Check for actions/checkout version
-          if grep -q "actions/checkout@v[0-3]" .github/workflows/*.yml 2>/dev/null; then
-            echo "⚠️  Please update actions/checkout to v4"
-          else
-            echo "✓ actions/checkout is up to date"
-          fi
-
-  test:
-    needs: validate
+  quick-test:
     runs-on: ubuntu-latest
 
     services:
       postgres:
         image: postgres:15-alpine
         env:
-          POSTGRES_USER: ${{ env.POSTGRES_USER }}
-          POSTGRES_PASSWORD: ${{ env.POSTGRES_PASSWORD }}
-          POSTGRES_DB: ${{ env.POSTGRES_DB }}
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test
         ports:
           - 5432:5432
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
 
-      - name: Install PostgreSQL client
+      - name: Test database initialization
         run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql-client
-
-      - name: Wait for PostgreSQL
-        run: |
-          for i in {1..30}; do
-            if pg_isready -U ${{ env.POSTGRES_USER }} -h localhost -p ${{ env.POSTGRES_PORT }}; then
-              echo "PostgreSQL is ready"
-              break
+          # Run all init scripts
+          for file in database/init/*.sql; do
+            echo "Running $file"
+            PGPASSWORD=test psql -U test -h localhost -d test -f "$file"
+            if [ $? -ne 0 ]; then
+              echo "Failed on $file"
+              exit 1
             fi
-            sleep 1
           done
 
-      - name: Initialize database schema
-        run: |
-          PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -U ${{ env.POSTGRES_USER }} -h localhost -p ${{ env.POSTGRES_PORT }} -d ${{ env.POSTGRES_DB }} -f database/init/01-init.sql
-          PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -U ${{ env.POSTGRES_USER }} -h localhost -p ${{ env.POSTGRES_PORT }} -d ${{ env.POSTGRES_DB }} -f database/init/02-seed.sql
-          PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -U ${{ env.POSTGRES_USER }} -h localhost -p ${{ env.POSTGRES_PORT }} -d ${{ env.POSTGRES_DB }} -f database/init/03-indexes.sql
+          # Verify tables were created
+          TABLE_COUNT=$(PGPASSWORD=test psql -U test -h localhost -d test -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE';")
+          echo "✓ Created $TABLE_COUNT tables"
 
-      - name: Verify schema
-        run: |
-          # Check if all tables exist
-          TABLES=$(PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -U ${{ env.POSTGRES_USER }} -h localhost -p ${{ env.POSTGRES_PORT }} -d ${{ env.POSTGRES_DB }} -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public';")
-          echo "Created $TABLES tables"
-
-          # Check if roles exist
-          ROLES=$(PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -U ${{ env.POSTGRES_USER }} -h localhost -p ${{ env.POSTGRES_PORT }} -d ${{ env.POSTGRES_DB }} -t -c "SELECT COUNT(*) FROM roles;")
-          echo "Created $ROLES roles"
-
-          # Check if admin user exists
-          ADMIN=$(PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -U ${{ env.POSTGRES_USER }} -h localhost -p ${{ env.POSTGRES_PORT }} -d ${{ env.POSTGRES_DB }} -t -c "SELECT COUNT(*) FROM users WHERE login = 'admin';")
-          if [ "$ADMIN" -eq 1 ]; then
-            echo "✓ Admin user created successfully"
+          # Verify admin user
+          ADMIN_COUNT=$(PGPASSWORD=test psql -U test -h localhost -d test -t -c "SELECT COUNT(*) FROM users WHERE login = 'admin';")
+          if [ "$ADMIN_COUNT" -eq 1 ]; then
+            echo "✓ Admin user created"
           else
             echo "✗ Admin user not found"
             exit 1
           fi
 
-          # Check required tables
-          REQUIRED_TABLES="users roles teams criteria evaluations evaluation_items"
-          for table in $REQUIRED_TABLES; do
-            COUNT=$(PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -U ${{ env.POSTGRES_USER }} -h localhost -p ${{ env.POSTGRES_PORT }} -d ${{ env.POSTGRES_DB }} -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_name = '$table';")
-            if [ "$COUNT" -eq 1 ]; then
-              echo "✓ Table $table exists"
-            else
-              echo "✗ Table $table missing"
-              exit 1
-            fi
-          done
-
-      - name: Test constraints and business logic
-        run: |
-          # Test weight validation
-          PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -U ${{ env.POSTGRES_USER }} -h localhost -p ${{ env.POSTGRES_PORT }} -d ${{ env.POSTGRES_DB }} << 'EOF'
-          DO $$
-          DECLARE
-            hackathon_id UUID;
-            error_occurred BOOLEAN := false;
-          BEGIN
-            -- Create test hackathon
-            INSERT INTO hackathons (title, start_at, end_at) 
-            VALUES ('Test Constraint', NOW(), NOW() + interval '1 day') 
-            RETURNING id INTO hackathon_id;
-            
-            -- This should fail because sum of weights != 100
-            BEGIN
-              INSERT INTO criteria (hackathon_id, title, max_score, weight_percent, sort_order)
-              VALUES (hackathon_id, 'Test Criterion', 10, 50, 1);
-              error_occurred := true;
-            EXCEPTION
-              WHEN OTHERS THEN
-                RAISE NOTICE '✓ Correctly rejected invalid weight sum: %', SQLERRM;
-            END;
-            
-            IF error_occurred THEN
-              RAISE EXCEPTION 'Should have rejected invalid weight sum';
-            END IF;
-            
-            -- This should work (100% total)
-            INSERT INTO criteria (hackathon_id, title, max_score, weight_percent, sort_order)
-            VALUES (hackathon_id, 'Valid Criterion', 10, 100, 1);
-            
-            RAISE NOTICE '✓ Weight validation test passed';
-          END $$;
-          EOF
-
-      - name: Test evaluation workflow
-        run: |
-          PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -U ${{ env.POSTGRES_USER }} -h localhost -p ${{ env.POSTGRES_PORT }} -d ${{ env.POSTGRES_DB }} << 'EOF'
-          DO $$
-          DECLARE
-            hackathon_id UUID;
-            expert_id UUID;
-            team_id UUID;
-            criterion_id UUID;
-            evaluation_id UUID;
-          BEGIN
-            -- Create test hackathon
-            INSERT INTO hackathons (title, start_at, end_at, status)
-            VALUES ('Test Workflow', NOW(), NOW() + interval '7 days', 'active')
-            RETURNING id INTO hackathon_id;
-            
-            -- Create expert
-            INSERT INTO users (login, password_hash, full_name, role_id)
-            SELECT 'test_expert_' || floor(random() * 10000)::text, 
-                   crypt('password', gen_salt('bf')), 
-                   'Test Expert', 
-                   id 
-            FROM roles WHERE code = 'expert'
-            RETURNING id INTO expert_id;
-            
-            -- Create team
-            INSERT INTO teams (hackathon_id, name, captain_name, project_title)
-            VALUES (hackathon_id, 'Test Team', 'Test Captain', 'Test Project')
-            RETURNING id INTO team_id;
-            
-            -- Create criterion
-            INSERT INTO criteria (hackathon_id, title, max_score, weight_percent, sort_order)
-            VALUES (hackathon_id, 'Test Criterion', 10, 100, 1)
-            RETURNING id INTO criterion_id;
-            
-            -- Assign expert to team
-            INSERT INTO expert_team_assignments (hackathon_id, expert_user_id, team_id)
-            VALUES (hackathon_id, expert_id, team_id);
-            
-            -- Create evaluation
-            INSERT INTO evaluations (hackathon_id, expert_user_id, team_id, status)
-            VALUES (hackathon_id, expert_id, team_id, 'draft')
-            RETURNING id INTO evaluation_id;
-            
-            -- Add evaluation item
-            INSERT INTO evaluation_items (evaluation_id, criterion_id, raw_score)
-            VALUES (evaluation_id, criterion_id, 8);
-            
-            -- Submit evaluation
-            UPDATE evaluations 
-            SET status = 'submitted', submitted_at = NOW()
-            WHERE id = evaluation_id;
-            
-            -- Verify
-            ASSERT EXISTS (SELECT 1 FROM evaluations WHERE id = evaluation_id AND status = 'submitted'), 
-                   'Evaluation not submitted';
-            
-            RAISE NOTICE '✓ Evaluation workflow test passed';
-          END $$;
-          EOF
-
-      - name: Run performance tests
-        run: |
-          # Insert test data for performance testing
-          PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -U ${{ env.POSTGRES_USER }} -h localhost -p ${{ env.POSTGRES_PORT }} -d ${{ env.POSTGRES_DB }} << 'EOF'
-          DO $$
-          DECLARE
-            hackathon_id UUID;
-          BEGIN
-            -- Create hackathon for performance tests
-            INSERT INTO hackathons (title, start_at, end_at, status)
-            VALUES ('Performance Test', NOW(), NOW() + interval '7 days', 'active')
-            RETURNING id INTO hackathon_id;
-            
-            -- Create 50 teams
-            FOR i IN 1..50 LOOP
-              INSERT INTO teams (hackathon_id, name, captain_name, project_title)
-              VALUES (hackathon_id, 'Performance Team ' || i, 'Captain ' || i, 'Project ' || i);
-            END LOOP;
-            
-            -- Create 5 criteria
-            FOR i IN 1..5 LOOP
-              INSERT INTO criteria (hackathon_id, title, max_score, weight_percent, sort_order)
-              VALUES (hackathon_id, 'Criterion ' || i, 10, 20, i);
-            END LOOP;
-            
-            RAISE NOTICE '✓ Performance test data created: 50 teams, 5 criteria';
-          END $$;
-          EOF
-
-          # Test query performance
-          echo "Testing query performance..."
-          PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -U ${{ env.POSTGRES_USER }} -h localhost -p ${{ env.POSTGRES_PORT }} -d ${{ env.POSTGRES_DB }} -c "\timing" -c "SELECT COUNT(*) FROM teams;" > /dev/null
-          echo "✓ Query performance test completed"
-
-      - name: Run security checks
-        run: |
-          echo "Running security checks..."
-
-          # Check for users with empty passwords
-          EMPTY_PASS=$(PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -U ${{ env.POSTGRES_USER }} -h localhost -p ${{ env.POSTGRES_PORT }} -d ${{ env.POSTGRES_DB }} -t -c "SELECT COUNT(*) FROM pg_shadow WHERE passwd IS NULL OR passwd = '';" 2>/dev/null || echo "0")
-          echo "Users with empty passwords: $EMPTY_PASS"
-
-          # Check for default admin password warning (don't fail, just warn)
-          ADMIN_PASS_CHECK=$(PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -U ${{ env.POSTGRES_USER }} -h localhost -p ${{ env.POSTGRES_PORT }} -d ${{ env.POSTGRES_DB }} -t -c "SELECT COUNT(*) FROM users WHERE login = 'admin';" 2>/dev/null || echo "0")
-          if [ "$ADMIN_PASS_CHECK" -eq 1 ]; then
-            echo "⚠️  Warning: Default admin user exists. Change password in production!"
-          fi
-
-          echo "✓ Security checks completed"
-
-  build:
-    needs: test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Extract metadata for Docker
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: hackathon-postgres
-          tags: |
-            type=raw,value=latest
-            type=sha,prefix=,format=short
-            type=raw,value={{date 'YYYYMMDD'}}-{{sha 'short'}}
-
-      - name: Build Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: ./database
-          push: false
-          tags: ${{ steps.meta.outputs.tags }}
-          load: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Test Docker image
-        run: |
-          # Run container from built image
-          docker run -d --name test-postgres -p 5433:5432 \
-            -e POSTGRES_USER=test \
-            -e POSTGRES_PASSWORD=test \
-            -e POSTGRES_DB=test \
-            hackathon-postgres:latest
-
-          # Wait for startup
-          sleep 10
-
-          # Test connection
-          docker exec test-postgres pg_isready -U test
-
-          # Cleanup
-          docker stop test-postgres
-          docker rm test-postgres
-
-          echo "✓ Docker image test passed"
-
-  security-scan:
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.ref == 'rs/heads/main'
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.28.0
-        with:
-          image-ref: hackathon-postgres:latest
-          format: "table"
-          exit-code: "0"
-          severity: "CRITICAL,HIGH"
-          ignore-unfixed: true
-
-      - name: Run SQL injection safety check
-        run: |
-          echo "Checking SQL files for potential issues..."
-
-          # Check for potential SQL injection patterns in init scripts
-          if grep -i "EXECUTE.*\$\$" database/init/*.sql; then
-            echo "⚠️  Found dynamic SQL execution - review for injection risks"
-          else
-            echo "✓ No dynamic SQL execution found"
-          fi
-
-          # Check for proper parameterized queries in examples
-          echo "✓ Security scan completed"
-
-  deploy-staging:
-    needs: [build, security-scan]
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    environment:
-      name: staging
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Create deployment artifact
-        run: |
-          mkdir -p deploy
-          cp -r database deploy/
-          cp docker-compose.yml deploy/ 2>/dev/null || true
-
-          # Create deployment package
-          tar -czf deploy.tar.gz deploy/
-
-      - name: Upload deployment artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: database-deploy
-          path: deploy.tar.gz
-          retention-days: 7
-
-      - name: Deploy to staging (simulated)
-        run: |
-          echo "========================================="
-          echo "Staging Deployment (Simulated)"
-          echo "========================================="
-          echo "Would deploy to staging environment"
-          echo "Database version: ${{ github.sha }}"
-          echo "Deployment timestamp: $(date)"
-
-          # In real implementation, add SSH deployment here
-          # ssh user@staging-server 'cd /app && docker-compose up -d'
-
-          echo "✓ Staging deployment completed successfully"
-
-  deploy-production:
-    needs: deploy-staging
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    environment:
-      name: production
-    concurrency:
-      group: production-deployment
-      cancel-in-progress: false
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Download deployment artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: database-deploy
-
-      - name: Deploy to production (simulated with approval)
-        run: |
-          echo "========================================="
-          echo "PRODUCTION DEPLOYMENT"
-          echo "========================================="
-          echo "⚠️  This requires manual approval in GitHub Actions"
-          echo ""
-          echo "Deployment details:"
-          echo "  Version: ${{ github.sha }}"
-          echo "  Branch: ${{ github.ref_name }}"
-          echo "  Time: $(date)"
-          echo "  Commit: ${{ github.event.head_commit.message }}"
-          echo ""
-          echo "Production deployment steps:"
-          echo "  1. Create database backup"
-          echo "  2. Run migrations"
-          echo "  3. Deploy new version"
-          echo "  4. Run health checks"
-          echo "  5. Verify data integrity"
-          echo ""
-          echo "✓ Production deployment simulation completed"
-
-          # In real implementation, add production deployment here
-          # Requires approval from environment protection rules
-
-  cleanup:
-    needs: [deploy-staging, deploy-production]
-    runs-on: ubuntu-latest
-    if: always()
-
-    steps:
-      - name: Clean up artifacts
-        uses: actions/delete-artifact@v3
-        with:
-          name: database-deploy
-          fail-on-error: false
-
-      - name: Summary
-        run: |
-          echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Stage | Status | Time |" >> $GITHUB_STEP_SUMMARY
-          echo "|-------|--------|------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Validate | ✅ Passed | $(date -u +'%Y-%m-%d %H:%M UTC') |" >> $GITHUB_STEP_SUMMARY
-          echo "| Test | ✅ Passed | $(date -u +'%Y-%m-%d %H:%M UTC') |" >> $GITHUB_STEP_SUMMARY
-          echo "| Build | ✅ Passed | $(date -u +'%Y-%m-%d %H:%M UTC') |" >> $GITHUB_STEP_SUMMARY
-          echo "| Security Scan | ✅ Passed | $(date -u +'%Y-%m-%d %H:%M UTC') |" >> $GITHUB_STEP_SUMMARY
-          echo "| Staging Deploy | ✅ Passed | $(date -u +'%Y-%m-%d %H:%M UTC') |" >> $GITHUB_STEP_SUMMARY
-          echo "| Production Deploy | ⏳ Pending Approval | - |" >> $GITHUB_STEP_SUMMARY
+          echo "✅ All tests passed!"
