@@ -7,15 +7,18 @@ from uuid import uuid4
 
 from app.main import app
 from app.core.config import settings
-from app.core.security import get_password_hash, create_access_token, create_refresh_token
-from app.models.user import User
-from app.models.role import Role
-from app.models.hackathon import Hackathon, HackathonStatus
-from app.models.team import Team
-from app.models.criterion import Criterion
+from app.core.security import get_password_hash, create_access_token
 
 
-# Mock database session fixture
+@pytest.fixture(scope="session")
+def event_loop():
+    """Create event loop for tests"""
+    import asyncio
+    loop = asyncio.get_event_loop_policy().new_event_loop()
+    yield loop
+    loop.close()
+
+
 @pytest.fixture
 def mock_db():
     """Create a mock database session"""
@@ -26,18 +29,16 @@ def mock_db():
     return db
 
 
-# Test client fixture
 @pytest.fixture
 def client():
     """Create test client"""
     return TestClient(app)
 
 
-# Test user fixtures
 @pytest.fixture
 def test_admin_user():
     """Create a test admin user"""
-    user = MagicMock(spec=User)
+    user = MagicMock()
     user.id = uuid4()
     user.login = "admin_test"
     user.full_name = "Test Admin"
@@ -56,7 +57,7 @@ def test_admin_user():
 @pytest.fixture
 def test_expert_user():
     """Create a test expert user"""
-    user = MagicMock(spec=User)
+    user = MagicMock()
     user.id = uuid4()
     user.login = "expert_test"
     user.full_name = "Test Expert"
@@ -75,7 +76,7 @@ def test_expert_user():
 @pytest.fixture
 def test_team_user():
     """Create a test team user"""
-    user = MagicMock(spec=User)
+    user = MagicMock()
     user.id = uuid4()
     user.login = "team_test"
     user.full_name = "Test Team"
@@ -94,62 +95,13 @@ def test_team_user():
 @pytest.fixture
 def test_role():
     """Create a test role"""
-    role = MagicMock(spec=Role)
+    role = MagicMock()
     role.id = uuid4()
     role.code = "admin"
     role.name = "Administrator"
     return role
 
 
-@pytest.fixture
-def test_hackathon():
-    """Create a test hackathon"""
-    hackathon = MagicMock(spec=Hackathon)
-    hackathon.id = uuid4()
-    hackathon.title = "Test Hackathon 2026"
-    hackathon.description = "Test Description"
-    hackathon.start_at = datetime.utcnow()
-    hackathon.end_at = datetime.utcnow() + timedelta(days=3)
-    hackathon.status = HackathonStatus.ACTIVE
-    hackathon.results_published = False
-    hackathon.results_frozen = False
-    hackathon.leaderboard_updated_at = None
-    hackathon.created_at = datetime.utcnow()
-    hackathon.updated_at = datetime.utcnow()
-    return hackathon
-
-
-@pytest.fixture
-def test_team():
-    """Create a test team"""
-    team = MagicMock(spec=Team)
-    team.id = uuid4()
-    team.hackathon_id = uuid4()
-    team.name = "Test Team"
-    team.captain_name = "Captain Name"
-    team.contact_email = "team@test.com"
-    team.contact_phone = "+79990000000"
-    team.project_title = "Test Project"
-    team.description = "Test Description"
-    return team
-
-
-@pytest.fixture
-def test_criterion():
-    """Create a test criterion"""
-    criterion = MagicMock(spec=Criterion)
-    criterion.id = uuid4()
-    criterion.hackathon_id = uuid4()
-    criterion.title = "Innovation"
-    criterion.description = "Innovation level"
-    criterion.max_score = 10.0
-    criterion.weight_percent = 25.0
-    criterion.sort_order = 1
-    criterion.is_active = True
-    return criterion
-
-
-# Token fixtures
 @pytest.fixture
 def admin_access_token(test_admin_user):
     """Create admin access token"""
@@ -168,7 +120,6 @@ def team_access_token(test_team_user):
     return create_access_token(data={"sub": str(test_team_user.id)})
 
 
-# Mock JWT token validation
 @pytest.fixture
 def mock_get_current_user(test_admin_user):
     """Mock get_current_user dependency"""
@@ -177,7 +128,6 @@ def mock_get_current_user(test_admin_user):
         yield mock
 
 
-# Mock database session
 @pytest.fixture
 def mock_db_session(mock_db):
     """Mock database session dependency"""
