@@ -1,5 +1,5 @@
 # backend/app/models/audit_log.py
-from sqlalchemy import Column, String, JSON, DateTime
+from sqlalchemy import Column, String, JSON, DateTime, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID, INET
 from sqlalchemy.orm import relationship
 from app.models.base import Base

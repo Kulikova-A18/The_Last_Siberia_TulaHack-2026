@@ -3,8 +3,7 @@ import pytest
 from fastapi.testclient import TestClient
 from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import datetime, timedelta
-from uuid import uuid4, UUID
-from jose import jwt
+from uuid import uuid4
 
 from app.main import app
 from app.core.config import settings
@@ -14,6 +13,7 @@ from app.models.role import Role
 from app.models.hackathon import Hackathon, HackathonStatus
 from app.models.team import Team
 from app.models.criterion import Criterion
+
 
 # Mock database session fixture
 @pytest.fixture
@@ -25,11 +25,13 @@ def mock_db():
     db.execute = AsyncMock()
     return db
 
+
 # Test client fixture
 @pytest.fixture
 def client():
     """Create test client"""
     return TestClient(app)
+
 
 # Test user fixtures
 @pytest.fixture
@@ -50,6 +52,7 @@ def test_admin_user():
     user.updated_at = datetime.utcnow()
     return user
 
+
 @pytest.fixture
 def test_expert_user():
     """Create a test expert user"""
@@ -67,6 +70,7 @@ def test_expert_user():
     user.created_at = datetime.utcnow()
     user.updated_at = datetime.utcnow()
     return user
+
 
 @pytest.fixture
 def test_team_user():
@@ -86,6 +90,7 @@ def test_team_user():
     user.updated_at = datetime.utcnow()
     return user
 
+
 @pytest.fixture
 def test_role():
     """Create a test role"""
@@ -94,6 +99,7 @@ def test_role():
     role.code = "admin"
     role.name = "Administrator"
     return role
+
 
 @pytest.fixture
 def test_hackathon():
@@ -112,6 +118,7 @@ def test_hackathon():
     hackathon.updated_at = datetime.utcnow()
     return hackathon
 
+
 @pytest.fixture
 def test_team():
     """Create a test team"""
@@ -125,6 +132,7 @@ def test_team():
     team.project_title = "Test Project"
     team.description = "Test Description"
     return team
+
 
 @pytest.fixture
 def test_criterion():
@@ -140,21 +148,25 @@ def test_criterion():
     criterion.is_active = True
     return criterion
 
+
 # Token fixtures
 @pytest.fixture
 def admin_access_token(test_admin_user):
     """Create admin access token"""
     return create_access_token(data={"sub": str(test_admin_user.id)})
 
+
 @pytest.fixture
 def expert_access_token(test_expert_user):
     """Create expert access token"""
     return create_access_token(data={"sub": str(test_expert_user.id)})
 
+
 @pytest.fixture
 def team_access_token(test_team_user):
     """Create team access token"""
     return create_access_token(data={"sub": str(test_team_user.id)})
+
 
 # Mock JWT token validation
 @pytest.fixture
@@ -163,6 +175,7 @@ def mock_get_current_user(test_admin_user):
     with patch("app.dependencies.auth.get_current_user") as mock:
         mock.return_value = test_admin_user
         yield mock
+
 
 # Mock database session
 @pytest.fixture

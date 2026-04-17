@@ -47,12 +47,12 @@ async def init_db():
     async with engine.begin() as conn:
         # Import all models to ensure they are registered
         from app.models import (
-            User, Role, Permission, RolePermission, RefreshToken,
+            User, Role, Permission, role_permissions, RefreshToken,
             Hackathon, Team, TeamMember, Criterion, ExpertTeamAssignment,
             Evaluation, EvaluationItem, Deadline, TeamResult, TeamResultItem, AuditLog
         )
-        # Create tables - these imports are used by SQLAlchemy metadata
-        _ = (User, Role, Permission, RolePermission, RefreshToken,
+        # These imports are used by SQLAlchemy metadata
+        _ = (User, Role, Permission, role_permissions, RefreshToken,
              Hackathon, Team, TeamMember, Criterion, ExpertTeamAssignment,
              Evaluation, EvaluationItem, Deadline, TeamResult, TeamResultItem, AuditLog)
         await conn.run_sync(Base.metadata.create_all)
