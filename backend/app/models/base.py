@@ -1,7 +1,7 @@
 # backend/app/models/base.py
 from sqlalchemy.orm import declarative_base, declared_attr
-from sqlalchemy import Column, DateTime, func, String
-from uuid import uuid4, UUID
+from sqlalchemy import Column, DateTime, func
+from uuid import uuid4
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 
 class BaseModel:

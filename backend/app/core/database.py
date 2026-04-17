@@ -51,5 +51,8 @@ async def init_db():
             Hackathon, Team, TeamMember, Criterion, ExpertTeamAssignment,
             Evaluation, EvaluationItem, Deadline, TeamResult, TeamResultItem, AuditLog
         )
-        # Create tables
+        # Create tables - these imports are used by SQLAlchemy metadata
+        _ = (User, Role, Permission, RolePermission, RefreshToken,
+             Hackathon, Team, TeamMember, Criterion, ExpertTeamAssignment,
+             Evaluation, EvaluationItem, Deadline, TeamResult, TeamResultItem, AuditLog)
         await conn.run_sync(Base.metadata.create_all)

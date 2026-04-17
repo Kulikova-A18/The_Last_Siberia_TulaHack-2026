@@ -1,8 +1,6 @@
 # backend/app/websocket/leaderboard_ws.py
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from typing import Dict, Set
-import asyncio
-import json
 from datetime import datetime
 
 router = APIRouter()
@@ -28,7 +26,8 @@ class ConnectionManager:
             for connection in self.active_connections[hackathon_id]:
                 try:
                     await connection.send_json(message)
-                except:
+                except Exception:
+                    # Skip failed connections
                     pass
     
     async def broadcast_leaderboard_update(self, hackathon_id: str, leaderboard_data: dict):

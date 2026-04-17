@@ -9,7 +9,7 @@ import secrets
 from app.models.user import User
 from app.models.refresh_token import RefreshToken
 from app.models.role import Role
-from app.core.security import verify_password, get_password_hash, create_access_token, create_refresh_token, decode_token
+from app.core.security import verify_password, get_password_hash, create_access_token, create_refresh_token
 from app.schemas.auth import UserInfo
 
 class AuthService:
@@ -86,10 +86,10 @@ class AuthService:
             await self.db.commit()
     
     async def get_user_info(self, user: User) -> UserInfo:
-        role_result = await self.db.execute(
+        result = await self.db.execute(
             select(Role).where(Role.id == user.role_id)
         )
-        role = role_result.scalar_one_or_none()
+        role = result.scalar_one_or_none()
         
         return UserInfo(
             id=user.id,

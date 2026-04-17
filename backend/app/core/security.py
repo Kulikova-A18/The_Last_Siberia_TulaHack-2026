@@ -7,7 +7,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.core.config import settings
 from app.models.user import User
-from app.models.refresh_token import RefreshToken
 import hashlib
 import secrets
 

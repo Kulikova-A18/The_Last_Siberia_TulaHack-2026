@@ -1,5 +1,5 @@
 # backend/app/models/refresh_token.py
-from sqlalchemy import Column, String, Boolean, ForeignKey, DateTime, CheckConstraint
+from sqlalchemy import Column, String, ForeignKey, DateTime, CheckConstraint
 from sqlalchemy.dialects.postgresql import UUID, INET
 from sqlalchemy.orm import relationship
 from app.models.base import Base

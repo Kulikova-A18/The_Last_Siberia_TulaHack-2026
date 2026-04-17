@@ -13,6 +13,7 @@ from app.models.evaluation_item import EvaluationItem
 from app.models.deadline import Deadline
 from app.models.team_result import TeamResult, TeamResultItem
 from app.models.audit_log import AuditLog
+from sqlalchemy import ForeignKey
 
 __all__ = [
     "Base", "User", "Role", "Permission", "RolePermission", "RefreshToken",
