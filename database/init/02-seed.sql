@@ -4,34 +4,34 @@
 
 -- Insert roles
 INSERT INTO roles (code, name) VALUES
-('admin', 'Администратор'),
-('expert', 'Эксперт'),
-('team', 'Команда')
+('admin', 'Administrator'),
+('expert', 'Expert'),
+('team', 'Team')
 ON CONFLICT (code) DO NOTHING;
 
 -- Insert permissions
 INSERT INTO permissions (code, name, description) VALUES
-('users.read', 'Просмотр пользователей', 'Чтение списка пользователей'),
-('users.create', 'Создание пользователей', 'Создание учетных записей'),
-('users.update', 'Редактирование пользователей', 'Изменение профилей и статусов'),
-('users.delete', 'Удаление пользователей', 'Удаление учетных записей'),
-('teams.read', 'Просмотр команд', 'Чтение списка команд'),
-('teams.create', 'Создание команд', 'Добавление новых команд'),
-('teams.update', 'Редактирование команд', 'Редактирование карточек команд'),
-('teams.delete', 'Удаление команд', 'Удаление команд'),
-('criteria.read', 'Просмотр критериев', 'Чтение критериев оценки'),
-('criteria.manage', 'Управление критериями', 'Создание/редактирование/удаление критериев'),
-('assignments.read', 'Просмотр назначений', 'Чтение назначений экспертов'),
-('assignments.manage', 'Управление назначениями', 'Назначение экспертов на команды'),
-('evaluations.read', 'Просмотр оценок', 'Просмотр всех оценок'),
-('evaluations.submit', 'Отправка оценок', 'Отправка оценки экспертом'),
-('evaluations.reopen', 'Переоткрытие оценки', 'Переоткрытие оценки администратором'),
-('results.read', 'Просмотр результатов', 'Просмотр рейтинга и итогов'),
-('results.publish', 'Публикация результатов', 'Публикация leaderboard'),
-('results.freeze', 'Фиксация результатов', 'Блокировка изменений результатов'),
-('deadlines.read', 'Просмотр дедлайнов', 'Чтение дедлайнов'),
-('deadlines.manage', 'Управление дедлайнами', 'Создание и редактирование дедлайнов'),
-('audit.read', 'Просмотр аудита', 'Просмотр журнала действий')
+('users.read', 'View users', 'Read user list'),
+('users.create', 'Create users', 'Create user accounts'),
+('users.update', 'Edit users', 'Edit profiles and statuses'),
+('users.delete', 'Delete users', 'Delete user accounts'),
+('teams.read', 'View teams', 'Read team list'),
+('teams.create', 'Create teams', 'Add new teams'),
+('teams.update', 'Edit teams', 'Edit team cards'),
+('teams.delete', 'Delete teams', 'Delete teams'),
+('criteria.read', 'View criteria', 'Read evaluation criteria'),
+('criteria.manage', 'Manage criteria', 'Create/edit/delete criteria'),
+('assignments.read', 'View assignments', 'Read expert assignments'),
+('assignments.manage', 'Manage assignments', 'Assign experts to teams'),
+('evaluations.read', 'View evaluations', 'View all evaluations'),
+('evaluations.submit', 'Submit evaluations', 'Submit evaluation by expert'),
+('evaluations.reopen', 'Reopen evaluation', 'Reopen evaluation by admin'),
+('results.read', 'View results', 'View leaderboard and results'),
+('results.publish', 'Publish results', 'Publish leaderboard'),
+('results.freeze', 'Freeze results', 'Lock result changes'),
+('deadlines.read', 'View deadlines', 'Read deadlines'),
+('deadlines.manage', 'Manage deadlines', 'Create and edit deadlines'),
+('audit.read', 'View audit', 'View action log')
 ON CONFLICT (code) DO NOTHING;
 
 -- Assign permissions to admin role
@@ -96,7 +96,7 @@ BEGIN
     VALUES (
         'admin',
         crypt('Admin123!', gen_salt('bf')),
-        'Главный Администратор',
+        'Main Administrator',
         'admin@hackathon.com',
         admin_role_id,
         TRUE
@@ -119,13 +119,14 @@ BEGIN
     total_weight := COALESCE(total_weight, 0) + NEW.weight_percent;
     
     IF total_weight != 100 THEN
-        RAISE EXCEPTION 'Sum of weights must be 100%%. Current sum: %%', total_weight;
+        RAISE EXCEPTION 'Sum of weights must be 100%%. Current sum: %', total_weight;
     END IF;
     
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trg_validate_criteria_weights ON criteria;
 CREATE TRIGGER trg_validate_criteria_weights
 BEFORE INSERT OR UPDATE ON criteria
 FOR EACH ROW
