@@ -1,0 +1,359 @@
+# .github/workflows/database-ci.yml
+name: Database CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - "database/**"
+      - ".github/workflows/database-ci.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "database/**"
+  workflow_dispatch:
+
+env:
+  POSTGRES_USER: test_user
+  POSTGRES_PASSWORD: test_pass_123
+  POSTGRES_DB: test_db
+
+jobs:
+  # ============================================================
+  # JOB 1: Quick Test - Fast validation on PR/push
+  # ============================================================
+  quick-test:
+    name: Quick Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_pass_123
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+          echo "PostgreSQL client installed"
+
+      - name: Wait for PostgreSQL
+        run: |
+          echo "Waiting for PostgreSQL to be ready..."
+          for i in {1..30}; do
+            if PGPASSWORD=${{ env.POSTGRES_PASSWORD }} pg_isready -h localhost -U ${{ env.POSTGRES_USER }} -d ${{ env.POSTGRES_DB }} > /dev/null 2>&1; then
+              echo "PostgreSQL is ready"
+              break
+            fi
+            echo "Attempt $i/30..."
+            sleep 2
+          done
+
+      - name: Show database version
+        run: |
+          echo "=========================================="
+          echo "DATABASE INFORMATION"
+          echo "=========================================="
+          PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -U ${{ env.POSTGRES_USER }} -h localhost -d ${{ env.POSTGRES_DB }} -c "SELECT version();"
+
+      - name: Run initialization scripts
+        run: |
+          echo "=========================================="
+          echo "RUNNING INITIALIZATION SCRIPTS"
+          echo "=========================================="
+
+          INIT_DIR="database/init"
+          SCRIPTS=("01-init.sql" "02-seed.sql" "03-indexes.sql")
+
+          for script in "${SCRIPTS[@]}"; do
+            if [ -f "$INIT_DIR/$script" ]; then
+              echo ""
+              echo "Running: $script"
+              echo "------------------------------------------"
+              
+              if PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -U ${{ env.POSTGRES_USER }} -h localhost -d ${{ env.POSTGRES_DB }} -f "$INIT_DIR/$script" 2>&1; then
+                echo "$script completed successfully"
+              else
+                echo "Failed on $script"
+                exit 1
+              fi
+            fi
+          done
+
+      - name: Quick verification
+        run: |
+          echo ""
+          echo "=========================================="
+          echo "QUICK VERIFICATION"
+          echo "=========================================="
+
+          TABLE_COUNT=$(PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -U ${{ env.POSTGRES_USER }} -h localhost -d ${{ env.POSTGRES_DB }} -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE';" | tr -d ' ')
+          echo "Tables: $TABLE_COUNT"
+
+          ADMIN_COUNT=$(PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -U ${{ env.POSTGRES_USER }} -h localhost -d ${{ env.POSTGRES_DB }} -t -c "SELECT COUNT(*) FROM users WHERE login = 'admin';" | tr -d ' ')
+          if [ "$ADMIN_COUNT" -eq 1 ]; then
+            echo "Admin user exists"
+          else
+            echo "Admin user missing"
+            exit 1
+          fi
+
+          ROLE_COUNT=$(PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -U ${{ env.POSTGRES_USER }} -h localhost -d ${{ env.POSTGRES_DB }} -t -c "SELECT COUNT(*) FROM roles;" | tr -d ' ')
+          echo "Roles: $ROLE_COUNT"
+
+          PERM_COUNT=$(PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -U ${{ env.POSTGRES_USER }} -h localhost -d ${{ env.POSTGRES_DB }} -t -c "SELECT COUNT(*) FROM permissions;" | tr -d ' ')
+          echo "Permissions: $PERM_COUNT"
+
+          echo ""
+          echo "Quick test passed!"
+
+  # ============================================================
+  # JOB 2: Full Test - Complete test suite
+  # ============================================================
+  full-test:
+    name: Full Test Suite
+    runs-on: ubuntu-latest
+    needs: quick-test
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_pass_123
+          POSTGRES_DB: test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+          echo "Dependencies installed"
+
+      - name: Wait for PostgreSQL
+        run: |
+          echo "Waiting for PostgreSQL..."
+          for i in {1..30}; do
+            if PGPASSWORD=${{ env.POSTGRES_PASSWORD }} pg_isready -h localhost -U ${{ env.POSTGRES_USER }} > /dev/null 2>&1; then
+              echo "PostgreSQL ready"
+              break
+            fi
+            sleep 2
+          done
+
+      - name: Run all initialization scripts
+        run: |
+          echo "=========================================="
+          echo "FULL INITIALIZATION"
+          echo "=========================================="
+
+          for file in database/init/*.sql; do
+            echo ""
+            echo "Processing: $(basename $file)"
+            echo "------------------------------------------"
+            PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -U ${{ env.POSTGRES_USER }} -h localhost -d ${{ env.POSTGRES_DB }} -f "$file"
+            if [ $? -eq 0 ]; then
+              echo "$(basename $file) OK"
+            else
+              echo "Failed on $(basename $file)"
+              exit 1
+            fi
+          done
+
+      - name: Database object statistics
+        run: |
+          echo ""
+          echo "=========================================="
+          echo "DATABASE OBJECT STATISTICS"
+          echo "=========================================="
+
+          cat > /tmp/stats.sql << 'EOF'
+          SELECT 'Tables' as object_type, COUNT(*) as count FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+          UNION ALL
+          SELECT 'Views', COUNT(*) FROM information_schema.views WHERE table_schema = 'public'
+          UNION ALL
+          SELECT 'Functions', COUNT(*) FROM pg_proc WHERE pronamespace = 'public'::regnamespace
+          UNION ALL
+          SELECT 'Triggers', COUNT(*) FROM information_schema.triggers
+          UNION ALL
+          SELECT 'Indexes', COUNT(*) FROM pg_indexes WHERE schemaname = 'public'
+          UNION ALL
+          SELECT 'Enum Types', COUNT(*) FROM pg_type WHERE typtype = 'e'
+          EOF
+
+          PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -U ${{ env.POSTGRES_USER }} -h localhost -d ${{ env.POSTGRES_DB }} -f /tmp/stats.sql
+
+      - name: Role and permission validation
+        run: |
+          echo ""
+          echo "=========================================="
+          echo "ROLE & PERMISSION VALIDATION"
+          echo "=========================================="
+
+          echo "Roles in system:"
+          PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -U ${{ env.POSTGRES_USER }} -h localhost -d ${{ env.POSTGRES_DB }} -t -c "SELECT code, name FROM roles ORDER BY code;" | while read line; do
+            echo "  - $line"
+          done
+
+          echo ""
+          echo "Permission counts:"
+          PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -U ${{ env.POSTGRES_USER }} -h localhost -d ${{ env.POSTGRES_DB }} -c "
+            SELECT r.code, COUNT(rp.permission_id) as perm_count 
+            FROM roles r
+            LEFT JOIN role_permissions rp ON r.id = rp.role_id
+            GROUP BY r.code
+            ORDER BY perm_count DESC;
+          "
+
+      - name: User authentication test
+        run: |
+          echo ""
+          echo "=========================================="
+          echo "USER AUTHENTICATION TEST"
+          echo "=========================================="
+
+          ADMIN_EXISTS=$(PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -U ${{ env.POSTGRES_USER }} -h localhost -d ${{ env.POSTGRES_DB }} -t -c "SELECT COUNT(*) FROM users WHERE login = 'admin' AND is_active = true;" | tr -d ' ')
+          if [ "$ADMIN_EXISTS" -eq 1 ]; then
+            echo "Admin user exists and is active"
+          else
+            echo "Admin user not found or inactive"
+            exit 1
+          fi
+
+          ADMIN_ROLE=$(PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -U ${{ env.POSTGRES_USER }} -h localhost -d ${{ env.POSTGRES_DB }} -t -c "SELECT r.code FROM users u JOIN roles r ON u.role_id = r.id WHERE u.login = 'admin';" | tr -d ' ')
+          echo "Admin role: $ADMIN_ROLE"
+
+      - name: Foreign key integrity test
+        run: |
+          echo ""
+          echo "=========================================="
+          echo "FOREIGN KEY INTEGRITY TEST"
+          echo "=========================================="
+
+          cat > /tmp/fk_test.sql << 'EOF'
+          DO $$
+          DECLARE
+              fk_record RECORD;
+              orphan_count INTEGER;
+          BEGIN
+              FOR fk_record IN
+                  SELECT
+                      tc.constraint_name,
+                      tc.table_name,
+                      kcu.column_name,
+                      ccu.table_name AS foreign_table_name,
+                      ccu.column_name AS foreign_column_name
+                  FROM information_schema.table_constraints tc
+                  JOIN information_schema.key_column_usage kcu
+                      ON tc.constraint_name = kcu.constraint_name
+                  JOIN information_schema.constraint_column_usage ccu
+                      ON ccu.constraint_name = tc.constraint_name
+                  WHERE tc.constraint_type = 'FOREIGN KEY'
+                    AND tc.table_schema = 'public'
+              LOOP
+                  EXECUTE format('
+                      SELECT COUNT(*) FROM %I t
+                      WHERE NOT EXISTS (
+                          SELECT 1 FROM %I ft
+                          WHERE ft.%I = t.%I
+                      )
+                  ', fk_record.table_name, fk_record.foreign_table_name, 
+                     fk_record.foreign_column_name, fk_record.column_name)
+                  INTO orphan_count;
+                  
+                  IF orphan_count > 0 THEN
+                      RAISE NOTICE 'Orphaned rows in %: %', fk_record.table_name, orphan_count;
+                  END IF;
+              END LOOP;
+              
+              RAISE NOTICE 'Foreign key integrity check completed';
+          END $$;
+          EOF
+
+          PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -U ${{ env.POSTGRES_USER }} -h localhost -d ${{ env.POSTGRES_DB }} -f /tmp/fk_test.sql
+
+      - name: Full test summary
+        run: |
+          echo ""
+          echo "=========================================="
+          echo "FULL TEST SUMMARY"
+          echo "=========================================="
+
+          TOTAL_TABLES=$(PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -U ${{ env.POSTGRES_USER }} -h localhost -d ${{ env.POSTGRES_DB }} -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE';" | tr -d ' ')
+          TOTAL_VIEWS=$(PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -U ${{ env.POSTGRES_USER }} -h localhost -d ${{ env.POSTGRES_DB }} -t -c "SELECT COUNT(*) FROM information_schema.views WHERE table_schema = 'public';" | tr -d ' ')
+          TOTAL_FUNCTIONS=$(PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -U ${{ env.POSTGRES_USER }} -h localhost -d ${{ env.POSTGRES_DB }} -t -c "SELECT COUNT(*) FROM pg_proc WHERE pronamespace = 'public'::regnamespace;" | tr -d ' ')
+          TOTAL_TRIGGERS=$(PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -U ${{ env.POSTGRES_USER }} -h localhost -d ${{ env.POSTGRES_DB }} -t -c "SELECT COUNT(*) FROM information_schema.triggers;" | tr -d ' ')
+          TOTAL_INDEXES=$(PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -U ${{ env.POSTGRES_USER }} -h localhost -d ${{ env.POSTGRES_DB }} -t -c "SELECT COUNT(*) FROM pg_indexes WHERE schemaname = 'public';" | tr -d ' ')
+
+          echo "Final Database Statistics:"
+          echo "  Tables: $TOTAL_TABLES"
+          echo "  Views: $TOTAL_VIEWS"
+          echo "  Functions: $TOTAL_FUNCTIONS"
+          echo "  Triggers: $TOTAL_TRIGGERS"
+          echo "  Indexes: $TOTAL_INDEXES"
+          echo ""
+          echo "All tests passed successfully!"
+
+  # ============================================================
+  # JOB 3: Final Report - Summary report
+  # ============================================================
+  final-report:
+    name: Final Report
+    runs-on: ubuntu-latest
+    needs: [quick-test, full-test]
+    if: always()
+
+    steps:
+      - name: Generate final report
+        run: |
+          echo "=========================================="
+          echo "FINAL CI/CD REPORT"
+          echo "=========================================="
+
+          cat >> $GITHUB_STEP_SUMMARY << 'EOF'
+          ## Database CI/CD Pipeline Report
+
+          | Job | Status | Description |
+          |-----|--------|-------------|
+          EOF
+
+          echo "| Quick Test | ${{ needs.quick-test.result }} | Basic schema validation |" >> $GITHUB_STEP_SUMMARY
+          echo "| Full Test Suite | ${{ needs.full-test.result }} | Complete database testing |" >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Pipeline Statistics" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Run ID**: ${{ github.run_id }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- **Trigger**: ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Actor**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+
+          echo ""
+          echo "Final report generated"
