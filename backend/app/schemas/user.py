@@ -1,8 +1,8 @@
 # backend/app/schemas/user.py
 from pydantic import BaseModel, Field, EmailStr
-from typing import Optional
 from uuid import UUID
 from datetime import datetime
+from typing import Optional
 
 class UserCreate(BaseModel):
     login: str = Field(..., min_length=3, max_length=50)
@@ -36,7 +36,7 @@ class ResetPasswordRequest(BaseModel):
     new_password: str = Field(..., min_length=6)
 
 class UserListResponse(BaseModel):
-    items: list[UserResponse]
+    items: List[UserResponse]
     page: int
     page_size: int
     total: int
