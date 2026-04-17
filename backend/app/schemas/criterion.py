@@ -1,8 +1,8 @@
 # backend/app/schemas/criterion.py
 from pydantic import BaseModel, Field, validator
 from uuid import UUID
+from datetime import datetime
 from typing import Optional, List
-from decimal import Decimal
 
 class CriterionCreate(BaseModel):
     title: str = Field(..., max_length=150)

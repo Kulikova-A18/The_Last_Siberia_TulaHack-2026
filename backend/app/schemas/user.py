@@ -2,7 +2,7 @@
 from pydantic import BaseModel, Field, EmailStr
 from uuid import UUID
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 
 class UserCreate(BaseModel):
     login: str = Field(..., min_length=3, max_length=50)

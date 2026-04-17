@@ -2,7 +2,7 @@
 from pydantic import BaseModel
 from uuid import UUID
 from datetime import datetime
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 
 class AuditLogResponse(BaseModel):
     id: int
@@ -18,8 +18,3 @@ class AuditLogListResponse(BaseModel):
     page: int
     page_size: int
     total: int
-
-class AuditLogPayload(BaseModel):
-    team_id: Optional[UUID] = None
-    user_id: Optional[UUID] = None
-    changes: Optional[Dict[str, Any]] = None

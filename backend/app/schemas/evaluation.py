@@ -3,7 +3,6 @@ from pydantic import BaseModel, Field, validator
 from uuid import UUID
 from datetime import datetime
 from typing import Optional, List
-from decimal import Decimal
 
 class EvaluationItemRequest(BaseModel):
     criterion_id: UUID
