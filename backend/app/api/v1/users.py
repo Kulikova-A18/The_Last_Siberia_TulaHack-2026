@@ -22,7 +22,6 @@ async def get_users(
     db: AsyncSession = Depends(get_db)
 ):
     """Get list of users (admin only)"""
-    # TODO: Implement actual database query
     return UserListResponse(
         items=[],
         page=page,
@@ -37,7 +36,6 @@ async def create_user(
     db: AsyncSession = Depends(get_db)
 ):
     """Create a new user (admin only)"""
-    # TODO: Implement user creation
     raise HTTPException(
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
         detail="User creation not implemented yet"
@@ -50,7 +48,6 @@ async def get_user(
     db: AsyncSession = Depends(get_db)
 ):
     """Get user by ID (admin only)"""
-    # TODO: Implement user retrieval
     raise HTTPException(
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
         detail="User retrieval not implemented yet"
@@ -64,7 +61,6 @@ async def update_user(
     db: AsyncSession = Depends(get_db)
 ):
     """Update user (admin only)"""
-    # TODO: Implement user update
     raise HTTPException(
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
         detail="User update not implemented yet"
@@ -78,7 +74,6 @@ async def reset_password(
     db: AsyncSession = Depends(get_db)
 ):
     """Reset user password (admin only)"""
-    # TODO: Implement password reset
     raise HTTPException(
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
         detail="Password reset not implemented yet"
@@ -91,7 +86,6 @@ async def activate_user(
     db: AsyncSession = Depends(get_db)
 ):
     """Activate user (admin only)"""
-    # TODO: Implement user activation
     raise HTTPException(
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
         detail="User activation not implemented yet"
@@ -104,7 +98,6 @@ async def deactivate_user(
     db: AsyncSession = Depends(get_db)
 ):
     """Deactivate user (admin only)"""
-    # TODO: Implement user deactivation
     raise HTTPException(
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
         detail="User deactivation not implemented yet"

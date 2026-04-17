@@ -16,7 +16,6 @@ async def get_active_hackathon(
     db: AsyncSession = Depends(get_db)
 ):
     """Get the active hackathon"""
-    # TODO: Implement active hackathon retrieval
     raise HTTPException(
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
         detail="Not implemented yet"
@@ -28,7 +27,6 @@ async def get_hackathons(
     db: AsyncSession = Depends(get_db)
 ):
     """Get all hackathons (admin only)"""
-    # TODO: Implement hackathons list
     return []
 
 @router.post("/", response_model=HackathonResponse)
@@ -38,7 +36,6 @@ async def create_hackathon(
     db: AsyncSession = Depends(get_db)
 ):
     """Create a new hackathon (admin only)"""
-    # TODO: Implement hackathon creation
     raise HTTPException(
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
         detail="Not implemented yet"
@@ -51,7 +48,6 @@ async def get_hackathon(
     db: AsyncSession = Depends(get_db)
 ):
     """Get hackathon by ID"""
-    # TODO: Implement hackathon retrieval
     raise HTTPException(
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
         detail="Not implemented yet"
@@ -65,7 +61,6 @@ async def update_hackathon(
     db: AsyncSession = Depends(get_db)
 ):
     """Update hackathon (admin only)"""
-    # TODO: Implement hackathon update
     raise HTTPException(
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
         detail="Not implemented yet"
@@ -78,7 +73,6 @@ async def start_hackathon(
     db: AsyncSession = Depends(get_db)
 ):
     """Start hackathon (admin only)"""
-    # TODO: Implement hackathon start
     raise HTTPException(
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
         detail="Not implemented yet"
@@ -91,7 +85,6 @@ async def finish_hackathon(
     db: AsyncSession = Depends(get_db)
 ):
     """Finish hackathon (admin only)"""
-    # TODO: Implement hackathon finish
     raise HTTPException(
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
         detail="Not implemented yet"

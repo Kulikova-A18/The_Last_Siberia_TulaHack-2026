@@ -5,7 +5,7 @@ from typing import Optional
 from uuid import UUID
 
 from app.core.database import get_db
-from app.dependencies.auth import get_current_user, admin_required, team_required
+from app.dependencies.auth import get_current_user, admin_required
 from app.models.user import User
 from app.schemas.team import (
     TeamCreate, TeamUpdate, TeamResponse, TeamListResponse, 
@@ -25,7 +25,6 @@ async def get_teams(
     db: AsyncSession = Depends(get_db)
 ):
     """Get list of teams"""
-    # TODO: Implement teams list
     return TeamListResponse(
         items=[],
         page=page,
@@ -41,7 +40,6 @@ async def create_team(
     db: AsyncSession = Depends(get_db)
 ):
     """Create a new team (admin only)"""
-    # TODO: Implement team creation
     raise HTTPException(
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
         detail="Not implemented yet"
@@ -55,7 +53,6 @@ async def get_team(
     db: AsyncSession = Depends(get_db)
 ):
     """Get team by ID"""
-    # TODO: Implement team retrieval
     raise HTTPException(
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
         detail="Not implemented yet"
@@ -70,7 +67,6 @@ async def update_team(
     db: AsyncSession = Depends(get_db)
 ):
     """Update team (admin only)"""
-    # TODO: Implement team update
     raise HTTPException(
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
         detail="Not implemented yet"
@@ -84,7 +80,6 @@ async def delete_team(
     db: AsyncSession = Depends(get_db)
 ):
     """Delete team (admin only)"""
-    # TODO: Implement team deletion
     raise HTTPException(
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
         detail="Not implemented yet"
@@ -99,7 +94,6 @@ async def add_member(
     db: AsyncSession = Depends(get_db)
 ):
     """Add member to team (admin only)"""
-    # TODO: Implement member addition
     raise HTTPException(
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
         detail="Not implemented yet"
@@ -115,7 +109,6 @@ async def update_member(
     db: AsyncSession = Depends(get_db)
 ):
     """Update team member (admin only)"""
-    # TODO: Implement member update
     raise HTTPException(
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
         detail="Not implemented yet"
@@ -130,7 +123,6 @@ async def delete_member(
     db: AsyncSession = Depends(get_db)
 ):
     """Delete team member (admin only)"""
-    # TODO: Implement member deletion
     raise HTTPException(
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
         detail="Not implemented yet"
