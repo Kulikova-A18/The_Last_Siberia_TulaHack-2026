@@ -18,9 +18,9 @@ cd "$PROJECT_ROOT"
 
 if docker-compose ps > /dev/null 2>&1; then
     docker-compose down
-    echo -e "${GREEN}✓ Database containers stopped${NC}"
+    echo -e "${GREEN}Database containers stopped${NC}"
 else
-    echo -e "${RED}✗ No running containers found${NC}"
+    echo -e "${RED}No running containers found${NC}"
 fi
 
-echo -e "${GREEN}✓ Database stopped successfully!${NC}"
+echo -e "${GREEN}Database stopped successfully!${NC}"

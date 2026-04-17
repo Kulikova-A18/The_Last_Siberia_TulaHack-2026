@@ -13,7 +13,7 @@ NC='\033[0m'
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
-echo -e "${RED}⚠ WARNING: This will delete ALL database data!${NC}"
+echo -e "${RED}WARNING: This will delete ALL database data!${NC}"
 read -p "Are you sure you want to continue? (yes/no): " -r
 
 if [[ ! $REPLY =~ ^[Yy][Ee][Ss]$ ]]; then
@@ -37,4 +37,4 @@ rm -rf "${PROJECT_ROOT}/data" 2>/dev/null || true
 # Start fresh
 bash scripts/start.sh
 
-echo -e "${GREEN}✓ Database reset successfully!${NC}"
+echo -e "${GREEN}Database reset successfully!${NC}"

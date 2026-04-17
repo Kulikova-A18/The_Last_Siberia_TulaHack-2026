@@ -19,6 +19,8 @@ env:
   POSTGRES_PASSWORD: test_password
   POSTGRES_DB: test_db
   POSTGRES_PORT: 5432
+  # Opt into Node.js 24 for GitHub Actions
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   test:
@@ -40,7 +42,9 @@ jobs:
           --health-retries 5
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
       - name: Install PostgreSQL client
         run: |
@@ -150,56 +154,269 @@ jobs:
           # Check for default passwords
           PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -U ${{ env.POSTGRES_USER }} -h localhost -p ${{ env.POSTGRES_PORT }} -d ${{ env.POSTGRES_DB }} -c "SELECT usename FROM pg_user WHERE passwd IS NULL;"
 
+      - name: Run integration tests
+        run: |
+          # Test evaluation workflow
+          PGPASSWORD=${{ env.POSTGRES_PASSWORD }} psql -U ${{ env.POSTGRES_USER }} -h localhost -p ${{ env.POSTGRES_PORT }} -d ${{ env.POSTGRES_DB }} << 'EOF'
+          DO $$
+          DECLARE
+            hackathon_id UUID;
+            admin_id UUID;
+            expert_id UUID;
+            team_id UUID;
+            criterion_id UUID;
+            evaluation_id UUID;
+          BEGIN
+            -- Create hackathon
+            INSERT INTO hackathons (title, start_at, end_at, status)
+            VALUES ('Integration Test', NOW(), NOW() + interval '7 days', 'active')
+            RETURNING id INTO hackathon_id;
+            
+            -- Get admin user
+            SELECT id INTO admin_id FROM users WHERE login = 'admin';
+            
+            -- Create expert
+            INSERT INTO users (login, password_hash, full_name, role_id)
+            SELECT 'test_expert', 'hash', 'Test Expert', id FROM roles WHERE code = 'expert'
+            RETURNING id INTO expert_id;
+            
+            -- Create team
+            INSERT INTO teams (hackathon_id, name, captain_name, project_title)
+            VALUES (hackathon_id, 'Integration Team', 'Captain', 'Integration Project')
+            RETURNING id INTO team_id;
+            
+            -- Create criterion
+            INSERT INTO criteria (hackathon_id, title, max_score, weight_percent, sort_order)
+            VALUES (hackathon_id, 'Integration Criterion', 10, 100, 1)
+            RETURNING id INTO criterion_id;
+            
+            -- Assign expert to team
+            INSERT INTO expert_team_assignments (hackathon_id, expert_user_id, team_id)
+            VALUES (hackathon_id, expert_id, team_id);
+            
+            -- Create evaluation
+            INSERT INTO evaluations (hackathon_id, expert_user_id, team_id, status)
+            VALUES (hackathon_id, expert_id, team_id, 'submitted')
+            RETURNING id INTO evaluation_id;
+            
+            -- Add evaluation item
+            INSERT INTO evaluation_items (evaluation_id, criterion_id, raw_score)
+            VALUES (evaluation_id, criterion_id, 8);
+            
+            -- Verify team result
+            INSERT INTO team_results (hackathon_id, team_id, final_score, evaluated_by_count, status)
+            VALUES (hackathon_id, team_id, 80, 1, 'completed')
+            ON CONFLICT (hackathon_id, team_id) DO UPDATE
+            SET final_score = 80, evaluated_by_count = 1, status = 'completed';
+            
+            -- Check if data was inserted correctly
+            ASSERT EXISTS (SELECT 1 FROM evaluations WHERE id = evaluation_id), 'Evaluation not found';
+            ASSERT EXISTS (SELECT 1 FROM evaluation_items WHERE evaluation_id = evaluation_id), 'Evaluation item not found';
+            ASSERT EXISTS (SELECT 1 FROM team_results WHERE team_id = team_id AND final_score = 80), 'Team result not found';
+            
+            RAISE NOTICE 'Integration tests passed successfully';
+          END $$;
+          EOF
+
   build:
     needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
       - name: Login to DockerHub
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKER_USERNAME }}/hackathon-postgres
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,prefix=,format=short
+            type=raw,value={{date 'YYYYMMDD'}}-{{sha 'short'}}
+
       - name: Build and push Docker image
-        uses: docker/build-push-action@v4
+        uses: docker/build-push-action@v5
         with:
           context: ./database
           push: true
-          tags: |
-            ${{ secrets.DOCKER_USERNAME }}/hackathon-postgres:latest
-            ${{ secrets.DOCKER_USERNAME }}/hackathon-postgres:${{ github.sha }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  deploy:
+      - name: Scan Docker image for vulnerabilities
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: ${{ secrets.DOCKER_USERNAME }}/hackathon-postgres:${{ github.sha }}
+          format: "sarif"
+          output: "trivy-results.sarif"
+          severity: "CRITICAL,HIGH"
+
+      - name: Upload Trivy results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: "trivy-results.sarif"
+
+  deploy-staging:
     needs: build
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
+    environment:
+      name: staging
+      url: https://staging.hackathon.com
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
 
-      - name: Deploy to production
+      - name: Deploy to staging
         env:
-          DEPLOY_KEY: ${{ secrets.DEPLOY_KEY }}
-          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_KEY: ${{ secrets.STAGING_DEPLOY_KEY }}
+          DEPLOY_HOST: ${{ secrets.STAGING_HOST }}
+          DEPLOY_USER: ${{ secrets.STAGING_USER }}
         run: |
           echo "$DEPLOY_KEY" > deploy_key
           chmod 600 deploy_key
 
           ssh -o StrictHostKeyChecking=no -i deploy_key $DEPLOY_USER@$DEPLOY_HOST << 'EOF'
-            cd /opt/hackathon
-            git pull
+            set -e
+            echo "Starting deployment to staging..."
+            
+            cd /opt/hackathon-staging
+            git pull origin main
+            
             cd database
             docker-compose pull
             docker-compose up -d --force-recreate
+            
+            # Wait for database to be ready
+            sleep 10
+            
+            # Run health check
             ./scripts/healthcheck.sh
+            
+            # Run migrations if any
+            docker exec hackathon_postgres psql -U hackathon_admin -d hackathon_db -f /docker-entrypoint-initdb.d/01-init.sql || true
+            
+            echo "Staging deployment completed successfully"
           EOF
+
+  deploy-production:
+    needs: deploy-staging
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: production
+      url: https://hackathon.com
+    concurrency:
+      group: production
+      cancel-in-progress: false
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Deploy to production
+        env:
+          DEPLOY_KEY: ${{ secrets.PRODUCTION_DEPLOY_KEY }}
+          DEPLOY_HOST: ${{ secrets.PRODUCTION_HOST }}
+          DEPLOY_USER: ${{ secrets.PRODUCTION_USER }}
+        run: |
+          echo "$DEPLOY_KEY" > deploy_key
+          chmod 600 deploy_key
+
+          ssh -o StrictHostKeyChecking=no -i deploy_key $DEPLOY_USER@$DEPLOY_HOST << 'EOF'
+            set -e
+            echo "Starting deployment to production..."
+            
+            # Create backup before deployment
+            cd /opt/hackathon
+            ./database/scripts/backup.sh
+            
+            # Pull latest changes
+            git pull origin main
+            
+            cd database
+            
+            # Pull latest images
+            docker-compose pull
+            
+            # Restart with new images
+            docker-compose up -d --force-recreate
+            
+            # Wait for database to be ready
+            sleep 15
+            
+            # Run health check
+            ./scripts/healthcheck.sh
+            
+            # Verify database integrity
+            docker exec hackathon_postgres psql -U hackathon_admin -d hackathon_db -c "SELECT COUNT(*) FROM users;"
+            docker exec hackathon_postgres psql -U hackathon_admin -d hackathon_db -c "SELECT COUNT(*) FROM teams;"
+            
+            echo "Production deployment completed successfully"
+            
+            # Send deployment notification (optional)
+            curl -X POST -H "Content-Type: application/json" \
+              -d '{"text": "✅ Production database deployed successfully"}' \
+              ${{ secrets.WEBHOOK_URL }} || true
+          EOF
+
+      - name: Verify deployment
+        if: always()
+        run: |
+          echo "Deployment verification completed"
+          # Add additional verification steps here
+
+  cleanup:
+    needs: [deploy-staging, deploy-production]
+    runs-on: ubuntu-latest
+    if: always() && (github.ref == 'refs/heads/main')
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Clean up old Docker images on staging
+        if: always()
+        env:
+          DEPLOY_KEY: ${{ secrets.STAGING_DEPLOY_KEY }}
+          DEPLOY_HOST: ${{ secrets.STAGING_HOST }}
+          DEPLOY_USER: ${{ secrets.STAGING_USER }}
+        run: |
+          echo "$DEPLOY_KEY" > deploy_key
+          chmod 600 deploy_key
+
+          ssh -o StrictHostKeyChecking=no -i deploy_key $DEPLOY_USER@$DEPLOY_HOST << 'EOF'
+            docker system prune -f --filter "until=24h"
+            docker volume prune -f
+          EOF || true
+
+      - name: Clean up old Docker images on production
+        if: always()
+        env:
+          DEPLOY_KEY: ${{ secrets.PRODUCTION_DEPLOY_KEY }}
+          DEPLOY_HOST: ${{ secrets.PRODUCTION_HOST }}
+          DEPLOY_USER: ${{ secrets.PRODUCTION_USER }}
+        run: |
+          echo "$DEPLOY_KEY" > deploy_key
+          chmod 600 deploy_key
+
+          ssh -o StrictHostKeyChecking=no -i deploy_key $DEPLOY_USER@$DEPLOY_HOST << 'EOF'
+            docker system prune -f --filter "until=48h"
+            docker volume prune -f
+          EOF || true

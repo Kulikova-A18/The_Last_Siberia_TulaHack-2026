@@ -32,17 +32,17 @@ docker exec hackathon_postgres pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" > "
 
 if [ -f "$BACKUP_FILE" ]; then
     SIZE=$(du -h "$BACKUP_FILE" | cut -f1)
-    echo -e "${GREEN}✓ Backup created: ${BACKUP_FILE} (${SIZE})${NC}"
+    echo -e "${GREEN}Backup created: ${BACKUP_FILE} (${SIZE})${NC}"
     
     # Compress backup
     gzip "$BACKUP_FILE"
-    echo -e "${GREEN}✓ Backup compressed: ${BACKUP_FILE}.gz${NC}"
+    echo -e "${GREEN}Backup compressed: ${BACKUP_FILE}.gz${NC}"
     
     # Keep only last 10 backups
     cd "$BACKUP_DIR"
     ls -t hackathon_db_*.sql.gz 2>/dev/null | tail -n +11 | xargs -r rm
-    echo -e "${GREEN}✓ Cleaned old backups (kept last 10)${NC}"
+    echo -e "${GREEN}Cleaned old backups (kept last 10)${NC}"
 else
-    echo -e "${RED}✗ Backup failed${NC}"
+    echo -e "${RED}Backup failed${NC}"
     exit 1
 fi

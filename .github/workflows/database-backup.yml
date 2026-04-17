@@ -1,0 +1,37 @@
+name: Database Backup
+
+on:
+  schedule:
+    - cron: "0 2 * * *" # Daily at 2 AM
+  workflow_dispatch: # Manual trigger
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create database backup
+        env:
+          DEPLOY_KEY: ${{ secrets.PRODUCTION_DEPLOY_KEY }}
+          DEPLOY_HOST: ${{ secrets.PRODUCTION_HOST }}
+          DEPLOY_USER: ${{ secrets.PRODUCTION_USER }}
+        run: |
+          echo "$DEPLOY_KEY" > deploy_key
+          chmod 600 deploy_key
+
+          ssh -o StrictHostKeyChecking=no -i deploy_key $DEPLOY_USER@$DEPLOY_HOST << 'EOF'
+            cd /opt/hackathon
+            ./database/scripts/backup.sh
+            
+            # Upload to S3 (optional)
+            # aws s3 cp backups/latest.sql.gz s3://hackathon-backups/
+          EOF
+
+      - name: Upload backup to GitHub Actions artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: database-backup
+          path: backups/*.sql.gz
+          retention-days: 30

@@ -19,9 +19,9 @@ ENV_FILE="${PROJECT_ROOT}/.env"
 # Load environment variables
 if [ -f "$ENV_FILE" ]; then
     source "$ENV_FILE"
-    echo -e "${GREEN}✓ Loaded environment variables from ${ENV_FILE}${NC}"
+    echo -e "${GREEN}Loaded environment variables from ${ENV_FILE}${NC}"
 else
-    echo -e "${YELLOW}⚠ No .env file found, using defaults${NC}"
+    echo -e "${YELLOW}No .env file found, using defaults${NC}"
     export POSTGRES_USER=${POSTGRES_USER:-hackathon_admin}
     export POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-SecurePass123!}
     export POSTGRES_DB=${POSTGRES_DB:-hackathon_db}
@@ -31,19 +31,19 @@ fi
 # Function to check if Docker is running
 check_docker() {
     if ! docker info > /dev/null 2>&1; then
-        echo -e "${RED}✗ Docker is not running. Please start Docker first.${NC}"
+        echo -e "${RED}Docker is not running. Please start Docker first.${NC}"
         exit 1
     fi
-    echo -e "${GREEN}✓ Docker is running${NC}"
+    echo -e "${GREEN}Docker is running${NC}"
 }
 
 # Function to check if ports are available
 check_ports() {
     if lsof -Pi :$POSTGRES_PORT -sTCP:LISTEN -t >/dev/null 2>&1 ; then
-        echo -e "${RED}✗ Port $POSTGRES_PORT is already in use${NC}"
+        echo -e "${RED}Port $POSTGRES_PORT is already in use${NC}"
         exit 1
     fi
-    echo -e "${GREEN}✓ Port $POSTGRES_PORT is available${NC}"
+    echo -e "${GREEN}Port $POSTGRES_PORT is available${NC}"
 }
 
 # Function to create necessary directories
@@ -51,7 +51,7 @@ create_directories() {
     mkdir -p "${PROJECT_ROOT}/data"
     mkdir -p "${PROJECT_ROOT}/logs"
     mkdir -p "${PROJECT_ROOT}/backups"
-    echo -e "${GREEN}✓ Created necessary directories${NC}"
+    echo -e "${GREEN}Created necessary directories${NC}"
 }
 
 # Function to start PostgreSQL
@@ -68,14 +68,14 @@ start_postgres() {
     # Health check
     for i in {1..30}; do
         if docker exec hackathon_postgres pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB" > /dev/null 2>&1; then
-            echo -e "${GREEN}✓ PostgreSQL is ready${NC}"
+            echo -e "${GREEN}PostgreSQL is ready${NC}"
             return 0
         fi
         echo -n "."
         sleep 1
     done
     
-    echo -e "\n${RED}✗ PostgreSQL failed to start${NC}"
+    echo -e "\n${RED}PostgreSQL failed to start${NC}"
     docker-compose logs postgres
     exit 1
 }
@@ -84,7 +84,7 @@ start_postgres() {
 start_pgadmin() {
     echo -e "${YELLOW}Starting pgAdmin...${NC}"
     docker-compose up -d pgadmin
-    echo -e "${GREEN}✓ pgAdmin started on port ${PGADMIN_PORT:-5050}${NC}"
+    echo -e "${GREEN}pgAdmin started on port ${PGADMIN_PORT:-5050}${NC}"
 }
 
 # Function to show connection info
@@ -114,15 +114,15 @@ verify_database() {
     
     # Check tables
     TABLES=$(docker exec hackathon_postgres psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -t -c "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public';")
-    echo -e "${GREEN}✓ Created $TABLES tables${NC}"
+    echo -e "${GREEN}Created $TABLES tables${NC}"
     
     # Check roles
     ROLES=$(docker exec hackathon_postgres psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -t -c "SELECT COUNT(*) FROM roles;")
-    echo -e "${GREEN}✓ Loaded $ROLES roles${NC}"
+    echo -e "${GREEN}Loaded $ROLES roles${NC}"
     
     # Check permissions
     PERMS=$(docker exec hackathon_postgres psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -t -c "SELECT COUNT(*) FROM permissions;")
-    echo -e "${GREEN}✓ Loaded $PERMS permissions${NC}"
+    echo -e "${GREEN}Loaded $PERMS permissions${NC}"
 }
 
 # Main execution
@@ -138,7 +138,7 @@ main() {
     verify_database
     show_connection_info
     
-    echo -e "${GREEN}✓ Database started successfully!${NC}"
+    echo -e "${GREEN}Database started successfully!${NC}"
 }
 
 # Run main function
