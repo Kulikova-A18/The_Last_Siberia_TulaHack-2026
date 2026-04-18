@@ -47,7 +47,7 @@
 
 ---
 
-## Типовой бизнес-сценарий
+## бизнес-сценарий
 
 1. Администратор создаёт хакатон, критерии, команды, экспертов.
 2. Назначает экспертов на команды.
@@ -56,62 +56,6 @@
 5. Администратор публикует рейтинг.
 6. Команды и гости видят live-рейтинг.
 
----
-
-## Логика расчёта оценок
-
-Для каждого критерия:
-
-normalized_score = raw_score / max_score  
-criterion_result = normalized_score \* weight_percent
-
-Итог команды (при нескольких экспертах):
-
-final_score = сумма(weight_i \* average(normalized_score_i))
-
-Результат — от 0 до 100.
-
----
-
-## Примеры API (Главные)
-
-POST /api/v1/auth/login  
-GET /api/v1/hackathons/active  
-GET /api/v1/hackathons/{id}/dashboard/admin  
-POST /api/v1/hackathons/{id}/criteria  
-PUT /api/v1/hackathons/{id}/teams/{team_id}/my-evaluation/draft  
-POST /api/v1/hackathons/{id}/results/publish  
-WS /api/v1/ws/public/hackathons/{id}/leaderboard
-
----
-
-## Что включено в MVP
-
-Обязательно:
-
-- Авторизация и роли
-- Управление командами
-- Конструктор критериев
-- Форма оценки
-- Автоматический расчёт
-- Рейтинг + публичная страница
-
-Очень желательно:
-
-- Черновики оценок
-- Live-рейтинг (WebSocket)
-- Таймер и дедлайны
-- Экспорт результатов
-- Аудит действий
-
-На следующие версии:
-
-- Email / Telegram-уведомления
-- Загрузка презентаций
-- Антифрод-проверка оценок
-- Аналитика по экспертам
-
----
 
 ## Быстрый старт (пример)
 
