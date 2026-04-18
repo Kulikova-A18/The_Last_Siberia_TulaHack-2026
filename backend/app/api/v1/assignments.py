@@ -54,23 +54,29 @@ async def create_assignment(
     db: AsyncSession = Depends(get_db)
 ):
     """Create assignment (admin only)"""
+    # Verify hackathon exists
     hackathon_result = await db.execute(select(Hackathon).where(Hackathon.id == hackathon_id))
     if not hackathon_result.scalar_one_or_none():
         raise HTTPException(status_code=404, detail="Hackathon not found")
     
+    # Verify expert exists and has expert role
     expert_result = await db.execute(select(User).where(User.id == assignment_data.expert_user_id))
-    if not expert_result.scalar_one_or_none():
+    expert = expert_result.scalar_one_or_none()
+    if not expert:
         raise HTTPException(status_code=404, detail="Expert not found")
     
+    # Verify team exists in this hackathon
     team_result = await db.execute(
         select(Team).where(
             Team.id == assignment_data.team_id,
             Team.hackathon_id == hackathon_id
         )
     )
-    if not team_result.scalar_one_or_none():
+    team = team_result.scalar_one_or_none()
+    if not team:
         raise HTTPException(status_code=404, detail="Team not found in this hackathon")
     
+    # Check if assignment already exists
     existing = await db.execute(
         select(ExpertTeamAssignment).where(
             ExpertTeamAssignment.hackathon_id == hackathon_id,
@@ -110,6 +116,7 @@ async def bulk_create_assignments(
     db: AsyncSession = Depends(get_db)
 ):
     """Bulk create assignments (admin only)"""
+    # Verify hackathon exists
     hackathon_result = await db.execute(select(Hackathon).where(Hackathon.id == hackathon_id))
     if not hackathon_result.scalar_one_or_none():
         raise HTTPException(status_code=404, detail="Hackathon not found")
@@ -117,6 +124,7 @@ async def bulk_create_assignments(
     created_assignments = []
     
     for assignment_item in assignments_data.assignments:
+        # Check if assignment already exists
         existing = await db.execute(
             select(ExpertTeamAssignment).where(
                 ExpertTeamAssignment.hackathon_id == hackathon_id,
@@ -125,7 +133,7 @@ async def bulk_create_assignments(
             )
         )
         if existing.scalar_one_or_none():
-            continue
+            continue  # Skip existing assignments
         
         new_assignment = ExpertTeamAssignment(
             hackathon_id=hackathon_id,

@@ -4,8 +4,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from typing import Optional
 from uuid import UUID
-from app.models.team_result import TeamResult
-from app.schemas.team import AssignedExpertInfo
 
 from app.core.database import get_db
 from app.dependencies.auth import get_current_user, admin_required
@@ -145,6 +143,7 @@ async def create_team(
         updated_at=new_team.updated_at
     )
 
+
 @router.get("/{team_id}", response_model=TeamDetailResponse)
 async def get_team(
     hackathon_id: UUID,
@@ -169,43 +168,9 @@ async def get_team(
     
     # Get team result
     result_result = await db.execute(
-        select(TeamResult).where(
-            TeamResult.team_id == team_id,
-            TeamResult.hackathon_id == hackathon_id
-        )
+        select(TeamResult).where(TeamResult.team_id == team_id)
     )
     team_result = result_result.scalar_one_or_none()
-    
-    # Get assigned experts
-    from app.models.expert_team_assignment import ExpertTeamAssignment
-    from app.models.evaluation import Evaluation
-    
-    experts_query = (
-        select(ExpertTeamAssignment, User, Evaluation)
-        .join(User, ExpertTeamAssignment.expert_user_id == User.id)
-        .outerjoin(
-            Evaluation,
-            (Evaluation.hackathon_id == ExpertTeamAssignment.hackathon_id) &
-            (Evaluation.expert_user_id == ExpertTeamAssignment.expert_user_id) &
-            (Evaluation.team_id == ExpertTeamAssignment.team_id)
-        )
-        .where(
-            ExpertTeamAssignment.hackathon_id == hackathon_id,
-            ExpertTeamAssignment.team_id == team_id
-        )
-    )
-    
-    experts_result = await db.execute(experts_query)
-    experts_rows = experts_result.all()
-    
-    assigned_experts = []
-    for assignment, expert, evaluation in experts_rows:
-        assigned_experts.append({
-            "expert_id": expert.id,
-            "expert_name": expert.full_name,
-            "evaluation_status": evaluation.status.value if evaluation else "not_started",
-            "evaluation_id": evaluation.id if evaluation else None
-        })
     
     member_responses = [
         TeamMemberResponse(
@@ -231,7 +196,6 @@ async def get_team(
         project_title=team.project_title,
         description=team.description,
         members=member_responses,
-        assigned_experts=assigned_experts if assigned_experts else [],
         evaluation_status=team_result.status.value if team_result else None,
         final_score=float(team_result.final_score) if team_result else None,
         place=team_result.place if team_result else None,

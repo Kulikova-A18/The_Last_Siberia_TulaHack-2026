@@ -1,76 +1,58 @@
 # backend/app/schemas/__init__.py
-from app.schemas.auth import (
-    LoginRequest, TokenResponse, RefreshTokenRequest, 
-    ChangePasswordRequest, UserInfo
-)
-from app.schemas.user import (
-    UserCreate, UserUpdate, UserResponse, UserListResponse,
-    ResetPasswordRequest as UserResetPasswordRequest
-)
-from app.schemas.hackathon import (
-    HackathonCreate, HackathonUpdate, HackathonResponse
-)
+from app.schemas.auth import LoginRequest, TokenResponse, UserInfo, ChangePasswordRequest, RefreshTokenRequest
+from app.schemas.user import UserCreate, UserUpdate, UserResponse, UserListResponse, ResetPasswordRequest
+from app.schemas.role import RoleResponse, PermissionResponse
+from app.schemas.hackathon import HackathonCreate, HackathonUpdate, HackathonResponse
 from app.schemas.team import (
-    TeamCreate, TeamUpdate, TeamResponse, TeamListResponse,
-    TeamDetailResponse, TeamMemberCreate, TeamMemberUpdate,
-    TeamMemberResponse, AssignedExpertInfo
+    TeamCreate, TeamUpdate, TeamResponse, TeamListResponse, TeamDetailResponse,
+    TeamMemberCreate, TeamMemberUpdate, TeamMemberResponse, TeamAccount
 )
 from app.schemas.criterion import (
-    CriterionCreate, CriterionUpdate, CriterionResponse,
-    CriteriaListResponse, CriteriaReorderRequest
+    CriterionCreate, CriterionUpdate, CriterionResponse, 
+    CriteriaListResponse, CriteriaReorderRequest, CriteriaReorderItem
 )
-from app.schemas.assignment import (
-    AssignmentCreate, AssignmentBulkCreate, AssignmentResponse
-)
+from app.schemas.assignment import AssignmentCreate, AssignmentBulkCreate, AssignmentBulkItem, AssignmentResponse
 from app.schemas.evaluation import (
-    EvaluationDraftRequest, EvaluationSubmitRequest,
-    EvaluationResponse, MyEvaluationResponse,
+    EvaluationDraftRequest, EvaluationSubmitRequest, EvaluationItemRequest,
+    EvaluationResponse, EvaluationItemResponse, MyEvaluationResponse, 
     AssignedTeamResponse, AssignedTeamListResponse
 )
-from app.schemas.deadline import (
-    DeadlineCreate, DeadlineUpdate, DeadlineResponse, TimerResponse
-)
 from app.schemas.result import (
-    LeaderboardResponse, TeamResultDetailResponse, WinnersResponse
+    LeaderboardResponse, LeaderboardItem, TeamResultDetailResponse, 
+    WinnersResponse, WinnersItem, CriterionBreakdown
+)
+from app.schemas.deadline import (
+    DeadlineCreate, DeadlineUpdate, DeadlineResponse, TimerResponse, NextDeadlineResponse
 )
 from app.schemas.public import (
-    PublicHackathonResponse, PublicLeaderboardResponse,
-    PublicTimerResponse, PublicWinnersResponse, PublicLeaderboardItem
+    PublicLeaderboardResponse, PublicLeaderboardItem, PublicTimerResponse, 
+    PublicWinnersResponse, PublicHackathonResponse
 )
-from app.schemas.role import RoleResponse, PermissionResponse
+from app.schemas.dashboard import (
+    AdminDashboardResponse, ExpertDashboardResponse, TeamDashboardResponse, 
+    ExpertsProgressItem, NextDeadlineItem, LeaderboardTopItem
+)
 from app.schemas.audit import AuditLogResponse, AuditLogListResponse
 
 __all__ = [
-    # Auth
-    "LoginRequest", "TokenResponse", "RefreshTokenRequest",
-    "ChangePasswordRequest", "UserInfo",
-    # User
-    "UserCreate", "UserUpdate", "UserResponse", "UserListResponse",
-    "UserResetPasswordRequest",
-    # Hackathon
-    "HackathonCreate", "HackathonUpdate", "HackathonResponse",
-    # Team
-    "TeamCreate", "TeamUpdate", "TeamResponse", "TeamListResponse",
-    "TeamDetailResponse", "TeamMemberCreate", "TeamMemberUpdate",
-    "TeamMemberResponse", "AssignedExpertInfo",
-    # Criterion
-    "CriterionCreate", "CriterionUpdate", "CriterionResponse",
-    "CriteriaListResponse", "CriteriaReorderRequest",
-    # Assignment
-    "AssignmentCreate", "AssignmentBulkCreate", "AssignmentResponse",
-    # Evaluation
-    "EvaluationDraftRequest", "EvaluationSubmitRequest",
-    "EvaluationResponse", "MyEvaluationResponse",
-    "AssignedTeamResponse", "AssignedTeamListResponse",
-    # Deadline
-    "DeadlineCreate", "DeadlineUpdate", "DeadlineResponse", "TimerResponse",
-    # Result
-    "LeaderboardResponse", "TeamResultDetailResponse", "WinnersResponse",
-    # Public
-    "PublicHackathonResponse", "PublicLeaderboardResponse",
-    "PublicTimerResponse", "PublicWinnersResponse", "PublicLeaderboardItem",
-    # Role
+    "LoginRequest", "TokenResponse", "UserInfo", "ChangePasswordRequest", "RefreshTokenRequest",
+    "UserCreate", "UserUpdate", "UserResponse", "UserListResponse", "ResetPasswordRequest",
     "RoleResponse", "PermissionResponse",
-    # Audit
-    "AuditLogResponse", "AuditLogListResponse",
+    "HackathonCreate", "HackathonUpdate", "HackathonResponse",
+    "TeamCreate", "TeamUpdate", "TeamResponse", "TeamListResponse", "TeamDetailResponse",
+    "TeamMemberCreate", "TeamMemberUpdate", "TeamMemberResponse", "TeamAccount",
+    "CriterionCreate", "CriterionUpdate", "CriterionResponse", "CriteriaListResponse",
+    "CriteriaReorderRequest", "CriteriaReorderItem",
+    "AssignmentCreate", "AssignmentBulkCreate", "AssignmentBulkItem", "AssignmentResponse",
+    "EvaluationDraftRequest", "EvaluationSubmitRequest", "EvaluationItemRequest",
+    "EvaluationResponse", "EvaluationItemResponse", "MyEvaluationResponse",
+    "AssignedTeamResponse", "AssignedTeamListResponse",
+    "LeaderboardResponse", "LeaderboardItem", "TeamResultDetailResponse",
+    "WinnersResponse", "WinnersItem", "CriterionBreakdown",
+    "DeadlineCreate", "DeadlineUpdate", "DeadlineResponse", "TimerResponse", "NextDeadlineResponse",
+    "PublicLeaderboardResponse", "PublicLeaderboardItem", "PublicTimerResponse",
+    "PublicWinnersResponse", "PublicHackathonResponse",
+    "AdminDashboardResponse", "ExpertDashboardResponse", "TeamDashboardResponse",
+    "ExpertsProgressItem", "NextDeadlineItem", "LeaderboardTopItem",
+    "AuditLogResponse", "AuditLogListResponse"
 ]

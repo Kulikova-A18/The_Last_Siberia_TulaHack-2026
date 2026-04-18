@@ -1,54 +1,49 @@
 # backend/app/schemas/result.py
 from pydantic import BaseModel
-from typing import Optional, List
 from uuid import UUID
+from typing import Optional, List
 from datetime import datetime
-
 
 class LeaderboardItem(BaseModel):
     place: int
     team_id: UUID
     team_name: str
-    project_title: Optional[str] = None
+    project_title: str
     final_score: float
-    evaluated_by_count: int = 0
-    status: Optional[str] = None  # Принимает строку
-    
-    class Config:
-        from_attributes = True
-
+    evaluated_by_count: int
+    status: str
 
 class LeaderboardResponse(BaseModel):
     published: bool
     frozen: bool
-    items: List[LeaderboardItem] = []
+    items: List[LeaderboardItem]
     updated_at: Optional[datetime] = None
 
-class CriteriaBreakdownItem(BaseModel):
+class CriterionBreakdown(BaseModel):
     criterion_id: UUID
     title: str
-    avg_raw_score: float
-    avg_normalized_score: float
-    weighted_score: float
     weight_percent: float
     max_score: float
-
+    avg_raw_score: float
+    weighted_score: float
 
 class TeamResultDetailResponse(BaseModel):
     team_id: UUID
-    final_score: float
+    team_name: str
     place: Optional[int] = None
-    evaluated_by_count: int = 0
-    criteria_breakdown: List[dict] = []
+    final_score: float
+    criteria_breakdown: List[CriterionBreakdown]
+    experts_count: int
+    status: str
+    published: bool
 
-
-class WinnerItem(BaseModel):
+class WinnersItem(BaseModel):
     place: int
     team_id: UUID
     team_name: str
     final_score: float
-
+    project_title: str
 
 class WinnersResponse(BaseModel):
-    items: List[dict] = []
-    total_teams: int = 0
+    items: List[WinnersItem]
+    total_teams: int

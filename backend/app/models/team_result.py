@@ -11,7 +11,8 @@ class ResultStatus(str, Enum):
     NOT_STARTED = "not_started"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
-    
+
+
 class TeamResult(Base, IDMixin, TimestampMixin):
     __tablename__ = "team_results"
     
@@ -21,7 +22,7 @@ class TeamResult(Base, IDMixin, TimestampMixin):
     final_score = Column(Numeric(7, 3), default=0, nullable=False)
     place = Column(Integer, nullable=True)
     evaluated_by_count = Column(Integer, default=0, nullable=False)
-    status = Column(PgEnum(ResultStatus, name="result_status", create_type=False), default=ResultStatus.NOT_STARTED, nullable=False)
+    status = Column(PgEnum(ResultStatus), default=ResultStatus.NOT_STARTED, nullable=False)
     recalculated_at = Column(DateTime(timezone=True), nullable=True)
     
     # Relationships
@@ -46,6 +47,7 @@ class TeamResult(Base, IDMixin, TimestampMixin):
         CheckConstraint("place IS NULL OR place > 0", name="team_results_place_chk"),
         CheckConstraint("evaluated_by_count >= 0", name="team_results_evaluated_by_chk"),
     )
+
 
 class TeamResultItem(Base, IDMixin, TimestampMixin):
     __tablename__ = "team_result_items"

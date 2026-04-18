@@ -22,6 +22,7 @@ from app.schemas.evaluation import (
 
 router = APIRouter(prefix="/hackathons/{hackathon_id}", tags=["Evaluations"])
 
+
 @router.get("/my/assigned-teams", response_model=AssignedTeamListResponse)
 async def get_my_assigned_teams(
     hackathon_id: UUID,
@@ -32,45 +33,32 @@ async def get_my_assigned_teams(
     db: AsyncSession = Depends(get_db)
 ):
     """Get teams assigned to current expert"""
-    assignments_query = (
-        select(ExpertTeamAssignment)
+    query = (
+        select(Team, Evaluation)
+        .join(ExpertTeamAssignment, 
+              (ExpertTeamAssignment.team_id == Team.id) & 
+              (ExpertTeamAssignment.hackathon_id == Team.hackathon_id))
+        .outerjoin(Evaluation,
+                   (Evaluation.team_id == Team.id) &
+                   (Evaluation.hackathon_id == hackathon_id) &
+                   (Evaluation.expert_user_id == current_user.id))
         .where(
             ExpertTeamAssignment.hackathon_id == hackathon_id,
             ExpertTeamAssignment.expert_user_id == current_user.id
         )
     )
     
-    assignments_result = await db.execute(assignments_query)
-    assignments = assignments_result.scalars().all()
+    result = await db.execute(query)
+    rows = result.all()
     
     items = []
-    for assignment in assignments:
-        team_result = await db.execute(
-            select(Team).where(
-                Team.id == assignment.team_id,
-                Team.hackathon_id == hackathon_id
-            )
-        )
-        team = team_result.scalar_one_or_none()
-        
-        if not team:
-            continue
-        
-        eval_result = await db.execute(
-            select(Evaluation).where(
-                Evaluation.hackathon_id == hackathon_id,
-                Evaluation.expert_user_id == current_user.id,
-                Evaluation.team_id == team.id
-            )
-        )
-        evaluation = eval_result.scalar_one_or_none()
-        
+    for team, evaluation in rows:
         eval_status = evaluation.status.value if evaluation else "not_started"
         submitted_at = evaluation.submitted_at if evaluation else None
         
         if status and eval_status != status:
             continue
-        
+            
         items.append(AssignedTeamResponse(
             team_id=team.id,
             team_name=team.name,
