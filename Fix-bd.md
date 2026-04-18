@@ -11,403 +11,456 @@ sudo docker-compose exec postgres psql -U hackathon_admin -d hackathon_db -f /do
 sudo docker-compose exec postgres psql -U hackathon_admin -d hackathon_db -f /docker-entrypoint-initdb.d/02-seed.sql
 sudo docker-compose exec postgres psql -U hackathon_admin -d hackathon_db -f /docker-entrypoint-initdb.d/03-indexes.sql
 sudo docker-compose exec postgres psql -U hackathon_admin -d hackathon_db -f /docker-entrypoint-initdb.d/04-fix-status-migration.sql
+
 ```
 
-### Шаг 1. Подключение к базе данных
-
-Для начала работы необходимо подключиться к PostgreSQL внутри Docker контейнера:
+### Шаг 1
 
 ```bash
+-- Подключаемся к базе
 sudo docker-compose exec postgres psql -U hackathon_admin -d hackathon_db
+
+-- 1. Создаем команды для CyberDef хакатона
+INSERT INTO teams (id, hackathon_id, name, captain_name, contact_email, contact_phone, project_title, description)
+VALUES
+    (gen_random_uuid(), 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44', 'ZeroDay Hunters', 'Иван Петров', 'zeroday@example.com', '+79006667788', 'Threat Intelligence System', 'AI-powered cyber threat prediction platform'),
+    (gen_random_uuid(), 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44', 'Crypto Guardians', 'Елена Чен', 'crypto@example.com', '+79007778899', 'Post-Quantum Cryptography', 'Quantum-resistant encryption library'),
+    (gen_random_uuid(), 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44', 'Privacy Defenders', 'Ахмед Хасанов', 'privacy@example.com', '+79008889900', 'Anonymous Credentials', 'Zero-knowledge proof verification system');
+
+-- 2. Проверяем созданные команды
+SELECT id, name FROM teams WHERE hackathon_id = 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44';
+
+-- 3. Создаем назначения экспертов для команд
+-- Получаем ID экспертов
+SELECT id, login FROM users WHERE login IN ('expert4', 'expert5');
+
+-- Создаем назначения (используйте реальные ID из предыдущего запроса)
+-- expert4 (Анна Морозова) проверяет ZeroDay Hunters
+INSERT INTO expert_team_assignments (id, hackathon_id, expert_user_id, team_id, assigned_at)
+SELECT
+    gen_random_uuid(),
+    'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44',
+    (SELECT id FROM users WHERE login = 'expert4'),
+    (SELECT id FROM teams WHERE name = 'ZeroDay Hunters' AND hackathon_id = 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44'),
+    NOW();
+
+-- expert4 и expert5 проверяют Crypto Guardians
+INSERT INTO expert_team_assignments (id, hackathon_id, expert_user_id, team_id, assigned_at)
+SELECT
+    gen_random_uuid(),
+    'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44',
+    (SELECT id FROM users WHERE login = 'expert4'),
+    (SELECT id FROM teams WHERE name = 'Crypto Guardians' AND hackathon_id = 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44'),
+    NOW();
+
+INSERT INTO expert_team_assignments (id, hackathon_id, expert_user_id, team_id, assigned_at)
+SELECT
+    gen_random_uuid(),
+    'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44',
+    (SELECT id FROM users WHERE login = 'expert5'),
+    (SELECT id FROM teams WHERE name = 'Crypto Guardians' AND hackathon_id = 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44'),
+    NOW();
+
+-- expert5 проверяет Privacy Defenders
+INSERT INTO expert_team_assignments (id, hackathon_id, expert_user_id, team_id, assigned_at)
+SELECT
+    gen_random_uuid(),
+    'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44',
+    (SELECT id FROM users WHERE login = 'expert5'),
+    (SELECT id FROM teams WHERE name = 'Privacy Defenders' AND hackathon_id = 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44'),
+    NOW();
+
+-- 4. Проверяем назначения
+SELECT COUNT(*) FROM expert_team_assignments WHERE hackathon_id = 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44';
+
+-- 5. Создаем оценки (evaluations) для команд
+-- Оценка для ZeroDay Hunters от expert4
+INSERT INTO evaluations (id, hackathon_id, expert_user_id, team_id, status, overall_comment, submitted_at)
+VALUES (
+    gen_random_uuid(),
+    'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44',
+    (SELECT id FROM users WHERE login = 'expert4'),
+    (SELECT id FROM teams WHERE name = 'ZeroDay Hunters' AND hackathon_id = 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44'),
+    'submitted',
+    'Excellent threat detection capabilities! Very innovative approach.',
+    NOW()
+);
+
+-- Оценка для Crypto Guardians от expert4
+INSERT INTO evaluations (id, hackathon_id, expert_user_id, team_id, status, overall_comment, submitted_at)
+VALUES (
+    gen_random_uuid(),
+    'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44',
+    (SELECT id FROM users WHERE login = 'expert4'),
+    (SELECT id FROM teams WHERE name = 'Crypto Guardians' AND hackathon_id = 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44'),
+    'submitted',
+    'Strong cryptographic implementation, good performance.',
+    NOW()
+);
+
+-- Оценка для Crypto Guardians от expert5
+INSERT INTO evaluations (id, hackathon_id, expert_user_id, team_id, status, overall_comment, submitted_at)
+VALUES (
+    gen_random_uuid(),
+    'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44',
+    (SELECT id FROM users WHERE login = 'expert5'),
+    (SELECT id FROM teams WHERE name = 'Crypto Guardians' AND hackathon_id = 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44'),
+    'submitted',
+    'Excellent quantum-resistant algorithms, well documented.',
+    NOW()
+);
+
+-- Оценка для Privacy Defenders от expert5
+INSERT INTO evaluations (id, hackathon_id, expert_user_id, team_id, status, overall_comment, submitted_at)
+VALUES (
+    gen_random_uuid(),
+    'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44',
+    (SELECT id FROM users WHERE login = 'expert5'),
+    (SELECT id FROM teams WHERE name = 'Privacy Defenders' AND hackathon_id = 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44'),
+    'submitted',
+    'Innovative zero-knowledge proof system, great potential.',
+    NOW()
+);
+
+-- 6. Добавляем баллы по критериям для оценок
+-- Для ZeroDay Hunters (критерии: эффективность защиты, качество кода, удобство использования)
+INSERT INTO evaluation_items (evaluation_id, criterion_id, raw_score, comment)
+SELECT
+    e.id,
+    c.id,
+    CASE c.title
+        WHEN 'Эффективность защиты' THEN 9.5
+        WHEN 'Качество кода' THEN 8.5
+        WHEN 'Удобство использования' THEN 9.0
+    END,
+    CASE c.title
+        WHEN 'Эффективность защиты' THEN 'Excellent threat detection algorithms'
+        WHEN 'Качество кода' THEN 'Clean code, good structure'
+        WHEN 'Удобство использования' THEN 'Easy to deploy and configure'
+    END
+FROM evaluations e
+CROSS JOIN criteria c
+WHERE e.hackathon_id = 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44'
+  AND e.expert_user_id = (SELECT id FROM users WHERE login = 'expert4')
+  AND e.team_id = (SELECT id FROM teams WHERE name = 'ZeroDay Hunters' AND hackathon_id = 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44')
+  AND c.hackathon_id = 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44';
+
+-- Для Crypto Guardians от expert4
+INSERT INTO evaluation_items (evaluation_id, criterion_id, raw_score, comment)
+SELECT
+    e.id,
+    c.id,
+    CASE c.title
+        WHEN 'Эффективность защиты' THEN 8.0
+        WHEN 'Качество кода' THEN 9.0
+        WHEN 'Удобство использования' THEN 7.5
+    END,
+    CASE c.title
+        WHEN 'Эффективность защиты' THEN 'Good protection level'
+        WHEN 'Качество кода' THEN 'Well-structured code'
+        WHEN 'Удобство использования' THEN 'Documentation could be improved'
+    END
+FROM evaluations e
+CROSS JOIN criteria c
+WHERE e.hackathon_id = 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44'
+  AND e.expert_user_id = (SELECT id FROM users WHERE login = 'expert4')
+  AND e.team_id = (SELECT id FROM teams WHERE name = 'Crypto Guardians' AND hackathon_id = 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44')
+  AND c.hackathon_id = 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44';
+
+-- Для Crypto Guardians от expert5
+INSERT INTO evaluation_items (evaluation_id, criterion_id, raw_score, comment)
+SELECT
+    e.id,
+    c.id,
+    CASE c.title
+        WHEN 'Эффективность защиты' THEN 8.5
+        WHEN 'Качество кода' THEN 9.5
+        WHEN 'Удобство использования' THEN 8.0
+    END,
+    CASE c.title
+        WHEN 'Эффективность защиты' THEN 'Strong encryption'
+        WHEN 'Качество кода' THEN 'Excellent implementation'
+        WHEN 'Удобство использования' THEN 'Good API design'
+    END
+FROM evaluations e
+CROSS JOIN criteria c
+WHERE e.hackathon_id = 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44'
+  AND e.expert_user_id = (SELECT id FROM users WHERE login = 'expert5')
+  AND e.team_id = (SELECT id FROM teams WHERE name = 'Crypto Guardians' AND hackathon_id = 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44')
+  AND c.hackathon_id = 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44';
+
+-- Для Privacy Defenders от expert5
+INSERT INTO evaluation_items (evaluation_id, criterion_id, raw_score, comment)
+SELECT
+    e.id,
+    c.id,
+    CASE c.title
+        WHEN 'Эффективность защиты' THEN 9.0
+        WHEN 'Качество кода' THEN 8.0
+        WHEN 'Удобство использования' THEN 9.5
+    END,
+    CASE c.title
+        WHEN 'Эффективность защиты' THEN 'Great privacy protection'
+        WHEN 'Качество кода' THEN 'Good implementation'
+        WHEN 'Удобство использования' THEN 'Very user-friendly'
+    END
+FROM evaluations e
+CROSS JOIN criteria c
+WHERE e.hackathon_id = 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44'
+  AND e.expert_user_id = (SELECT id FROM users WHERE login = 'expert5')
+  AND e.team_id = (SELECT id FROM teams WHERE name = 'Privacy Defenders' AND hackathon_id = 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44')
+  AND c.hackathon_id = 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44';
+
+-- 7. Создаем результаты команд (leaderboard)
+INSERT INTO team_results (id, hackathon_id, team_id, final_score, place, evaluated_by_count, status, recalculated_at)
+VALUES
+    (
+        gen_random_uuid(),
+        'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44',
+        (SELECT id FROM teams WHERE name = 'ZeroDay Hunters' AND hackathon_id = 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44'),
+        90.0,
+        1,
+        1,
+        'completed'::result_status,
+        NOW()
+    ),
+    (
+        gen_random_uuid(),
+        'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44',
+        (SELECT id FROM teams WHERE name = 'Crypto Guardians' AND hackathon_id = 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44'),
+        85.5,
+        2,
+        2,
+        'completed'::result_status,
+        NOW()
+    ),
+    (
+        gen_random_uuid(),
+        'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44',
+        (SELECT id FROM teams WHERE name = 'Privacy Defenders' AND hackathon_id = 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44'),
+        88.0,
+        3,
+        1,
+        'completed'::result_status,
+        NOW()
+    );
+
+-- 8. Обновляем метаданные хакатона
+UPDATE hackathons
+SET leaderboard_updated_at = NOW(),
+    results_published = TRUE
+WHERE id = 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44';
+
+-- 9. Финальная проверка
+SELECT
+    'CyberDef Teams' as metric,
+    COUNT(*) as value
+FROM teams
+WHERE hackathon_id = 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44'
+
+UNION ALL
+
+SELECT
+    'Expert Assignments',
+    COUNT(*)
+FROM expert_team_assignments
+WHERE hackathon_id = 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44'
+
+UNION ALL
+
+SELECT
+    'Evaluations',
+    COUNT(*)
+FROM evaluations
+WHERE hackathon_id = 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44'
+
+UNION ALL
+
+SELECT
+    'Team Results',
+    COUNT(*)
+FROM team_results
+WHERE hackathon_id = 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44';
+
+-- 10. Просмотр результатов команд
+SELECT t.name, tr.final_score, tr.place, tr.evaluated_by_count, tr.status
+FROM team_results tr
+JOIN teams t ON tr.team_id = t.id
+WHERE tr.hackathon_id = 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44'
+ORDER BY tr.place;
+
+-- Выход
+\q
 ```
 
 После успешного подключения вы увидите приглашение командной строки psql.
 
-### Шаг 2. Создание критериев оценки для AI Challenge
-
-Перед добавлением критериев необходимо удалить мешающий триггер, который может блокировать вставку данных:
+### Шаг 2
 
 ```sql
-DROP TRIGGER IF EXISTS trg_validate_criteria_weights ON criteria;
-DROP FUNCTION IF EXISTS fn_validate_criteria_weights();
-```
+-- Подключаемся к базе
+sudo docker-compose exec postgres psql -U hackathon_admin -d hackathon_db
 
-Удалите существующие критерии для указанного хакатона (если они есть):
+-- 1. Проверяем текущие значения ENUM
+SELECT enumlabel FROM pg_enum WHERE enumtypid = 'result_status'::regtype ORDER BY enumsortorder;
 
-```sql
-DELETE FROM criteria WHERE hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
-```
+-- 2. Если enum имеет значения в нижнем регистре, пересоздаем его
+-- Сначала временно меняем тип колонки на text
+ALTER TABLE team_results ALTER COLUMN status TYPE text;
 
-Выполните вставку новых критериев в рамках одной транзакции:
+-- Удаляем старый enum
+DROP TYPE IF EXISTS result_status CASCADE;
 
-```sql
-BEGIN;
-INSERT INTO criteria (id, hackathon_id, title, description, max_score, weight_percent, sort_order, is_active)
-VALUES
-    (gen_random_uuid(), 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Инновационность', 'Оригинальность и креативность решения', 10.0, 25.0, 1, TRUE),
-    (gen_random_uuid(), 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Техническая сложность', 'Сложность технологического стека и реализации', 10.0, 25.0, 2, TRUE),
-    (gen_random_uuid(), 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Бизнес-ценность', 'Рыночный потенциал и практическая применимость', 10.0, 20.0, 3, TRUE),
-    (gen_random_uuid(), 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Презентация', 'Качество демо и защиты проекта', 10.0, 15.0, 4, TRUE),
-    (gen_random_uuid(), 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Командная работа', 'Взаимодействие и динамика команды', 5.0, 15.0, 5, TRUE);
-COMMIT;
-```
+-- Создаем новый enum с правильными значениями (UPPERCASE)
+CREATE TYPE result_status AS ENUM ('NOT_STARTED', 'IN_PROGRESS', 'COMPLETED');
 
-Проверьте количество созданных критериев:
+-- Обновляем данные в таблице
+UPDATE team_results SET status = 'NOT_STARTED' WHERE status = 'not_started' OR status = 'NOT_STARTED';
+UPDATE team_results SET status = 'IN_PROGRESS' WHERE status = 'in_progress' OR status = 'IN_PROGRESS';
+UPDATE team_results SET status = 'COMPLETED' WHERE status = 'completed' OR status = 'COMPLETED';
 
-```sql
-SELECT COUNT(*) FROM criteria WHERE hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
-```
+-- Возвращаем тип колонке
+ALTER TABLE team_results ALTER COLUMN status TYPE result_status USING status::result_status;
 
-### Шаг 3. Проверка и создание экспертов
+-- 3. Проверяем результат
+SELECT DISTINCT status FROM team_results;
 
-Проверьте наличие всех необходимых экспертов в системе:
+-- 4. Исправляем deadline_kind enum
+-- Проверяем текущие значения
+SELECT enumlabel FROM pg_enum WHERE enumtypid = 'deadline_kind'::regtype ORDER BY enumsortorder;
 
-```sql
-SELECT id, login, full_name FROM users WHERE role_id = (SELECT id FROM roles WHERE code = 'expert');
-```
+-- Временно меняем тип колонки
+ALTER TABLE deadlines ALTER COLUMN kind TYPE text;
 
-Если экспертов недостаточно, создайте их:
+-- Удаляем старый enum
+DROP TYPE IF EXISTS deadline_kind CASCADE;
 
-```sql
-INSERT INTO users (id, login, password_hash, full_name, email, role_id, is_active)
+-- Создаем новый enum с правильными значениями (UPPERCASE)
+CREATE TYPE deadline_kind AS ENUM ('REGISTRATION', 'DEVELOPMENT', 'PITCH', 'EVALUATION', 'CUSTOM');
+
+-- Обновляем данные
+UPDATE deadlines SET kind = 'REGISTRATION' WHERE kind = 'registration' OR kind = 'REGISTRATION';
+UPDATE deadlines SET kind = 'DEVELOPMENT' WHERE kind = 'development' OR kind = 'DEVELOPMENT';
+UPDATE deadlines SET kind = 'PITCH' WHERE kind = 'pitch' OR kind = 'PITCH';
+UPDATE deadlines SET kind = 'EVALUATION' WHERE kind = 'evaluation' OR kind = 'EVALUATION';
+UPDATE deadlines SET kind = 'CUSTOM' WHERE kind = 'custom' OR kind = 'CUSTOM';
+
+-- Возвращаем тип колонке
+ALTER TABLE deadlines ALTER COLUMN kind TYPE deadline_kind USING kind::deadline_kind;
+
+-- 5. Проверяем результаты
 SELECT
-    gen_random_uuid(),
-    'expert1',
-    encode(sha256('Expert123!'::bytea), 'hex'),
-    'Алексей Смирнов',
-    'alexey.smirnov@example.com',
-    (SELECT id FROM roles WHERE code = 'expert'),
-    TRUE
-WHERE NOT EXISTS (SELECT 1 FROM users WHERE login = 'expert1');
+    'result_status enum' as enum_name,
+    string_agg(enumlabel, ', ') as values
+FROM pg_enum
+WHERE enumtypid = 'result_status'::regtype
+GROUP BY enumtypid;
 
-INSERT INTO users (id, login, password_hash, full_name, email, role_id, is_active)
 SELECT
-    gen_random_uuid(),
-    'expert2',
-    encode(sha256('Expert123!'::bytea), 'hex'),
-    'Елена Козлова',
-    'elena.kozlova@example.com',
-    (SELECT id FROM roles WHERE code = 'expert'),
-    TRUE
-WHERE NOT EXISTS (SELECT 1 FROM users WHERE login = 'expert2');
+    'deadline_kind enum' as enum_name,
+    string_agg(enumlabel, ', ') as values
+FROM pg_enum
+WHERE enumtypid = 'deadline_kind'::regtype
+GROUP BY enumtypid;
 
-INSERT INTO users (id, login, password_hash, full_name, email, role_id, is_active)
-SELECT
-    gen_random_uuid(),
-    'expert3',
-    encode(sha256('Expert123!'::bytea), 'hex'),
-    'Михаил Волков',
-    'mikhail.volkov@example.com',
-    (SELECT id FROM roles WHERE code = 'expert'),
-    TRUE
-WHERE NOT EXISTS (SELECT 1 FROM users WHERE login = 'expert3');
+-- 6. Проверяем данные в таблицах
+SELECT COUNT(*) FROM team_results WHERE hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
+SELECT COUNT(*) FROM deadlines WHERE hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
 
-INSERT INTO users (id, login, password_hash, full_name, email, role_id, is_active)
-SELECT
-    gen_random_uuid(),
-    'expert4',
-    encode(sha256('Expert123!'::bytea), 'hex'),
-    'Анна Морозова',
-    'anna.morozova@example.com',
-    (SELECT id FROM roles WHERE code = 'expert'),
-    TRUE
-WHERE NOT EXISTS (SELECT 1 FROM users WHERE login = 'expert4');
-
-INSERT INTO users (id, login, password_hash, full_name, email, role_id, is_active)
-SELECT
-    gen_random_uuid(),
-    'expert5',
-    encode(sha256('Expert123!'::bytea), 'hex'),
-    'Дмитрий Новиков',
-    'dmitry.novikov@example.com',
-    (SELECT id FROM roles WHERE code = 'expert'),
-    TRUE
-WHERE NOT EXISTS (SELECT 1 FROM users WHERE login = 'expert5');
-```
-
-### Шаг 4. Создание команд-участников
-
-Перед созданием команд проверьте существующие:
-
-```sql
-SELECT id, name FROM teams WHERE hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
-```
-
-Создайте десять команд-участников:
-
-```sql
-INSERT INTO teams (id, hackathon_id, name, description, created_at)
-VALUES
-    (gen_random_uuid(), 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'КиберМаги', 'Команда специалистов по искусственному интеллекту', NOW()),
-    (gen_random_uuid(), 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Данные Визионеры', 'Эксперты в анализе данных и машинном обучении', NOW()),
-    (gen_random_uuid(), 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Нейронные Ниндзя', 'Разработчики нейросетевых решений', NOW()),
-    (gen_random_uuid(), 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Алгоритм Мастера', 'Специалисты по созданию эффективных алгоритмов', NOW()),
-    (gen_random_uuid(), 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Квантовый Скачок', 'Исследователи в области квантовых вычислений', NOW()),
-    (gen_random_uuid(), 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Облачные Стражи', 'Эксперты по облачным технологиям и DevOps', NOW()),
-    (gen_random_uuid(), 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Робототехники', 'Разработчики роботизированных систем', NOW()),
-    (gen_random_uuid(), 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Блокчейн Пионеры', 'Специалисты по распределенным реестрам', NOW()),
-    (gen_random_uuid(), 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'КиберЗащитники', 'Эксперты в области кибербезопасности', NOW()),
-    (gen_random_uuid(), 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'UX Гении', 'Дизайнеры пользовательских интерфейсов', NOW());
-```
-
-Получите UUID созданных команд для дальнейшего использования:
-
-```sql
-SELECT id, name FROM teams WHERE hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11' ORDER BY name;
-```
-
-### Шаг 5. Назначение экспертов командам
-
-Очистите старые назначения для указанного хакатона:
-
-```sql
-DELETE FROM expert_team_assignments WHERE hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
-```
-
-Создайте назначения для всех команд (каждую команду оценивают 2-3 эксперта):
-
-```sql
--- Назначения для команды КиберМаги
-INSERT INTO expert_team_assignments (id, hackathon_id, expert_user_id, team_id, assigned_at)
-SELECT gen_random_uuid(), 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', u.id, t.id, NOW()
-FROM users u, teams t
-WHERE u.login IN ('expert1', 'expert2') AND t.name = 'КиберМаги' AND t.hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
-
--- Назначения для команды Данные Визионеры
-INSERT INTO expert_team_assignments (id, hackathon_id, expert_user_id, team_id, assigned_at)
-SELECT gen_random_uuid(), 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', u.id, t.id, NOW()
-FROM users u, teams t
-WHERE u.login IN ('expert1', 'expert3') AND t.name = 'Данные Визионеры' AND t.hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
-
--- Назначения для команды Нейронные Ниндзя
-INSERT INTO expert_team_assignments (id, hackathon_id, expert_user_id, team_id, assigned_at)
-SELECT gen_random_uuid(), 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', u.id, t.id, NOW()
-FROM users u, teams t
-WHERE u.login IN ('expert2', 'expert4') AND t.name = 'Нейронные Ниндзя' AND t.hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
-
--- Назначения для команды Алгоритм Мастера
-INSERT INTO expert_team_assignments (id, hackathon_id, expert_user_id, team_id, assigned_at)
-SELECT gen_random_uuid(), 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', u.id, t.id, NOW()
-FROM users u, teams t
-WHERE u.login IN ('expert3', 'expert5') AND t.name = 'Алгоритм Мастера' AND t.hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
-
--- Назначения для команды Квантовый Скачок
-INSERT INTO expert_team_assignments (id, hackathon_id, expert_user_id, team_id, assigned_at)
-SELECT gen_random_uuid(), 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', u.id, t.id, NOW()
-FROM users u, teams t
-WHERE u.login IN ('expert1', 'expert4') AND t.name = 'Квантовый Скачок' AND t.hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
-
--- Назначения для команды Облачные Стражи
-INSERT INTO expert_team_assignments (id, hackathon_id, expert_user_id, team_id, assigned_at)
-SELECT gen_random_uuid(), 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', u.id, t.id, NOW()
-FROM users u, teams t
-WHERE u.login IN ('expert2', 'expert5') AND t.name = 'Облачные Стражи' AND t.hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
-
--- Назначения для команды Робототехники
-INSERT INTO expert_team_assignments (id, hackathon_id, expert_user_id, team_id, assigned_at)
-SELECT gen_random_uuid(), 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', u.id, t.id, NOW()
-FROM users u, teams t
-WHERE u.login IN ('expert3', 'expert4') AND t.name = 'Робототехники' AND t.hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
-
--- Назначения для команды Блокчейн Пионеры
-INSERT INTO expert_team_assignments (id, hackathon_id, expert_user_id, team_id, assigned_at)
-SELECT gen_random_uuid(), 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', u.id, t.id, NOW()
-FROM users u, teams t
-WHERE u.login IN ('expert1', 'expert5') AND t.name = 'Блокчейн Пионеры' AND t.hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
-
--- Назначения для команды КиберЗащитники
-INSERT INTO expert_team_assignments (id, hackathon_id, expert_user_id, team_id, assigned_at)
-SELECT gen_random_uuid(), 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', u.id, t.id, NOW()
-FROM users u, teams t
-WHERE u.login IN ('expert2', 'expert3') AND t.name = 'КиберЗащитники' AND t.hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
-
--- Назначения для команды UX Гении
-INSERT INTO expert_team_assignments (id, hackathon_id, expert_user_id, team_id, assigned_at)
-SELECT gen_random_uuid(), 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', u.id, t.id, NOW()
-FROM users u, teams t
-WHERE u.login IN ('expert4', 'expert5') AND t.name = 'UX Гении' AND t.hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
-```
-
-Проверьте количество назначений:
-
-```sql
-SELECT COUNT(*) FROM expert_team_assignments WHERE hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
-```
-
-### Шаг 6. Создание или обновление результатов команд
-
-Сначала проверьте, существуют ли записи в team_results:
-
-```sql
-SELECT * FROM team_results WHERE hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
-```
-
-Если записи отсутствуют, создайте их для всех команд:
-
-```sql
-INSERT INTO team_results (id, hackathon_id, team_id, final_score, place, evaluated_by_count, status)
+-- 7. Создаем дедлайны для AI Challenge если их нет
+INSERT INTO deadlines (id, hackathon_id, kind, title, description, deadline_at, notify_before_minutes)
 SELECT
     gen_random_uuid(),
     'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
-    t.id,
-    CASE
-        WHEN t.name = 'КиберМаги' THEN 94.2
-        WHEN t.name = 'Данные Визионеры' THEN 91.7
-        WHEN t.name = 'Нейронные Ниндзя' THEN 89.3
-        WHEN t.name = 'Алгоритм Мастера' THEN 87.5
-        WHEN t.name = 'Квантовый Скачок' THEN 85.8
-        WHEN t.name = 'Облачные Стражи' THEN 83.1
-        WHEN t.name = 'Робототехники' THEN 80.4
-        WHEN t.name = 'Блокчейн Пионеры' THEN 77.9
-        WHEN t.name = 'КиберЗащитники' THEN 74.6
-        WHEN t.name = 'UX Гении' THEN 71.2
-        ELSE 0
-    END,
-    CASE
-        WHEN t.name = 'КиберМаги' THEN 1
-        WHEN t.name = 'Данные Визионеры' THEN 2
-        WHEN t.name = 'Нейронные Ниндзя' THEN 3
-        WHEN t.name = 'Алгоритм Мастера' THEN 4
-        WHEN t.name = 'Квантовый Скачок' THEN 5
-        WHEN t.name = 'Облачные Стражи' THEN 6
-        WHEN t.name = 'Робототехники' THEN 7
-        WHEN t.name = 'Блокчейн Пионеры' THEN 8
-        WHEN t.name = 'КиберЗащитники' THEN 9
-        WHEN t.name = 'UX Гении' THEN 10
-        ELSE NULL
-    END,
-    2,
-    'IN_PROGRESS'
-FROM teams t
-WHERE t.hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
-  AND NOT EXISTS (
-    SELECT 1 FROM team_results tr
-    WHERE tr.team_id = t.id AND tr.hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
-  );
-```
+    'REGISTRATION',
+    'Registration Deadline',
+    'Team registration closes',
+    NOW() + INTERVAL '1 day',
+    60
+WHERE NOT EXISTS (
+    SELECT 1 FROM deadlines WHERE hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
+);
 
-Если записи существуют, обновите их напрямую:
+INSERT INTO deadlines (id, hackathon_id, kind, title, description, deadline_at, notify_before_minutes)
+SELECT
+    gen_random_uuid(),
+    'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+    'DEVELOPMENT',
+    'Development Phase',
+    'Code development period ends',
+    NOW() + INTERVAL '3 days',
+    120
+WHERE NOT EXISTS (
+    SELECT 1 FROM deadlines WHERE hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11' AND kind = 'DEVELOPMENT'
+);
 
-```sql
--- Обновление для КиберМаги
+INSERT INTO deadlines (id, hackathon_id, kind, title, description, deadline_at, notify_before_minutes)
+SELECT
+    gen_random_uuid(),
+    'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11',
+    'PITCH',
+    'Pitch Submission',
+    'Project presentation submission deadline',
+    NOW() + INTERVAL '5 days',
+    180
+WHERE NOT EXISTS (
+    SELECT 1 FROM deadlines WHERE hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11' AND kind = 'PITCH'
+);
+
+-- 8. Обновляем статусы team_results для AI Challenge
 UPDATE team_results
-SET final_score = 94.2, place = 1, evaluated_by_count = 2, status = 'COMPLETED'
-WHERE team_id = (SELECT id FROM teams WHERE name = 'КиберМаги' AND hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11')
-  AND hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
+SET status = 'COMPLETED'::result_status
+WHERE hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
+AND place <= 3;
 
--- Обновление для Данные Визионеры
 UPDATE team_results
-SET final_score = 91.7, place = 2, evaluated_by_count = 2, status = 'COMPLETED'
-WHERE team_id = (SELECT id FROM teams WHERE name = 'Данные Визионеры' AND hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11')
-  AND hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
+SET status = 'IN_PROGRESS'::result_status
+WHERE hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
+AND place BETWEEN 4 AND 6;
 
--- Обновление для Нейронные Ниндзя
 UPDATE team_results
-SET final_score = 89.3, place = 3, evaluated_by_count = 2, status = 'COMPLETED'
-WHERE team_id = (SELECT id FROM teams WHERE name = 'Нейронные Ниндзя' AND hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11')
-  AND hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
+SET status = 'NOT_STARTED'::result_status
+WHERE hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
+AND place > 6;
 
--- Обновление для Алгоритм Мастера
-UPDATE team_results
-SET final_score = 87.5, place = 4, evaluated_by_count = 2, status = 'COMPLETED'
-WHERE team_id = (SELECT id FROM teams WHERE name = 'Алгоритм Мастера' AND hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11')
-  AND hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
+-- 9. Проверяем финальные результаты
+SELECT t.name, tr.final_score, tr.place, tr.status::text
+FROM team_results tr
+JOIN teams t ON tr.team_id = t.id
+WHERE tr.hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
+ORDER BY tr.place;
 
--- Обновление для Квантовый Скачок
-UPDATE team_results
-SET final_score = 85.8, place = 5, evaluated_by_count = 2, status = 'COMPLETED'
-WHERE team_id = (SELECT id FROM teams WHERE name = 'Квантовый Скачок' AND hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11')
-  AND hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
-
--- Обновление для Облачные Стражи
-UPDATE team_results
-SET final_score = 83.1, place = 6, evaluated_by_count = 2, status = 'IN_PROGRESS'
-WHERE team_id = (SELECT id FROM teams WHERE name = 'Облачные Стражи' AND hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11')
-  AND hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
-
--- Обновление для Робототехники
-UPDATE team_results
-SET final_score = 80.4, place = 7, evaluated_by_count = 2, status = 'IN_PROGRESS'
-WHERE team_id = (SELECT id FROM teams WHERE name = 'Робототехники' AND hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11')
-  AND hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
-
--- Обновление для Блокчейн Пионеры
-UPDATE team_results
-SET final_score = 77.9, place = 8, evaluated_by_count = 2, status = 'IN_PROGRESS'
-WHERE team_id = (SELECT id FROM teams WHERE name = 'Блокчейн Пионеры' AND hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11')
-  AND hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
-
--- Обновление для КиберЗащитники
-UPDATE team_results
-SET final_score = 74.6, place = 9, evaluated_by_count = 2, status = 'NOT_STARTED'
-WHERE team_id = (SELECT id FROM teams WHERE name = 'КиберЗащитники' AND hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11')
-  AND hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
-
--- Обновление для UX Гении
-UPDATE team_results
-SET final_score = 71.2, place = 10, evaluated_by_count = 2, status = 'NOT_STARTED'
-WHERE team_id = (SELECT id FROM teams WHERE name = 'UX Гении' AND hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11')
-  AND hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
-```
-
-### Шаг 7. Приведение статусов к корректному формату
-
-Если статусы хранятся в нижнем регистре, приведите их к формату enum:
-
-```sql
-UPDATE team_results SET status = 'NOT_STARTED' WHERE status = 'not_started';
-UPDATE team_results SET status = 'IN_PROGRESS' WHERE status = 'in_progress';
-UPDATE team_results SET status = 'COMPLETED' WHERE status = 'completed';
-```
-
-### Шаг 8. Обновление метаданных хакатона
-
-Обновите время последнего обновления лидерборда и опубликуйте результаты:
-
-```sql
+-- 10. Обновляем метаданные хакатонов
 UPDATE hackathons
 SET leaderboard_updated_at = NOW(),
     results_published = TRUE
-WHERE id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
-```
+WHERE id IN ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'd3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44');
 
-### Шаг 9. Финальная проверка
-
-Выполните итоговую проверку всех внесенных данных:
-
-```sql
+-- 11. Проверяем все ENUM значения
 SELECT
-    (SELECT COUNT(*) FROM criteria WHERE hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11') as criteria_count,
-    (SELECT COUNT(*) FROM expert_team_assignments WHERE hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11') as assignments_count,
-    (SELECT COUNT(*) FROM team_results WHERE hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11' AND final_score > 0) as results_with_scores;
-```
+    'hackathon_status' as enum_name,
+    string_agg(enumlabel, ', ') as values
+FROM pg_enum
+WHERE enumtypid = 'hackathon_status'::regtype
+UNION ALL
+SELECT
+    'result_status',
+    string_agg(enumlabel, ', ')
+FROM pg_enum
+WHERE enumtypid = 'result_status'::regtype
+UNION ALL
+SELECT
+    'deadline_kind',
+    string_agg(enumlabel, ', ')
+FROM pg_enum
+WHERE enumtypid = 'deadline_kind'::regtype
+UNION ALL
+SELECT
+    'evaluation_status',
+    string_agg(enumlabel, ', ')
+FROM pg_enum
+WHERE enumtypid = 'evaluation_status'::regtype;
 
-Проверьте результаты всех команд:
-
-```sql
-SELECT t.name, tr.final_score, tr.place, tr.evaluated_by_count, tr.status
-FROM teams t
-LEFT JOIN team_results tr ON t.id = tr.team_id AND tr.hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
-WHERE t.hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
-ORDER BY tr.place;
-```
-
-Проверьте распределение экспертов по командам:
-
-```sql
-SELECT t.name as team_name, STRING_AGG(u.full_name, ', ') as experts
-FROM expert_team_assignments eta
-JOIN teams t ON eta.team_id = t.id
-JOIN users u ON eta.expert_user_id = u.id
-WHERE eta.hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11'
-GROUP BY t.name
-ORDER BY t.name;
-```
-
-### Шаг 10. Завершение работы
-
-Выйдите из psql:
-
-```sql
+-- Выход
 \q
 ```

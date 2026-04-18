@@ -1,6 +1,7 @@
 api:
   base_url: "http://192.168.5.46:8000"
   prefix: "/api/v1"
+  use_proxy: false
   timeout:
     connect: 10
     receive: 30

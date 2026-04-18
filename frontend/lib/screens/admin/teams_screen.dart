@@ -80,7 +80,6 @@ class _TeamsScreenState extends ConsumerState<TeamsScreen> {
                   padding: const EdgeInsets.all(24),
                   child: Column(
                     children: [
-                      // Search Bar
                       TextField(
                         controller: _searchController,
                         decoration: InputDecoration(
@@ -106,8 +105,6 @@ class _TeamsScreenState extends ConsumerState<TeamsScreen> {
                         onSubmitted: (_) => setState(() => _page = 1),
                       ),
                       const SizedBox(height: 24),
-
-                      // Teams Table
                       Expanded(
                         child: FutureBuilder<TeamListResponse>(
                           future: apiService.getTeams(
@@ -161,55 +158,94 @@ class _TeamsScreenState extends ConsumerState<TeamsScreen> {
                                 borderRadius: BorderRadius.circular(16),
                                 child: SingleChildScrollView(
                                   scrollDirection: Axis.horizontal,
-                                  child: DataTable(
-                                    columnSpacing: 16,
-                                    headingRowColor: MaterialStateProperty.all(
-                                      Colors.grey[50],
-                                    ),
-                                    headingRowHeight: 56,
-                                    dataRowMinHeight: 60,
-                                    columns: const [
-                                      DataColumn(label: Text('Название')),
-                                      DataColumn(label: Text('Капитан')),
-                                      DataColumn(label: Text('Участников')),
-                                      DataColumn(label: Text('Проект')),
-                                      DataColumn(label: Text('Статус')),
-                                      DataColumn(label: Text('Балл')),
-                                      DataColumn(label: Text('Место')),
-                                    ],
-                                    rows: data.items
-                                        .map((team) => DataRow(
-                                              onSelectChanged: (_) =>
-                                                  _showTeamDetails(
-                                                context,
-                                                apiService,
-                                                hackathonId,
-                                                team.id,
+                                  child: SizedBox(
+                                    width:
+                                        MediaQuery.of(context).size.width - 48,
+                                    child: DataTable(
+                                      columnSpacing: 16,
+                                      headingRowColor:
+                                          MaterialStateProperty.all(
+                                        Colors.grey[50],
+                                      ),
+                                      headingRowHeight: 56,
+                                      dataRowMinHeight: 60,
+                                      dataRowMaxHeight: 60,
+                                      columns: const [
+                                        DataColumn(label: Text('Название')),
+                                        DataColumn(label: Text('Капитан')),
+                                        DataColumn(label: Text('Уч.')),
+                                        DataColumn(label: Text('Проект')),
+                                        DataColumn(label: Text('Статус')),
+                                        DataColumn(label: Text('Балл')),
+                                        DataColumn(label: Text('Место')),
+                                      ],
+                                      rows: data.items.map((team) {
+                                        return DataRow(
+                                          onSelectChanged: (_) =>
+                                              _showTeamDetails(
+                                            context,
+                                            apiService,
+                                            hackathonId,
+                                            team.id,
+                                          ),
+                                          cells: [
+                                            DataCell(
+                                              SizedBox(
+                                                width: 120,
+                                                child: Text(
+                                                  team.name,
+                                                  style: const TextStyle(
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
                                               ),
-                                              cells: [
-                                                DataCell(Text(team.name,
-                                                    style: const TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.w500))),
-                                                DataCell(
-                                                    Text(team.captainName)),
-                                                DataCell(Text(
-                                                    '${team.membersCount}')),
-                                                DataCell(
-                                                    Text(team.projectTitle)),
-                                                DataCell(StatusBadge(
-                                                    status:
-                                                        team.evaluationStatus ??
-                                                            'not_started')),
-                                                DataCell(Text(team.finalScore
+                                            ),
+                                            DataCell(
+                                              SizedBox(
+                                                width: 120,
+                                                child: Text(
+                                                  team.captainName,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                            ),
+                                            DataCell(
+                                                Text('${team.membersCount}')),
+                                            DataCell(
+                                              SizedBox(
+                                                width: 150,
+                                                child: Text(
+                                                  team.projectTitle,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                              ),
+                                            ),
+                                            DataCell(
+                                              StatusBadge(
+                                                status: team.evaluationStatus ??
+                                                    'not_started',
+                                              ),
+                                            ),
+                                            DataCell(
+                                              Text(
+                                                team.finalScore
                                                         ?.toStringAsFixed(1) ??
-                                                    '-')),
-                                                DataCell(Text(
-                                                    team.place?.toString() ??
-                                                        '-')),
-                                              ],
-                                            ))
-                                        .toList(),
+                                                    '-',
+                                              ),
+                                            ),
+                                            DataCell(
+                                              Text(
+                                                team.place?.toString() ?? '-',
+                                              ),
+                                            ),
+                                          ],
+                                        );
+                                      }).toList(),
+                                    ),
                                   ),
                                 ),
                               ),
@@ -217,8 +253,6 @@ class _TeamsScreenState extends ConsumerState<TeamsScreen> {
                           },
                         ),
                       ),
-
-                      // Pagination
                       const SizedBox(height: 16),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -260,88 +294,90 @@ class _TeamsScreenState extends ConsumerState<TeamsScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         content: SizedBox(
           width: 500,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: InputDecoration(
-                  labelText: 'Название команды',
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  decoration: InputDecoration(
+                    labelText: 'Название команды',
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: captainController,
-                decoration: InputDecoration(
-                  labelText: 'Капитан',
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: captainController,
+                  decoration: InputDecoration(
+                    labelText: 'Капитан',
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: projectController,
-                decoration: InputDecoration(
-                  labelText: 'Название проекта',
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: projectController,
+                  decoration: InputDecoration(
+                    labelText: 'Название проекта',
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: emailController,
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: emailController,
+                  decoration: InputDecoration(
+                    labelText: 'Email',
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: phoneController,
-                decoration: InputDecoration(
-                  labelText: 'Телефон',
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: phoneController,
+                  decoration: InputDecoration(
+                    labelText: 'Телефон',
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: descController,
-                decoration: InputDecoration(
-                  labelText: 'Описание',
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: descController,
+                  decoration: InputDecoration(
+                    labelText: 'Описание',
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
+                  maxLines: 3,
                 ),
-                maxLines: 3,
-              ),
-            ],
+              ],
+            ),
           ),
         ),
         actions: [

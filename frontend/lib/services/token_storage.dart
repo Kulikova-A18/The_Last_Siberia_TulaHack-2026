@@ -24,12 +24,12 @@ class TokenStorage {
       if (expiry != null) {
         await _storage.write(
             key: _tokenExpiryKey, value: expiry.toIso8601String());
-        debugPrint('💾 Token expiry: $expiry');
+        debugPrint('Token expiry: $expiry');
       }
 
-      debugPrint('✅ Tokens saved successfully');
+      debugPrint('Tokens saved successfully');
     } catch (e) {
-      debugPrint('❌ Failed to save tokens: $e');
+      debugPrint('Failed to save tokens: $e');
       rethrow;
     }
   }
@@ -38,7 +38,7 @@ class TokenStorage {
     try {
       return await _storage.read(key: _accessTokenKey);
     } catch (e) {
-      debugPrint('❌ Failed to read access token: $e');
+      debugPrint('Failed to read access token: $e');
       return null;
     }
   }
@@ -47,7 +47,7 @@ class TokenStorage {
     try {
       return await _storage.read(key: _refreshTokenKey);
     } catch (e) {
-      debugPrint('❌ Failed to read refresh token: $e');
+      debugPrint('Failed to read refresh token: $e');
       return null;
     }
   }
@@ -58,7 +58,7 @@ class TokenStorage {
       if (expiryStr == null) return null;
       return DateTime.parse(expiryStr);
     } catch (e) {
-      debugPrint('❌ Failed to read token expiry: $e');
+      debugPrint('Failed to read token expiry: $e');
       return null;
     }
   }
@@ -74,8 +74,7 @@ class TokenStorage {
     final checkTime = threshold != null ? expiry.subtract(threshold) : expiry;
     final isExpired = now.isAfter(checkTime);
 
-    debugPrint(
-        '🔐 Token check: now=$now, expiry=$expiry, isExpired=$isExpired');
+    debugPrint('Token check: now=$now, expiry=$expiry, isExpired=$isExpired');
     return isExpired;
   }
 
@@ -103,9 +102,9 @@ class TokenStorage {
       await _storage.delete(key: _accessTokenKey);
       await _storage.delete(key: _refreshTokenKey);
       await _storage.delete(key: _tokenExpiryKey);
-      debugPrint('🧹 Tokens cleared from storage');
+      debugPrint('Tokens cleared from storage');
     } catch (e) {
-      debugPrint('❌ Failed to clear tokens: $e');
+      debugPrint('Failed to clear tokens: $e');
     }
   }
 
@@ -120,8 +119,7 @@ class TokenStorage {
     }
 
     final isExpired = await isTokenExpired();
-    debugPrint(
-        '🔐 Token validation: access token exists, isExpired=$isExpired');
+    debugPrint('Token validation: access token exists, isExpired=$isExpired');
     return !isExpired;
   }
 }

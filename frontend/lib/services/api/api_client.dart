@@ -24,7 +24,6 @@ class ApiClient {
     required TokenStorage tokenStorage,
   })  : _config = config,
         _tokenStorage = tokenStorage {
-    // Для Web не используем sendTimeout
     final options = BaseOptions(
       baseUrl: config.fullApiUrl,
       connectTimeout: Duration(seconds: config.connectTimeout),
@@ -64,34 +63,44 @@ class ApiClient {
         final token = await _tokenStorage.getAccessToken();
         if (token != null) {
           options.headers['Authorization'] = 'Bearer $token';
-          _log('📤 🔐 ${options.method} ${options.path}');
+          _log('[REQUEST] AUTH ${options.method} ${options.uri}');
         } else {
-          _log('📤 🌐 ${options.method} ${options.path}');
+          _log('[REQUEST] PUBLIC ${options.method} ${options.uri}');
         }
         if (options.data != null) {
-          _log('   Body: ${_truncate(options.data.toString())}');
+          _log('  Body: ${_truncate(options.data.toString())}');
         }
         return handler.next(options);
       },
       onResponse: (response, handler) {
-        final emoji = response.statusCode != null && response.statusCode! < 300
-            ? '✅'
-            : '⚠️';
+        final status = response.statusCode != null && response.statusCode! < 300
+            ? 'SUCCESS'
+            : 'WARNING';
         _log(
-            '📥 $emoji HTTP ${response.statusCode} ${response.requestOptions.path}');
+            '[RESPONSE] $status HTTP ${response.statusCode} ${response.requestOptions.uri}');
         return handler.next(response);
       },
       onError: (DioException error, handler) async {
-        _log('❌ ERROR: ${error.message}');
+        _log('[ERROR] ${error.message}');
+        _log('  URL: ${error.requestOptions.uri}');
         if (error.response != null) {
-          _log('   Status: ${error.response?.statusCode}');
+          _log('  Status: ${error.response?.statusCode}');
+          _log('  Data: ${error.response?.data}');
+        }
+
+        if (error.type == DioExceptionType.connectionError ||
+            error.type == DioExceptionType.connectionTimeout ||
+            error.type == DioExceptionType.receiveTimeout) {
+          _log(
+              '[NETWORK] Network error - check if backend is running and CORS is configured');
+          return handler.next(error);
         }
 
         if (error.response?.statusCode == 401) {
-          _log('🔄 Attempting token refresh...');
+          _log('[AUTH] Attempting token refresh...');
           final shouldRetry = await _handleUnauthorized(error);
           if (shouldRetry) {
-            _log('✅ Token refreshed, retrying request');
+            _log('[AUTH] Token refreshed, retrying request');
             final retryOptions = error.requestOptions;
             final newToken = await _tokenStorage.getAccessToken();
             if (newToken != null) {
@@ -100,19 +109,19 @@ class ApiClient {
                 final response = await _dio.fetch(retryOptions);
                 return handler.resolve(response);
               } catch (e) {
-                _log('❌ Retry failed: $e');
+                _log('[ERROR] Retry failed: $e');
                 return handler.reject(e as DioException);
               }
             }
           } else {
-            _log('❌ Token refresh failed');
+            _log('[AUTH] Token refresh failed');
           }
 
           if (_authService != null &&
               error.requestOptions.path != '/auth/login' &&
               error.requestOptions.path != '/auth/refresh') {
             await _authService!.logout();
-            _log('👋 Logged out due to auth failure');
+            _log('[AUTH] Logged out due to auth failure');
           }
         }
 
@@ -137,10 +146,10 @@ class ApiClient {
     try {
       final refreshToken = await _tokenStorage.getRefreshToken();
       if (refreshToken == null) {
-        _log('❌ No refresh token available');
+        _log('[AUTH] No refresh token available');
         return false;
       }
-      _log('📤 🔄 POST /auth/refresh');
+      _log('[REQUEST] REFRESH POST /auth/refresh');
       final response = await _dio.post(
         '/auth/refresh',
         data: {'refresh_token': refreshToken},
@@ -153,7 +162,7 @@ class ApiClient {
           accessToken: newAccessToken,
           refreshToken: newRefreshToken,
         );
-        _log('✅ Tokens refreshed and saved');
+        _log('[AUTH] Tokens refreshed and saved');
         for (final completer in _refreshCompleters) {
           completer.complete();
         }
@@ -161,7 +170,7 @@ class ApiClient {
       }
       return false;
     } catch (e) {
-      _log('❌ Refresh error: $e');
+      _log('[ERROR] Refresh error: $e');
       for (final completer in _refreshCompleters) {
         completer.completeError(e);
       }

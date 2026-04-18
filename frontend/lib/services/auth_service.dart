@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import '../config/app_config.dart';
 import '../models/user.dart';
@@ -24,29 +25,29 @@ class AuthService {
 
   Future<bool> initialize() async {
     try {
-      debugPrint('🔄 AuthService: Initializing...');
+      debugPrint('[AUTH] Initializing...');
       final hasTokens = await _tokenStorage.hasValidTokens();
-      debugPrint('🔑 Has valid tokens: $hasTokens');
+      debugPrint('[AUTH] Has valid tokens: $hasTokens');
 
       if (hasTokens) {
         final accessToken = await _tokenStorage.getAccessToken();
-        debugPrint('🔐 Access token: ${accessToken?.substring(0, 20)}...');
+        debugPrint('[AUTH] Access token: ${accessToken?.substring(0, 20)}...');
 
         try {
           final user = await _apiService.getMe();
           _currentUser = user;
           debugPrint(
-              '✅ AuthService: User loaded - ${user.fullName} (${user.roleString})');
+              '[AUTH] User loaded - ${user.fullName} (${user.roleString})');
           return true;
         } catch (e) {
-          debugPrint('❌ AuthService: Failed to get user with stored token: $e');
+          debugPrint('[AUTH] Failed to get user with stored token: $e');
           await _tokenStorage.clearTokens();
           _currentUser = null;
           return false;
         }
       }
     } catch (e) {
-      debugPrint('❌ AuthService: Initialization error: $e');
+      debugPrint('[AUTH] Initialization error: $e');
       await _tokenStorage.clearTokens();
       _currentUser = null;
     }
@@ -55,54 +56,72 @@ class AuthService {
 
   Future<AuthResult> login(String login, String password) async {
     try {
-      debugPrint('🔄 AuthService: Logging in as $login...');
+      debugPrint('[AUTH] Logging in as $login...');
       final response = await _apiService.login(login, password);
 
-      debugPrint('✅ AuthService: Login successful');
+      debugPrint('[AUTH] Login successful');
       debugPrint(
-          '   Access token: ${response.accessToken.substring(0, 20)}...');
+          '[AUTH] Access token: ${response.accessToken.substring(0, 20)}...');
       debugPrint(
-          '   User: ${response.user.fullName} (${response.user.roleString})');
+          '[AUTH] User: ${response.user.fullName} (${response.user.roleString})');
 
-      // Сохраняем токены
       await _tokenStorage.saveTokens(
         accessToken: response.accessToken,
         refreshToken: response.refreshToken,
       );
-      debugPrint('💾 Tokens saved to secure storage');
+      debugPrint('[AUTH] Tokens saved to secure storage');
 
       _currentUser = response.user;
 
       return AuthResult.success(response.user);
+    } on DioException catch (e) {
+      debugPrint('[AUTH] Login failed with DioException: ${e.type}');
+      debugPrint('[AUTH] Message: ${e.message}');
+      debugPrint('[AUTH] Response: ${e.response?.data}');
+
+      String errorMessage = 'Network error';
+      if (e.type == DioExceptionType.connectionError) {
+        errorMessage = 'Failed to connect to server. Check:\n'
+            '1. Backend is running at http://192.168.5.46:8000\n'
+            '2. CORS is configured on backend\n'
+            '3. No browser blocking';
+      } else if (e.response?.statusCode == 404) {
+        errorMessage = 'Endpoint not found. Check URL: ${e.requestOptions.uri}';
+      } else if (e.response?.data is Map) {
+        errorMessage = e.response?.data['message'] ??
+            e.response?.data['error'] ??
+            'Server error';
+      }
+
+      return AuthResult.failure(errorMessage);
     } catch (e) {
-      debugPrint('❌ AuthService: Login failed: $e');
+      debugPrint('[AUTH] Login failed: $e');
       return AuthResult.failure(_getErrorMessage(e));
     }
   }
 
   Future<void> logout() async {
     try {
-      debugPrint('🔄 AuthService: Logging out...');
+      debugPrint('[AUTH] Logging out...');
       final refreshToken = await _tokenStorage.getRefreshToken();
       if (refreshToken != null) {
         try {
           await _apiService.logout(refreshToken);
-          debugPrint('✅ AuthService: Server logout successful');
+          debugPrint('[AUTH] Server logout successful');
         } catch (e) {
-          debugPrint('⚠️ AuthService: Server logout failed: $e');
+          debugPrint('[AUTH] Server logout failed: $e');
         }
       }
     } catch (e) {
-      debugPrint('⚠️ AuthService: Logout error: $e');
+      debugPrint('[AUTH] Logout error: $e');
     } finally {
       await _tokenStorage.clearTokens();
       _currentUser = null;
-      debugPrint('🧹 Tokens cleared');
+      debugPrint('[AUTH] Tokens cleared');
     }
   }
 
   Future<bool> refreshTokenIfNeeded() async {
-    // Токен обновляется автоматически в ApiClient при 401
     return true;
   }
 
@@ -111,17 +130,17 @@ class AuthService {
       await _apiService.changePassword(oldPassword, newPassword);
       return true;
     } catch (e) {
-      debugPrint('❌ AuthService: Change password failed: $e');
+      debugPrint('[AUTH] Change password failed: $e');
       return false;
     }
   }
 
   String _getErrorMessage(dynamic error) {
     if (error is Map && error.containsKey('message')) return error['message'];
-    if (error.toString().contains('401')) return 'Неверный логин или пароль';
+    if (error.toString().contains('401')) return 'Invalid login or password';
     if (error.toString().contains('SocketException'))
-      return 'Не удалось подключиться к серверу';
-    return 'Ошибка авторизации: $error';
+      return 'Failed to connect to server';
+    return 'Authorization error: $error';
   }
 }
 

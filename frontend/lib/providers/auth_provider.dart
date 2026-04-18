@@ -50,17 +50,17 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
 
   Future<void> _init() async {
     try {
-      debugPrint('🔄 AuthNotifier: Initializing...');
+      debugPrint('[AUTH] AuthNotifier: Initializing...');
       final success = await _authService.initialize();
       if (success) {
-        debugPrint('✅ AuthNotifier: User restored from storage');
+        debugPrint('[AUTH] AuthNotifier: User restored from storage');
         state = AsyncValue.data(_authService.currentUser);
       } else {
-        debugPrint('ℹ️ AuthNotifier: No valid session found');
+        debugPrint('[AUTH] AuthNotifier: No valid session found');
         state = const AsyncValue.data(null);
       }
     } catch (e, st) {
-      debugPrint('❌ AuthNotifier: Init error: $e');
+      debugPrint('[AUTH] AuthNotifier: Init error: $e');
       state = AsyncValue.error(e, st);
     }
   }
@@ -70,15 +70,15 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
     try {
       final result = await _authService.login(login, password);
       if (result.success) {
-        debugPrint('✅ AuthNotifier: Login successful, updating state');
+        debugPrint('[AUTH] AuthNotifier: Login successful, updating state');
         state = AsyncValue.data(_authService.currentUser);
       } else {
-        debugPrint('❌ AuthNotifier: Login failed');
+        debugPrint('[AUTH] AuthNotifier: Login failed');
         state = const AsyncValue.data(null);
       }
       return result;
     } catch (e, st) {
-      debugPrint('❌ AuthNotifier: Login exception: $e');
+      debugPrint('[AUTH] AuthNotifier: Login exception: $e');
       state = AsyncValue.error(e, st);
       return AuthResult.failure(e.toString());
     }
@@ -86,12 +86,12 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
 
   Future<void> logout() async {
     try {
-      debugPrint('🔄 AuthNotifier: Logging out...');
+      debugPrint('[AUTH] AuthNotifier: Logging out...');
       await _authService.logout();
       state = const AsyncValue.data(null);
-      debugPrint('✅ AuthNotifier: Logged out');
+      debugPrint('[AUTH] AuthNotifier: Logged out');
     } catch (e, st) {
-      debugPrint('❌ AuthNotifier: Logout error: $e');
+      debugPrint('[AUTH] AuthNotifier: Logout error: $e');
       state = AsyncValue.error(e, st);
     }
   }
@@ -102,7 +102,6 @@ final currentUserProvider = Provider<User?>((ref) {
   return authState.valueOrNull;
 });
 
-// Получаем ID хакатона только если пользователь авторизован
 final hackathonIdProvider = FutureProvider<String>((ref) async {
   final user = ref.watch(currentUserProvider);
   if (user == null) {
@@ -114,7 +113,7 @@ final hackathonIdProvider = FutureProvider<String>((ref) async {
     final hackathon = await apiService.getActiveHackathon();
     return hackathon?.id ?? '';
   } catch (e) {
-    debugPrint('❌ Failed to get active hackathon: $e');
+    debugPrint('[HACKATHON] Failed to get active hackathon: $e');
     return '';
   }
 });

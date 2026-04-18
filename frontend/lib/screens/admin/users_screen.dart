@@ -62,7 +62,6 @@ class _UsersScreenState extends ConsumerState<UsersScreen> {
           padding: const EdgeInsets.all(24),
           child: Column(
             children: [
-              // Search and Filter Bar
               Row(
                 children: [
                   Expanded(
@@ -125,8 +124,6 @@ class _UsersScreenState extends ConsumerState<UsersScreen> {
                 ],
               ),
               const SizedBox(height: 24),
-
-              // Users Table
               Expanded(
                 child: FutureBuilder<UserListResponse>(
                   future: apiService.getUsers(
@@ -178,80 +175,122 @@ class _UsersScreenState extends ConsumerState<UsersScreen> {
                         borderRadius: BorderRadius.circular(16),
                         child: SingleChildScrollView(
                           scrollDirection: Axis.horizontal,
-                          child: DataTable(
-                            columnSpacing: 16,
-                            headingRowColor: MaterialStateProperty.all(
-                              Colors.grey[50],
-                            ),
-                            headingRowHeight: 56,
-                            dataRowMinHeight: 60,
-                            columns: const [
-                              DataColumn(label: Text('ФИО')),
-                              DataColumn(label: Text('Логин')),
-                              DataColumn(label: Text('Роль')),
-                              DataColumn(label: Text('Email')),
-                              DataColumn(label: Text('Статус')),
-                              DataColumn(label: Text('Действия')),
-                            ],
-                            rows: data.items
-                                .map((u) => DataRow(
-                                      cells: [
-                                        DataCell(Text(u.fullName,
-                                            style: const TextStyle(
-                                                fontWeight: FontWeight.w500))),
-                                        DataCell(Text(u.login)),
-                                        DataCell(Container(
-                                          padding: const EdgeInsets.symmetric(
-                                              horizontal: 8, vertical: 4),
-                                          decoration: BoxDecoration(
-                                            color: _getRoleColor(u.roleString)
-                                                .withOpacity(0.1),
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                          ),
-                                          child: Text(
-                                            _getRoleLabel(u.roleString),
-                                            style: TextStyle(
-                                              color:
-                                                  _getRoleColor(u.roleString),
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                        )),
-                                        DataCell(Text(u.email ?? '-')),
-                                        DataCell(StatusBadge(
-                                            status: u.isActive
-                                                ? 'active'
-                                                : 'inactive')),
-                                        DataCell(
-                                          Row(
-                                            children: [
-                                              IconButton(
-                                                icon: Icon(Icons.edit_outlined,
-                                                    size: 20,
-                                                    color: Colors.grey[600]),
-                                                onPressed: () =>
-                                                    _showEditUserDialog(
-                                                        context, apiService, u),
-                                                tooltip: 'Редактировать',
-                                              ),
-                                              IconButton(
-                                                icon: Icon(
-                                                    Icons.lock_reset_outlined,
-                                                    size: 20,
-                                                    color: Colors.grey[600]),
-                                                onPressed: () =>
-                                                    _showResetPasswordDialog(
-                                                        context, apiService, u),
-                                                tooltip: 'Сбросить пароль',
-                                              ),
-                                            ],
+                          child: SizedBox(
+                            width: MediaQuery.of(context).size.width - 48,
+                            child: DataTable(
+                              columnSpacing: 16,
+                              headingRowColor: MaterialStateProperty.all(
+                                Colors.grey[50],
+                              ),
+                              headingRowHeight: 56,
+                              dataRowMinHeight: 60,
+                              dataRowMaxHeight: 60,
+                              columns: const [
+                                DataColumn(label: Text('ФИО')),
+                                DataColumn(label: Text('Логин')),
+                                DataColumn(label: Text('Роль')),
+                                DataColumn(label: Text('Email')),
+                                DataColumn(label: Text('Статус')),
+                                DataColumn(label: Text('')),
+                              ],
+                              rows: data.items.map((u) {
+                                return DataRow(
+                                  cells: [
+                                    DataCell(
+                                      SizedBox(
+                                        width: 150,
+                                        child: Text(
+                                          u.fullName,
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.w500),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ),
+                                    DataCell(
+                                      SizedBox(
+                                        width: 100,
+                                        child: Text(
+                                          u.login,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ),
+                                    DataCell(
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: _getRoleColor(u.roleString)
+                                              .withOpacity(0.1),
+                                          borderRadius:
+                                              BorderRadius.circular(8),
+                                        ),
+                                        child: Text(
+                                          _getRoleLabel(u.roleString),
+                                          style: TextStyle(
+                                            color: _getRoleColor(u.roleString),
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w500,
                                           ),
                                         ),
-                                      ],
-                                    ))
-                                .toList(),
+                                      ),
+                                    ),
+                                    DataCell(
+                                      SizedBox(
+                                        width: 150,
+                                        child: Text(
+                                          u.email ?? '-',
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ),
+                                    DataCell(
+                                      StatusBadge(
+                                        status:
+                                            u.isActive ? 'active' : 'inactive',
+                                      ),
+                                    ),
+                                    DataCell(
+                                      Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          IconButton(
+                                            icon: Icon(Icons.edit_outlined,
+                                                size: 20,
+                                                color: Colors.grey[600]),
+                                            onPressed: () =>
+                                                _showEditUserDialog(
+                                                    context, apiService, u),
+                                            tooltip: 'Редактировать',
+                                            constraints: const BoxConstraints(
+                                              minWidth: 32,
+                                              minHeight: 32,
+                                            ),
+                                            padding: EdgeInsets.zero,
+                                          ),
+                                          IconButton(
+                                            icon: Icon(
+                                                Icons.lock_reset_outlined,
+                                                size: 20,
+                                                color: Colors.grey[600]),
+                                            onPressed: () =>
+                                                _showResetPasswordDialog(
+                                                    context, apiService, u),
+                                            tooltip: 'Сбросить пароль',
+                                            constraints: const BoxConstraints(
+                                              minWidth: 32,
+                                              minHeight: 32,
+                                            ),
+                                            padding: EdgeInsets.zero,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              }).toList(),
+                            ),
                           ),
                         ),
                       ),
@@ -259,31 +298,25 @@ class _UsersScreenState extends ConsumerState<UsersScreen> {
                   },
                 ),
               ),
-
-              // Pagination
               const SizedBox(height: 16),
-              _buildPagination(),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.chevron_left),
+                    onPressed: _page > 1 ? () => setState(() => _page--) : null,
+                  ),
+                  Text('Страница $_page'),
+                  IconButton(
+                    icon: const Icon(Icons.chevron_right),
+                    onPressed: () => setState(() => _page++),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildPagination() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        IconButton(
-          icon: const Icon(Icons.chevron_left),
-          onPressed: _page > 1 ? () => setState(() => _page--) : null,
-        ),
-        Text('Страница $_page'),
-        IconButton(
-          icon: const Icon(Icons.chevron_right),
-          onPressed: () => setState(() => _page++),
-        ),
-      ],
     );
   }
 
@@ -319,8 +352,7 @@ class _UsersScreenState extends ConsumerState<UsersScreen> {
     final fullNameController = TextEditingController();
     final emailController = TextEditingController();
     String? selectedRole;
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
 
     showDialog(
       context: context,
@@ -329,81 +361,83 @@ class _UsersScreenState extends ConsumerState<UsersScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         content: SizedBox(
           width: 480,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: fullNameController,
-                decoration: InputDecoration(
-                  labelText: 'ФИО',
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: fullNameController,
+                  decoration: InputDecoration(
+                    labelText: 'ФИО',
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: loginController,
-                decoration: InputDecoration(
-                  labelText: 'Логин',
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: loginController,
+                  decoration: InputDecoration(
+                    labelText: 'Логин',
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: passwordController,
-                obscureText: true,
-                decoration: InputDecoration(
-                  labelText: 'Пароль',
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: passwordController,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    labelText: 'Пароль',
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: emailController,
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
+                const SizedBox(height: 12),
+                TextField(
+                  controller: emailController,
+                  decoration: InputDecoration(
+                    labelText: 'Email',
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<String>(
-                decoration: InputDecoration(
-                  labelText: 'Роль',
-                  filled: true,
-                  fillColor: Colors.white,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
+                const SizedBox(height: 12),
+                DropdownButtonFormField<String>(
+                  decoration: InputDecoration(
+                    labelText: 'Роль',
+                    filled: true,
+                    fillColor: Colors.white,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
+                  items: const [
+                    DropdownMenuItem(
+                        value: 'admin', child: Text('Администратор')),
+                    DropdownMenuItem(value: 'expert', child: Text('Эксперт')),
+                    DropdownMenuItem(value: 'team', child: Text('Команда')),
+                  ],
+                  onChanged: (value) => selectedRole = value,
                 ),
-                items: const [
-                  DropdownMenuItem(
-                      value: 'admin', child: Text('Администратор')),
-                  DropdownMenuItem(value: 'expert', child: Text('Эксперт')),
-                  DropdownMenuItem(value: 'team', child: Text('Команда')),
-                ],
-                onChanged: (value) => selectedRole = value,
-              ),
-            ],
+              ],
+            ),
           ),
         ),
         actions: [

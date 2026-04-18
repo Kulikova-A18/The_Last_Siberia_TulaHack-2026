@@ -171,48 +171,6 @@ class _DashboardContent extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // KPI Cards with click functionality
-          GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 4,
-            childAspectRatio: 1.6,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-            children: [
-              _ClickableKpiCard(
-                title: 'Всего команд',
-                value: '${dashboard.teamsTotal}',
-                icon: Icons.groups_outlined,
-                color: colorScheme.primary,
-                onTap: () => context.go('/admin/teams'),
-              ),
-              _ClickableKpiCard(
-                title: 'Экспертов',
-                value: '${dashboard.expertsTotal}',
-                icon: Icons.people_outline,
-                color: colorScheme.secondary,
-                onTap: () => context.go('/admin/users'),
-              ),
-              _ClickableKpiCard(
-                title: 'Критериев',
-                value: '${dashboard.criteriaTotal}',
-                icon: Icons.rule_outlined,
-                color: colorScheme.primary,
-                onTap: () => context.go('/admin/criteria'),
-              ),
-              _ClickableKpiCard(
-                title: 'Оценок отправлено',
-                value:
-                    '${dashboard.evaluationsSubmitted}/${dashboard.evaluationsTotalExpected}',
-                icon: Icons.check_circle_outline,
-                color: colorScheme.primary,
-                onTap: () => context.go('/admin/assignments'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 32),
-
           // Quick Actions Section
           _buildQuickActionsGrid(context),
 
