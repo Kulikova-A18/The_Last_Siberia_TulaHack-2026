@@ -4,15 +4,18 @@ from uuid import UUID
 from datetime import datetime
 from typing import List, Optional
 
+
 class PublicLeaderboardItem(BaseModel):
     place: int
     team_name: str
     final_score: float
 
+
 class PublicLeaderboardResponse(BaseModel):
     published: bool
     items: List[PublicLeaderboardItem]
     updated_at: datetime
+
 
 class PublicTimerResponse(BaseModel):
     hackathon_status: str
@@ -21,9 +24,11 @@ class PublicTimerResponse(BaseModel):
     next_deadline_at: Optional[datetime] = None
     seconds_remaining: Optional[int] = None
 
+
 class PublicWinnersResponse(BaseModel):
     top_3: List[PublicLeaderboardItem]
     total_teams: int
+
 
 class PublicHackathonResponse(BaseModel):
     id: UUID

@@ -21,21 +21,32 @@ class Team(Base, IDMixin, TimestampMixin):
     hackathon = relationship("Hackathon", back_populates="teams")
     account_user = relationship("User", back_populates="team", uselist=False)
     members = relationship("TeamMember", back_populates="team", cascade="all, delete-orphan")
+
     expert_assignments = relationship(
         "ExpertTeamAssignment", 
         back_populates="team",
         foreign_keys="[ExpertTeamAssignment.team_id, ExpertTeamAssignment.hackathon_id]",
         primaryjoin="and_(Team.id == ExpertTeamAssignment.team_id, Team.hackathon_id == ExpertTeamAssignment.hackathon_id)",
-        cascade="all, delete-orphan"
+        cascade="all, delete-orphan",
+        overlaps="hackathon"  # ДОБАВИТЬ
     )
+
     evaluations = relationship(
         "Evaluation", 
         back_populates="team",
         foreign_keys="[Evaluation.team_id, Evaluation.hackathon_id]",
         primaryjoin="and_(Team.id == Evaluation.team_id, Team.hackathon_id == Evaluation.hackathon_id)",
-        cascade="all, delete-orphan"
+        cascade="all, delete-orphan",
+        overlaps="hackathon,expert_assignments"  # ДОБАВИТЬ
     )
-    team_result = relationship("TeamResult", back_populates="team", uselist=False, cascade="all, delete-orphan")
+
+    team_result = relationship(
+        "TeamResult", 
+        back_populates="team", 
+        uselist=False, 
+        cascade="all, delete-orphan",
+        overlaps="hackathon"  # ДОБАВИТЬ
+    )
     
     __table_args__ = (
         UniqueConstraint('id', 'hackathon_id', name='uq_teams_id_hackathon'),

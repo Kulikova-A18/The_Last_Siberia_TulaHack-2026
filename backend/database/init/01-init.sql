@@ -9,13 +9,13 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 CREATE EXTENSION IF NOT EXISTS "pg_stat_statements";
 
 -- =========================================================
--- ENUM TYPES
+-- ENUM TYPES (FIXED: UPPERCASE VALUES FOR TESTS)
 -- =========================================================
 
 CREATE TYPE hackathon_status AS ENUM (
-    'draft',
-    'active',
-    'finished'
+    'DRAFT',
+    'ACTIVE',
+    'FINISHED'
 );
 
 CREATE TYPE evaluation_status AS ENUM (
@@ -59,7 +59,7 @@ CREATE TABLE hackathons (
     description TEXT,
     start_at TIMESTAMPTZ NOT NULL,
     end_at TIMESTAMPTZ NOT NULL,
-    status hackathon_status NOT NULL DEFAULT 'draft',
+    status hackathon_status NOT NULL DEFAULT 'DRAFT',
     
     results_published BOOLEAN NOT NULL DEFAULT FALSE,
     results_published_at TIMESTAMPTZ,
@@ -173,7 +173,7 @@ CREATE TABLE refresh_tokens (
     CONSTRAINT refresh_tokens_expires_chk CHECK (expires_at > created_at)
 );
 
--- Триггер для updated_at в refresh_tokens (добавлено вручную)
+-- Триггер для updated_at в refresh_tokens
 DROP TRIGGER IF EXISTS trg_refresh_tokens_updated_at ON refresh_tokens;
 CREATE TRIGGER trg_refresh_tokens_updated_at
     BEFORE UPDATE ON refresh_tokens

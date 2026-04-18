@@ -126,21 +126,19 @@ BEGIN
         ('expert4', encode(sha256('Expert123!'::bytea), 'hex'), 'Dr. James Wilson', 'james.wilson@example.com', '+79004567890', expert_role_id, TRUE),
         ('expert5', encode(sha256('Expert123!'::bytea), 'hex'), 'Elena Petrova', 'elena.petrova@example.com', '+79005678901', expert_role_id, TRUE)
     ON CONFLICT (login) DO UPDATE SET
-        -- Принудительно обновляем пароли в соответствии с ручными правками
         password_hash = EXCLUDED.password_hash,
         is_active = EXCLUDED.is_active;
 END $$;
 
 -- =========================================================
--- HACKATHON (Создание с проверкой)
+-- HACKATHON (FIXED: Using UPPERCASE status)
 -- =========================================================
 
--- Проверяем и создаем хакатон, если его нет, или активируем существующий
 DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM hackathons WHERE id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11') THEN
         UPDATE hackathons 
-        SET status = 'active',
+        SET status = 'ACTIVE'::hackathon_status,
             start_at = NOW(),
             end_at = NOW() + INTERVAL '7 days'
         WHERE id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
@@ -152,7 +150,7 @@ BEGIN
             'Annual hackathon focused on artificial intelligence and machine learning solutions. Teams will compete to build innovative AI applications over 48 hours.',
             NOW(),
             NOW() + INTERVAL '7 days',
-            'active'
+            'ACTIVE'::hackathon_status
         );
     END IF;
 END $$;
@@ -168,7 +166,7 @@ VALUES
     ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Business Value', 'Market potential and practical applicability', 10.0, 20.0, 3, TRUE),
     ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Presentation', 'Quality of demo and pitch delivery', 10.0, 15.0, 4, TRUE),
     ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'Teamwork', 'Collaboration and team dynamics', 5.0, 15.0, 5, TRUE)
-ON CONFLICT DO NOTHING;
+ON CONFLICT (hackathon_id, title) DO NOTHING;
 
 -- =========================================================
 -- TEAMS AND TEAM MEMBERS
@@ -185,7 +183,7 @@ WITH team1 AS (
         'AI-Powered Code Review Assistant',
         'An intelligent tool that automatically reviews code quality, suggests improvements, and detects potential bugs using machine learning.'
     )
-    ON CONFLICT DO NOTHING
+    ON CONFLICT (hackathon_id, name) DO NOTHING
     RETURNING id
 ),
 team2 AS (
@@ -199,7 +197,7 @@ team2 AS (
         'Real-Time Fraud Detection System',
         'Machine learning system for detecting fraudulent transactions in real-time using ensemble methods and anomaly detection.'
     )
-    ON CONFLICT DO NOTHING
+    ON CONFLICT (hackathon_id, name) DO NOTHING
     RETURNING id
 ),
 team3 AS (
@@ -213,7 +211,7 @@ team3 AS (
         'Healthcare Diagnosis Assistant',
         'AI assistant that helps doctors diagnose diseases from medical images using deep learning and computer vision.'
     )
-    ON CONFLICT DO NOTHING
+    ON CONFLICT (hackathon_id, name) DO NOTHING
     RETURNING id
 )
 -- Add team members
@@ -274,9 +272,9 @@ BEGIN
     SELECT id INTO expert2_id FROM users WHERE login = 'expert2';
     SELECT id INTO expert3_id FROM users WHERE login = 'expert3';
     
-    SELECT id INTO team1_id FROM teams WHERE name = 'Code Wizards';
-    SELECT id INTO team2_id FROM teams WHERE name = 'Data Dynamos';
-    SELECT id INTO team3_id FROM teams WHERE name = 'Neural Ninjas';
+    SELECT id INTO team1_id FROM teams WHERE name = 'Code Wizards' AND hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
+    SELECT id INTO team2_id FROM teams WHERE name = 'Data Dynamos' AND hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
+    SELECT id INTO team3_id FROM teams WHERE name = 'Neural Ninjas' AND hackathon_id = 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11';
     
     INSERT INTO expert_team_assignments (hackathon_id, expert_user_id, team_id)
     VALUES 
@@ -286,7 +284,7 @@ BEGIN
         ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', expert2_id, team3_id),
         ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', expert3_id, team1_id),
         ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', expert3_id, team3_id)
-    ON CONFLICT DO NOTHING;
+    ON CONFLICT (hackathon_id, expert_user_id, team_id) DO NOTHING;
 END $$;
 
 -- =========================================================
@@ -299,7 +297,7 @@ VALUES
     ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'development', 'Development Phase', 'Coding and development period', NOW() + INTERVAL '3 days', 120),
     ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'pitch', 'Final Pitch Submission', 'Submit pitch deck and demo video', NOW() + INTERVAL '5 days', 180),
     ('a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'evaluation', 'Expert Evaluation Deadline', 'All expert evaluations must be submitted', NOW() + INTERVAL '6 days', 240)
-ON CONFLICT DO NOTHING;
+ON CONFLICT (hackathon_id, kind, title) DO NOTHING;
 
 -- =========================================================
 -- SUMMARY

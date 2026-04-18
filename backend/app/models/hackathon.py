@@ -8,6 +8,7 @@ from app.models.base import Base, IDMixin, TimestampMixin
 
 
 class HackathonStatus(str, Enum):
+    # ВАЖНО: значения должны совпадать с регистром в БД (нижний регистр)
     DRAFT = "draft"
     ACTIVE = "active"
     FINISHED = "finished"
@@ -20,7 +21,12 @@ class Hackathon(Base, IDMixin, TimestampMixin):
     description = Column(String)
     start_at = Column(DateTime(timezone=True), nullable=False)
     end_at = Column(DateTime(timezone=True), nullable=False)
-    status = Column(PgEnum(HackathonStatus), default=HackathonStatus.DRAFT, nullable=False)
+    # ВАЖНО: create_type=False чтобы не пытаться создать enum повторно
+    status = Column(
+        PgEnum(HackathonStatus, name="hackathon_status", create_type=False),
+        default=HackathonStatus.DRAFT,
+        nullable=False
+    )
     
     results_published = Column(Boolean, default=False)
     results_published_at = Column(DateTime(timezone=True), nullable=True)
