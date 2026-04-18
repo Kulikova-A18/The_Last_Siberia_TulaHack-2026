@@ -24,6 +24,13 @@ async def get_criteria(
     db: AsyncSession = Depends(get_db)
 ):
     """Get all criteria for hackathon"""
+    # Проверяем существование хакатона
+    hackathon_result = await db.execute(
+        select(Hackathon).where(Hackathon.id == hackathon_id)
+    )
+    if not hackathon_result.scalar_one_or_none():
+        raise HTTPException(status_code=404, detail="Hackathon not found")
+    
     result = await db.execute(
         select(Criterion)
         .where(Criterion.hackathon_id == hackathon_id)
@@ -31,8 +38,8 @@ async def get_criteria(
     )
     criteria = result.scalars().all()
     
-    total_weight = sum(float(c.weight_percent) for c in criteria)
-    weights_valid = abs(total_weight - 100.0) < 0.01
+    total_weight = sum(float(c.weight_percent) for c in criteria) if criteria else 0.0
+    weights_valid = abs(total_weight - 100.0) < 0.01 if criteria else False
     
     items = [CriterionResponse(
         id=c.id,
@@ -61,12 +68,10 @@ async def create_criterion(
     db: AsyncSession = Depends(get_db)
 ):
     """Create a new criterion (admin only)"""
-    # Verify hackathon exists
     hackathon_result = await db.execute(select(Hackathon).where(Hackathon.id == hackathon_id))
     if not hackathon_result.scalar_one_or_none():
         raise HTTPException(status_code=404, detail="Hackathon not found")
     
-    # Check title uniqueness
     existing = await db.execute(
         select(Criterion).where(
             Criterion.hackathon_id == hackathon_id,
@@ -76,12 +81,10 @@ async def create_criterion(
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Criterion with this title already exists")
     
-    # Get next sort order
     max_order_result = await db.execute(
         select(func.max(Criterion.sort_order)).where(Criterion.hackathon_id == hackathon_id)
     )
     max_order = max_order_result.scalar_one() or 0
-    sort_order = max_order + 1
     
     new_criterion = Criterion(
         hackathon_id=hackathon_id,
@@ -89,7 +92,7 @@ async def create_criterion(
         description=criterion_data.description,
         max_score=criterion_data.max_score,
         weight_percent=criterion_data.weight_percent,
-        sort_order=criterion_data.sort_order if criterion_data.sort_order else sort_order,
+        sort_order=criterion_data.sort_order if criterion_data.sort_order else max_order + 1,
         is_active=criterion_data.is_active
     )
     
@@ -164,7 +167,6 @@ async def update_criterion(
     
     update_data = criterion_data.model_dump(exclude_unset=True)
     
-    # Check title uniqueness if changing
     if "title" in update_data and update_data["title"] != criterion.title:
         existing = await db.execute(
             select(Criterion).where(

@@ -1,0 +1,19 @@
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMTExMTExMS0xMTExLTExMTEtMTExMS0xMTExMTExMTExMTEiLCJleHAiOjE3NzY2MzE4MDQsInR5cGUiOiJhY2Nlc3MifQ.-X6JL80QEWJAkWfdh4ElFNch-77E_VJSQhElh8m-_40",
+  "refresh_token": "_srxNlYpos8PnlPoAlpyAV7RFGUz5LN8NzD0x5AGxorddWbaZTt-ODNXDNa1RLR359V8pmZudgJmeZcYamzvuA",
+  "admin_user_id": "11111111-1111-1111-1111-111111111111",
+  "expert_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyMjIyMjIyMi0yMjIyLTIyMjItMjIyMi0yMjIyMjIyMjIyMjEiLCJleHAiOjE3NzY2MzE4MDQsInR5cGUiOiJhY2Nlc3MifQ.-Z5v_rspsAKBaa3RpwGt9BGGVd9yHDTb8f5dVo7sMEI",
+  "expert_id": "22222222-2222-2222-2222-222222222221",
+  "team_token": null,
+  "team_user_id": null,
+  "hackathon_id": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+  "team_id": null,
+  "criterion_ids": [
+    "c1111111-1111-1111-1111-111111111111",
+    "c1111111-1111-1111-1111-111111111112",
+    "c1111111-1111-1111-1111-111111111113"
+  ],
+  "assignment_id": null,
+  "evaluation_id": null,
+  "timestamp": "2026-04-18T23:50:04.989618"
+}

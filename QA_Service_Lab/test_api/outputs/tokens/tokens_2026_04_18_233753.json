@@ -1,0 +1,15 @@
+{
+  "access_token": null,
+  "refresh_token": null,
+  "admin_user_id": null,
+  "expert_token": null,
+  "expert_id": null,
+  "team_token": null,
+  "team_user_id": null,
+  "hackathon_id": null,
+  "team_id": null,
+  "criterion_ids": [],
+  "assignment_id": null,
+  "evaluation_id": null,
+  "timestamp": "2026-04-18T23:37:58.006394"
+}
