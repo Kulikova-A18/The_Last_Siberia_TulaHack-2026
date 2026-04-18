@@ -291,8 +291,16 @@ class _TeamsScreenState extends ConsumerState<TeamsScreen> {
         ),
       );
     } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Ошибка: $e')));
+      if (e.toString().contains('501')) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text(
+                  'Детальная информация о команде временно недоступна (API не реализовано)')),
+        );
+      } else {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Ошибка: $e')));
+      }
     }
   }
 }

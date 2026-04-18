@@ -24,14 +24,16 @@ class ApiClient {
     required TokenStorage tokenStorage,
   })  : _config = config,
         _tokenStorage = tokenStorage {
-    _dio = Dio(BaseOptions(
+    // Для Web не используем sendTimeout
+    final options = BaseOptions(
       baseUrl: config.fullApiUrl,
       connectTimeout: Duration(seconds: config.connectTimeout),
       receiveTimeout: Duration(seconds: config.receiveTimeout),
-      sendTimeout: Duration(seconds: config.sendTimeout),
       headers: config.defaultHeaders,
       validateStatus: (status) => status != null && status < 500,
-    ));
+    );
+
+    _dio = Dio(options);
     _setupInterceptors();
   }
 

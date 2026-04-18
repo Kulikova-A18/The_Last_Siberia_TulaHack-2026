@@ -21,8 +21,8 @@ import 'screens/public/public_leaderboard_screen.dart';
 import 'widgets/debug_drawer.dart';
 import 'widgets/app_drawer.dart';
 
-final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
-final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
+final GlobalKey<ScaffoldState> scaffoldKey = GlobalKey<ScaffoldState>();
 
 class HackRankApp extends ConsumerStatefulWidget {
   const HackRankApp({super.key});
@@ -42,7 +42,7 @@ class _HackRankAppState extends ConsumerState<HackRankApp> {
 
   GoRouter _buildRouter() {
     return GoRouter(
-      navigatorKey: _rootNavigatorKey,
+      navigatorKey: rootNavigatorKey,
       initialLocation: '/public',
       redirect: (context, state) {
         final authState = ref.read(authStateProvider);
@@ -50,20 +50,16 @@ class _HackRankAppState extends ConsumerState<HackRankApp> {
         final isLoggingIn = state.matchedLocation == '/login';
         final isPublic = state.matchedLocation.startsWith('/public');
 
-        // Публичные страницы доступны всегда
         if (isPublic) return null;
 
-        // Не авторизован и не на странице логина -> логин
         if (user == null && !isLoggingIn) {
           return '/login';
         }
 
-        // Авторизован и пытается на логин -> домашняя страница по роли
         if (user != null && isLoggingIn) {
           return _getHomePath(user.role);
         }
 
-        // Авторизован, но пытается на чужую страницу -> проверка доступа
         if (user != null) {
           final location = state.matchedLocation;
           if (location.startsWith('/admin') && user.role != UserRole.admin) {
@@ -81,72 +77,58 @@ class _HackRankAppState extends ConsumerState<HackRankApp> {
       },
       routes: [
         GoRoute(
-          path: '/login',
-          name: 'login',
-          builder: (context, state) => const LoginScreen(),
-        ),
+            path: '/login',
+            name: 'login',
+            builder: (context, state) => const LoginScreen()),
         GoRoute(
-          path: '/public',
-          name: 'public',
-          builder: (context, state) => const PublicLeaderboardScreen(),
-        ),
+            path: '/public',
+            name: 'public',
+            builder: (context, state) => const PublicLeaderboardScreen()),
         GoRoute(
-          path: '/admin',
-          name: 'admin_dashboard',
-          builder: (context, state) => const AdminDashboardScreen(),
-        ),
+            path: '/admin',
+            name: 'admin_dashboard',
+            builder: (context, state) => const AdminDashboardScreen()),
         GoRoute(
-          path: '/admin/users',
-          name: 'admin_users',
-          builder: (context, state) => const UsersScreen(),
-        ),
+            path: '/admin/users',
+            name: 'admin_users',
+            builder: (context, state) => const UsersScreen()),
         GoRoute(
-          path: '/admin/teams',
-          name: 'admin_teams',
-          builder: (context, state) => const TeamsScreen(),
-        ),
+            path: '/admin/teams',
+            name: 'admin_teams',
+            builder: (context, state) => const TeamsScreen()),
         GoRoute(
-          path: '/admin/criteria',
-          name: 'admin_criteria',
-          builder: (context, state) => const CriteriaScreen(),
-        ),
+            path: '/admin/criteria',
+            name: 'admin_criteria',
+            builder: (context, state) => const CriteriaScreen()),
         GoRoute(
-          path: '/admin/assignments',
-          name: 'admin_assignments',
-          builder: (context, state) => const AssignmentsScreen(),
-        ),
+            path: '/admin/assignments',
+            name: 'admin_assignments',
+            builder: (context, state) => const AssignmentsScreen()),
         GoRoute(
-          path: '/admin/results',
-          name: 'admin_results',
-          builder: (context, state) => const ResultsScreen(),
-        ),
+            path: '/admin/results',
+            name: 'admin_results',
+            builder: (context, state) => const ResultsScreen()),
         GoRoute(
-          path: '/expert',
-          name: 'expert_dashboard',
-          builder: (context, state) => const ExpertDashboardScreen(),
-        ),
+            path: '/expert',
+            name: 'expert_dashboard',
+            builder: (context, state) => const ExpertDashboardScreen()),
         GoRoute(
-          path: '/expert/teams',
-          name: 'expert_teams',
-          builder: (context, state) => const AssignedTeamsScreen(),
-        ),
+            path: '/expert/teams',
+            name: 'expert_teams',
+            builder: (context, state) => const AssignedTeamsScreen()),
         GoRoute(
-          path: '/expert/evaluate/:teamId',
-          name: 'expert_evaluate',
-          builder: (context, state) => EvaluationFormScreen(
-            teamId: state.pathParameters['teamId']!,
-          ),
-        ),
+            path: '/expert/evaluate/:teamId',
+            name: 'expert_evaluate',
+            builder: (context, state) =>
+                EvaluationFormScreen(teamId: state.pathParameters['teamId']!)),
         GoRoute(
-          path: '/team',
-          name: 'team_profile',
-          builder: (context, state) => const TeamProfileScreen(),
-        ),
+            path: '/team',
+            name: 'team_profile',
+            builder: (context, state) => const TeamProfileScreen()),
         GoRoute(
-          path: '/team/results',
-          name: 'team_results',
-          builder: (context, state) => const TeamResultScreen(),
-        ),
+            path: '/team/results',
+            name: 'team_results',
+            builder: (context, state) => const TeamResultScreen()),
       ],
       errorBuilder: (context, state) => Scaffold(
         body: Center(
@@ -161,9 +143,8 @@ class _HackRankAppState extends ConsumerState<HackRankApp> {
                   style: TextStyle(color: Colors.grey[600])),
               const SizedBox(height: 24),
               ElevatedButton(
-                onPressed: () => context.go('/public'),
-                child: const Text('На главную'),
-              ),
+                  onPressed: () => context.go('/public'),
+                  child: const Text('На главную')),
             ],
           ),
         ),
@@ -195,44 +176,38 @@ class _HackRankAppState extends ConsumerState<HackRankApp> {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF2563EB),
-          brightness: Brightness.light,
-        ),
+            seedColor: const Color(0xFF2563EB), brightness: Brightness.light),
         useMaterial3: true,
         textTheme: GoogleFonts.interTextTheme(),
         cardTheme: CardThemeData(
-          elevation: 2,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
+            elevation: 2,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12))),
         inputDecorationTheme: InputDecorationTheme(
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 12)),
         elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-          ),
-        ),
+            style: ElevatedButton.styleFrom(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8)))),
       ),
       routerConfig: _router,
       builder: (context, child) {
         return Scaffold(
-          key: _scaffoldKey,
+          key: scaffoldKey,
           drawer: user != null
               ? AppDrawer(
                   role: user.role,
                   currentRoute:
-                      _router.routerDelegate.currentConfiguration.uri.path,
-                )
+                      _router.routerDelegate.currentConfiguration.uri.path)
               : null,
           endDrawer: DebugDrawer(
             router: _router,
             onLogout: () async {
-              _scaffoldKey.currentState?.closeEndDrawer();
+              scaffoldKey.currentState?.closeEndDrawer();
               await ref.read(authStateProvider.notifier).logout();
             },
             currentUser: user,

@@ -11,23 +11,17 @@ class ApiLogger {
     final timestamp = DateTime.now().toIso8601String().substring(11, 23);
     final formattedMessage = '[$timestamp] $message';
     _logs.add(formattedMessage);
-    if (_logs.length > 100) {
-      _logs.removeAt(0);
-    }
+    if (_logs.length > 100) _logs.removeAt(0);
     for (final listener in _listeners) {
       listener(formattedMessage);
     }
     debugPrint(message);
   }
 
-  static void addListener(Function(String) listener) {
-    _listeners.add(listener);
-  }
-
-  static void removeListener(Function(String) listener) {
-    _listeners.remove(listener);
-  }
-
+  static void addListener(Function(String) listener) =>
+      _listeners.add(listener);
+  static void removeListener(Function(String) listener) =>
+      _listeners.remove(listener);
   static List<String> getLogs() => List.unmodifiable(_logs);
 
   static void clear() {
@@ -43,12 +37,11 @@ class DebugDrawer extends StatefulWidget {
   final VoidCallback onLogout;
   final User? currentUser;
 
-  const DebugDrawer({
-    super.key,
-    required this.router,
-    required this.onLogout,
-    this.currentUser,
-  });
+  const DebugDrawer(
+      {super.key,
+      required this.router,
+      required this.onLogout,
+      this.currentUser});
 
   @override
   State<DebugDrawer> createState() => _DebugDrawerState();
@@ -63,7 +56,6 @@ class _DebugDrawerState extends State<DebugDrawer> {
     super.initState();
     ApiLogger.addListener(_onLogAdded);
     ApiClient.setLogCallback(ApiLogger.log);
-
     ApiLogger.log('🟢 Debug Drawer initialized');
     ApiLogger.log('📡 API Base URL: http://192.168.5.46:8000/api/v1');
     if (widget.currentUser != null) {
@@ -81,9 +73,7 @@ class _DebugDrawerState extends State<DebugDrawer> {
   void _onLogAdded(String message) {
     setState(() {
       _apiLogs.add(message);
-      if (_apiLogs.length > 100) {
-        _apiLogs.removeAt(0);
-      }
+      if (_apiLogs.length > 100) _apiLogs.removeAt(0);
     });
     _scrollToBottom();
   }
@@ -91,25 +81,20 @@ class _DebugDrawerState extends State<DebugDrawer> {
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOut,
-        );
+        _scrollController.animateTo(_scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 200), curve: Curves.easeOut);
       }
     });
   }
 
   void _clearLogs() {
-    setState(() {
-      _apiLogs.clear();
-    });
+    setState(() => _apiLogs.clear());
     ApiLogger.clear();
   }
 
   void _navigate(String route) {
-    Navigator.pop(context);
-    widget.router.go(route);
+    Navigator.of(context).pop();
+    widget.router.push(route);
   }
 
   @override
@@ -122,21 +107,18 @@ class _DebugDrawerState extends State<DebugDrawer> {
             width: double.infinity,
             padding: const EdgeInsets.fromLTRB(16, 48, 16, 16),
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.primaryContainer,
-            ),
+                color: Theme.of(context).colorScheme.primaryContainer),
             child: Row(
               children: [
                 const Icon(Icons.bug_report, color: Colors.orange),
                 const SizedBox(width: 12),
-                const Text(
-                  'Отладка API',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
+                const Text('Отладка API',
+                    style:
+                        TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                 const Spacer(),
                 IconButton(
-                  icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.pop(context),
-                ),
+                    icon: const Icon(Icons.close),
+                    onPressed: () => Navigator.pop(context)),
               ],
             ),
           ),
@@ -148,11 +130,10 @@ class _DebugDrawerState extends State<DebugDrawer> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  widget.currentUser != null
-                      ? '👤 ${widget.currentUser!.fullName}'
-                      : '👤 Не авторизован',
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
+                    widget.currentUser != null
+                        ? '👤 ${widget.currentUser!.fullName}'
+                        : '👤 Не авторизован',
+                    style: const TextStyle(fontWeight: FontWeight.w600)),
                 if (widget.currentUser != null) ...[
                   const SizedBox(height: 4),
                   Text('🆔 ${widget.currentUser!.id}'),
@@ -168,26 +149,12 @@ class _DebugDrawerState extends State<DebugDrawer> {
               spacing: 8,
               runSpacing: 8,
               children: [
+                _NavChip(label: '🏠 Public', onTap: () => _navigate('/public')),
+                _NavChip(label: '🔐 Login', onTap: () => _navigate('/login')),
+                _NavChip(label: '👑 Admin', onTap: () => _navigate('/admin')),
                 _NavChip(
-                    label: '🏠 Public',
-                    route: '/public',
-                    onTap: () => _navigate('/public')),
-                _NavChip(
-                    label: '🔐 Login',
-                    route: '/login',
-                    onTap: () => _navigate('/login')),
-                _NavChip(
-                    label: '👑 Admin',
-                    route: '/admin',
-                    onTap: () => _navigate('/admin')),
-                _NavChip(
-                    label: '👨‍⚖️ Expert',
-                    route: '/expert',
-                    onTap: () => _navigate('/expert')),
-                _NavChip(
-                    label: '👥 Team',
-                    route: '/team',
-                    onTap: () => _navigate('/team')),
+                    label: '👨‍⚖️ Expert', onTap: () => _navigate('/expert')),
+                _NavChip(label: '👥 Team', onTap: () => _navigate('/team')),
               ],
             ),
           ),
@@ -204,25 +171,22 @@ class _DebugDrawerState extends State<DebugDrawer> {
                   icon: const Icon(Icons.send, size: 16),
                   label: const Text('Тест API'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    foregroundColor: Colors.white,
-                  ),
+                      backgroundColor: Colors.blue,
+                      foregroundColor: Colors.white),
                 ),
                 const SizedBox(width: 8),
                 OutlinedButton.icon(
-                  onPressed: _clearLogs,
-                  icon: const Icon(Icons.clear, size: 16),
-                  label: const Text('Очистить'),
-                ),
+                    onPressed: _clearLogs,
+                    icon: const Icon(Icons.clear, size: 16),
+                    label: const Text('Очистить')),
                 const Spacer(),
                 if (widget.currentUser != null)
                   OutlinedButton.icon(
-                    onPressed: widget.onLogout,
-                    icon: const Icon(Icons.logout, size: 16),
-                    label: const Text('Выйти'),
-                    style:
-                        OutlinedButton.styleFrom(foregroundColor: Colors.red),
-                  ),
+                      onPressed: widget.onLogout,
+                      icon: const Icon(Icons.logout, size: 16),
+                      label: const Text('Выйти'),
+                      style: OutlinedButton.styleFrom(
+                          foregroundColor: Colors.red)),
               ],
             ),
           ),
@@ -233,19 +197,15 @@ class _DebugDrawerState extends State<DebugDrawer> {
               children: [
                 const Icon(Icons.terminal, size: 16, color: Colors.green),
                 const SizedBox(width: 8),
-                Text(
-                  'API Логи (${_apiLogs.length})',
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
+                Text('API Логи (${_apiLogs.length})',
+                    style: const TextStyle(fontWeight: FontWeight.w600)),
                 const Spacer(),
                 Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: Colors.green,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                        color: Colors.green,
+                        borderRadius: BorderRadius.circular(4))),
                 const SizedBox(width: 4),
                 const Text('Live', style: TextStyle(fontSize: 12)),
               ],
@@ -261,12 +221,11 @@ class _DebugDrawerState extends State<DebugDrawer> {
                 itemBuilder: (context, index) {
                   if (_apiLogs.isEmpty) {
                     return const Padding(
-                      padding: EdgeInsets.all(16),
-                      child: Text(
-                        'Логи пусты. Нажмите "Тест API" или выполните запрос в приложении.',
-                        style: TextStyle(color: Colors.grey, fontSize: 12),
-                      ),
-                    );
+                        padding: EdgeInsets.all(16),
+                        child: Text(
+                            'Логи пусты. Нажмите "Тест API" или выполните запрос в приложении.',
+                            style:
+                                TextStyle(color: Colors.grey, fontSize: 12)));
                   }
                   final log = _apiLogs[index];
                   Color color = Colors.white;
@@ -276,19 +235,13 @@ class _DebugDrawerState extends State<DebugDrawer> {
                   if (log.contains('✅')) color = Colors.green;
                   if (log.contains('⏳')) color = Colors.yellow;
                   if (log.contains('🔄')) color = Colors.orange;
-                  if (log.contains('🔐')) color = Colors.purpleAccent;
-
                   return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 2),
-                    child: Text(
-                      log,
-                      style: TextStyle(
-                        color: color,
-                        fontSize: 11,
-                        fontFamily: 'monospace',
-                      ),
-                    ),
-                  );
+                      padding: const EdgeInsets.symmetric(vertical: 2),
+                      child: Text(log,
+                          style: TextStyle(
+                              color: color,
+                              fontSize: 11,
+                              fontFamily: 'monospace')));
                 },
               ),
             ),
@@ -301,20 +254,12 @@ class _DebugDrawerState extends State<DebugDrawer> {
 
 class _NavChip extends StatelessWidget {
   final String label;
-  final String route;
   final VoidCallback onTap;
 
-  const _NavChip({
-    required this.label,
-    required this.route,
-    required this.onTap,
-  });
+  const _NavChip({required this.label, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return ActionChip(
-      label: Text(label),
-      onPressed: onTap,
-    );
+    return ActionChip(label: Text(label), onPressed: onTap);
   }
 }

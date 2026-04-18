@@ -10,7 +10,7 @@ from app.dependencies.auth import get_current_user, admin_required
 from app.models.user import User
 from app.models.role import Role
 from app.schemas.user import UserCreate, UserUpdate, UserResponse, UserListResponse, ResetPasswordRequest
-from app.core.security import get_password_hash
+from app.core.security import get_password_hash, verify_password
 
 router = APIRouter(prefix="/users", tags=["Users"])
 
@@ -29,7 +29,6 @@ async def get_users(
     query = select(User)
     count_query = select(func.count()).select_from(User)
     
-    # Apply filters
     if role:
         query = query.join(Role).where(Role.code == role)
         count_query = count_query.join(Role).where(Role.code == role)
@@ -43,18 +42,15 @@ async def get_users(
         query = query.where(User.is_active == is_active)
         count_query = count_query.where(User.is_active == is_active)
     
-    # Get total count
     total_result = await db.execute(count_query)
     total = total_result.scalar_one()
     
-    # Get paginated results
     query = query.order_by(User.created_at.desc())
     query = query.offset((page - 1) * page_size).limit(page_size)
     
     result = await db.execute(query)
     users = result.scalars().all()
     
-    # Build response with role codes
     items = []
     for user in users:
         role_result = await db.execute(select(Role).where(Role.id == user.role_id))
@@ -81,7 +77,7 @@ async def get_users(
     )
 
 
-@router.post("/", response_model=UserResponse)
+@router.post("/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def create_user(
     user_data: UserCreate,
     current_user: User = Depends(admin_required),
@@ -109,6 +105,17 @@ async def create_user(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Login already taken"
         )
+    
+    # Check if email exists (if provided)
+    if user_data.email:
+        existing_email = await db.execute(
+            select(User).where(User.email == user_data.email)
+        )
+        if existing_email.scalar_one_or_none():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered"
+            )
     
     new_user = User(
         login=user_data.login,
@@ -139,4 +146,127 @@ async def create_user(
     )
 
 
-# Остальные методы аналогично...
+@router.get("/{user_id}", response_model=UserResponse)
+async def get_user(
+    user_id: UUID,
+    current_user: User = Depends(admin_required),
+    db: AsyncSession = Depends(get_db)
+):
+    """Get user by ID (admin only)"""
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    role_result = await db.execute(select(Role).where(Role.id == user.role_id))
+    role_obj = role_result.scalar_one_or_none()
+    
+    return UserResponse(
+        id=user.id,
+        login=user.login,
+        full_name=user.full_name,
+        role_code=role_obj.code if role_obj else "unknown",
+        email=user.email,
+        phone=user.phone,
+        team_id=user.team_id,
+        is_active=user.is_active,
+        last_login_at=user.last_login_at,
+        created_at=user.created_at
+    )
+
+
+@router.patch("/{user_id}", response_model=UserResponse)
+async def update_user(
+    user_id: UUID,
+    user_data: UserUpdate,
+    current_user: User = Depends(admin_required),
+    db: AsyncSession = Depends(get_db)
+):
+    """Update user (admin only)"""
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    update_data = user_data.model_dump(exclude_unset=True)
+    
+    # Handle role change
+    if "role_code" in update_data:
+        role_code = update_data.pop("role_code")
+        role_result = await db.execute(select(Role).where(Role.code == role_code))
+        role = role_result.scalar_one_or_none()
+        if not role:
+            raise HTTPException(status_code=400, detail=f"Role '{role_code}' not found")
+        user.role_id = role.id
+    
+    # Handle password change
+    if "password" in update_data:
+        user.password_hash = get_password_hash(update_data.pop("password"))
+    
+    # Update other fields
+    for field, value in update_data.items():
+        if value is not None:
+            setattr(user, field, value)
+    
+    await db.commit()
+    await db.refresh(user)
+    
+    role_result = await db.execute(select(Role).where(Role.id == user.role_id))
+    role_obj = role_result.scalar_one_or_none()
+    
+    return UserResponse(
+        id=user.id,
+        login=user.login,
+        full_name=user.full_name,
+        role_code=role_obj.code if role_obj else "unknown",
+        email=user.email,
+        phone=user.phone,
+        team_id=user.team_id,
+        is_active=user.is_active,
+        last_login_at=user.last_login_at,
+        created_at=user.created_at
+    )
+
+
+@router.delete("/{user_id}")
+async def delete_user(
+    user_id: UUID,
+    current_user: User = Depends(admin_required),
+    db: AsyncSession = Depends(get_db)
+):
+    """Delete user (admin only)"""
+    if user_id == current_user.id:
+        raise HTTPException(status_code=400, detail="Cannot delete yourself")
+    
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    await db.delete(user)
+    await db.commit()
+    
+    return {"message": "User deleted successfully"}
+
+
+@router.post("/{user_id}/reset-password")
+async def reset_user_password(
+    user_id: UUID,
+    request: ResetPasswordRequest,
+    current_user: User = Depends(admin_required),
+    db: AsyncSession = Depends(get_db)
+):
+    """Reset user password (admin only)"""
+    result = await db.execute(select(User).where(User.id == user_id))
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    user.password_hash = get_password_hash(request.new_password)
+    await db.commit()
+    
+    return {"message": "Password reset successfully"}

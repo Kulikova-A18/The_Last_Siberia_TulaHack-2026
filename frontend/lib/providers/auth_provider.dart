@@ -102,7 +102,13 @@ final currentUserProvider = Provider<User?>((ref) {
   return authState.valueOrNull;
 });
 
+// Получаем ID хакатона только если пользователь авторизован
 final hackathonIdProvider = FutureProvider<String>((ref) async {
+  final user = ref.watch(currentUserProvider);
+  if (user == null) {
+    return '';
+  }
+
   final apiService = ref.watch(apiServiceProvider);
   try {
     final hackathon = await apiService.getActiveHackathon();

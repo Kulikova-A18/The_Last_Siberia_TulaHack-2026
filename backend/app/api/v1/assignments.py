@@ -4,10 +4,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from typing import Optional
 from uuid import UUID
+from datetime import datetime, timezone
 
 from app.core.database import get_db
 from app.dependencies.auth import get_current_user, admin_required
 from app.models.user import User
+from app.models.team import Team
+from app.models.hackathon import Hackathon
 from app.models.expert_team_assignment import ExpertTeamAssignment
 from app.schemas.assignment import AssignmentCreate, AssignmentBulkCreate, AssignmentResponse
 
@@ -42,7 +45,8 @@ async def get_assignments(
         created_at=a.created_at
     ) for a in assignments]
 
-@router.post("/", response_model=AssignmentResponse)
+
+@router.post("/", response_model=AssignmentResponse, status_code=status.HTTP_201_CREATED)
 async def create_assignment(
     hackathon_id: UUID,
     assignment_data: AssignmentCreate,
@@ -50,13 +54,61 @@ async def create_assignment(
     db: AsyncSession = Depends(get_db)
 ):
     """Create assignment (admin only)"""
-    # TODO: Implement assignment creation
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Not implemented yet"
+    # Verify hackathon exists
+    hackathon_result = await db.execute(select(Hackathon).where(Hackathon.id == hackathon_id))
+    if not hackathon_result.scalar_one_or_none():
+        raise HTTPException(status_code=404, detail="Hackathon not found")
+    
+    # Verify expert exists and has expert role
+    expert_result = await db.execute(select(User).where(User.id == assignment_data.expert_user_id))
+    expert = expert_result.scalar_one_or_none()
+    if not expert:
+        raise HTTPException(status_code=404, detail="Expert not found")
+    
+    # Verify team exists in this hackathon
+    team_result = await db.execute(
+        select(Team).where(
+            Team.id == assignment_data.team_id,
+            Team.hackathon_id == hackathon_id
+        )
+    )
+    team = team_result.scalar_one_or_none()
+    if not team:
+        raise HTTPException(status_code=404, detail="Team not found in this hackathon")
+    
+    # Check if assignment already exists
+    existing = await db.execute(
+        select(ExpertTeamAssignment).where(
+            ExpertTeamAssignment.hackathon_id == hackathon_id,
+            ExpertTeamAssignment.expert_user_id == assignment_data.expert_user_id,
+            ExpertTeamAssignment.team_id == assignment_data.team_id
+        )
+    )
+    if existing.scalar_one_or_none():
+        raise HTTPException(status_code=400, detail="Assignment already exists")
+    
+    new_assignment = ExpertTeamAssignment(
+        hackathon_id=hackathon_id,
+        expert_user_id=assignment_data.expert_user_id,
+        team_id=assignment_data.team_id,
+        assigned_at=datetime.now(timezone.utc)
+    )
+    
+    db.add(new_assignment)
+    await db.commit()
+    await db.refresh(new_assignment)
+    
+    return AssignmentResponse(
+        id=new_assignment.id,
+        hackathon_id=new_assignment.hackathon_id,
+        expert_user_id=new_assignment.expert_user_id,
+        team_id=new_assignment.team_id,
+        assigned_at=new_assignment.assigned_at,
+        created_at=new_assignment.created_at
     )
 
-@router.post("/bulk", response_model=list[AssignmentResponse])
+
+@router.post("/bulk", response_model=list[AssignmentResponse], status_code=status.HTTP_201_CREATED)
 async def bulk_create_assignments(
     hackathon_id: UUID,
     assignments_data: AssignmentBulkCreate,
@@ -64,11 +116,48 @@ async def bulk_create_assignments(
     db: AsyncSession = Depends(get_db)
 ):
     """Bulk create assignments (admin only)"""
-    # TODO: Implement bulk assignment creation
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Not implemented yet"
-    )
+    # Verify hackathon exists
+    hackathon_result = await db.execute(select(Hackathon).where(Hackathon.id == hackathon_id))
+    if not hackathon_result.scalar_one_or_none():
+        raise HTTPException(status_code=404, detail="Hackathon not found")
+    
+    created_assignments = []
+    
+    for assignment_item in assignments_data.assignments:
+        # Check if assignment already exists
+        existing = await db.execute(
+            select(ExpertTeamAssignment).where(
+                ExpertTeamAssignment.hackathon_id == hackathon_id,
+                ExpertTeamAssignment.expert_user_id == assignment_item.expert_user_id,
+                ExpertTeamAssignment.team_id == assignment_item.team_id
+            )
+        )
+        if existing.scalar_one_or_none():
+            continue  # Skip existing assignments
+        
+        new_assignment = ExpertTeamAssignment(
+            hackathon_id=hackathon_id,
+            expert_user_id=assignment_item.expert_user_id,
+            team_id=assignment_item.team_id,
+            assigned_at=datetime.now(timezone.utc)
+        )
+        db.add(new_assignment)
+        created_assignments.append(new_assignment)
+    
+    await db.commit()
+    
+    for a in created_assignments:
+        await db.refresh(a)
+    
+    return [AssignmentResponse(
+        id=a.id,
+        hackathon_id=a.hackathon_id,
+        expert_user_id=a.expert_user_id,
+        team_id=a.team_id,
+        assigned_at=a.assigned_at,
+        created_at=a.created_at
+    ) for a in created_assignments]
+
 
 @router.delete("/{assignment_id}")
 async def delete_assignment(
@@ -78,8 +167,18 @@ async def delete_assignment(
     db: AsyncSession = Depends(get_db)
 ):
     """Delete assignment (admin only)"""
-    # TODO: Implement assignment deletion
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Not implemented yet"
+    result = await db.execute(
+        select(ExpertTeamAssignment).where(
+            ExpertTeamAssignment.id == assignment_id,
+            ExpertTeamAssignment.hackathon_id == hackathon_id
+        )
     )
+    assignment = result.scalar_one_or_none()
+    
+    if not assignment:
+        raise HTTPException(status_code=404, detail="Assignment not found")
+    
+    await db.delete(assignment)
+    await db.commit()
+    
+    return {"message": "Assignment deleted successfully"}

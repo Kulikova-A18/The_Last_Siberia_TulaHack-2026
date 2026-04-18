@@ -269,6 +269,35 @@ class PublicLeaderboardResponse {
   }
 }
 
+class PublicHackathonResponse {
+  final String id;
+  final String title;
+  final String? description;
+  final DateTime startAt;
+  final DateTime endAt;
+  final String status;
+
+  PublicHackathonResponse({
+    required this.id,
+    required this.title,
+    this.description,
+    required this.startAt,
+    required this.endAt,
+    required this.status,
+  });
+
+  factory PublicHackathonResponse.fromJson(Map<String, dynamic> json) {
+    return PublicHackathonResponse(
+      id: json['id'],
+      title: json['title'],
+      description: json['description'],
+      startAt: DateTime.parse(json['start_at']),
+      endAt: DateTime.parse(json['end_at']),
+      status: json['status'],
+    );
+  }
+}
+
 class PublicTimerResponse {
   final String hackathonStatus;
   final String currentPhase;

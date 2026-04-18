@@ -217,6 +217,11 @@ class ApiService {
 
   ApiService(this._client);
 
+  Future<PublicHackathonResponse> getPublicActiveHackathon() async {
+    final response = await _client.get('/public/hackathons/active');
+    return PublicHackathonResponse.fromJson(response.data);
+  }
+
   // ========== AUTH ==========
   Future<AuthResponse> login(String login, String password) async {
     final response = await _client
@@ -515,9 +520,46 @@ class ApiService {
 
   // ========== DASHBOARDS ==========
   Future<AdminDashboard> getAdminDashboard(String hackathonId) async {
-    final response =
-        await _client.get('/hackathons/$hackathonId/dashboard/admin');
-    return AdminDashboard.fromJson(response.data);
+    try {
+      final response =
+          await _client.get('/hackathons/$hackathonId/dashboard/admin');
+      return AdminDashboard.fromJson(response.data);
+    } catch (e) {
+      if (e is DioException && e.response?.statusCode == 404) {
+        // Возвращаем пустой дашборд, если эндпоинт не реализован
+        return AdminDashboard(
+          teamsTotal: 0,
+          expertsTotal: 0,
+          criteriaTotal: 0,
+          evaluationsSubmitted: 0,
+          evaluationsDraft: 0,
+          evaluationsTotalExpected: 0,
+          leaderboardTop: [],
+          expertsProgress: [],
+          nextDeadline: null,
+        );
+      }
+      rethrow;
+    }
+  }
+
+  Future<TimerResponse> getTimer(String hackathonId) async {
+    try {
+      final response = await _client.get('/hackathons/$hackathonId/timer');
+      return TimerResponse.fromJson(response.data);
+    } catch (e) {
+      if (e is DioException && e.response?.statusCode == 404) {
+        // Возвращаем пустой таймер
+        return TimerResponse(
+          serverTime: DateTime.now(),
+          hackathonStatus: 'active',
+          currentPhase: 'active',
+          nextDeadline: null,
+          secondsRemaining: null,
+        );
+      }
+      rethrow;
+    }
   }
 
   Future<ExpertDashboard> getExpertDashboard(String hackathonId) async {
@@ -548,11 +590,6 @@ class ApiService {
 
   Future<void> deleteDeadline(String hackathonId, String deadlineId) async {
     await _client.delete('/hackathons/$hackathonId/deadlines/$deadlineId');
-  }
-
-  Future<TimerResponse> getTimer(String hackathonId) async {
-    final response = await _client.get('/hackathons/$hackathonId/timer');
-    return TimerResponse.fromJson(response.data);
   }
 
   // ========== PUBLIC ==========

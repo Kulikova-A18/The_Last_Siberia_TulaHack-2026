@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/auth_provider.dart';
 import '../models/user.dart';
+import '../app.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -42,27 +43,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (!mounted) return;
 
       if (result.success) {
-        final user = ref.read(currentUserProvider);
-        debugPrint(
-            '✅ Login successful, navigating to home for role: ${user?.role}');
-
-        // Небольшая задержка для обновления состояния
+        ref.invalidate(authStateProvider);
         await Future.delayed(const Duration(milliseconds: 100));
+
+        final user = ref.read(currentUserProvider);
+        debugPrint('✅ Login successful, user role: ${user?.role}');
 
         if (!mounted) return;
 
-        switch (user?.role) {
-          case UserRole.admin:
-            context.go('/admin');
-            break;
-          case UserRole.expert:
-            context.go('/expert');
-            break;
-          case UserRole.team:
-            context.go('/team');
-            break;
-          default:
-            context.go('/public');
+        final context = rootNavigatorKey.currentContext;
+        if (context != null) {
+          switch (user?.role) {
+            case UserRole.admin:
+              context.go('/admin');
+              break;
+            case UserRole.expert:
+              context.go('/expert');
+              break;
+            case UserRole.team:
+              context.go('/team');
+              break;
+            default:
+              context.go('/public');
+          }
         }
       } else {
         setState(() {
@@ -112,10 +115,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     TextFormField(
                       controller: _loginController,
                       decoration: const InputDecoration(
-                        labelText: 'Логин',
-                        prefixIcon: Icon(Icons.person_outline),
-                        border: OutlineInputBorder(),
-                      ),
+                          labelText: 'Логин',
+                          prefixIcon: Icon(Icons.person_outline),
+                          border: OutlineInputBorder()),
                       validator: (v) =>
                           v?.isEmpty ?? true ? 'Введите логин' : null,
                     ),
@@ -124,10 +126,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       controller: _passwordController,
                       obscureText: true,
                       decoration: const InputDecoration(
-                        labelText: 'Пароль',
-                        prefixIcon: Icon(Icons.lock_outline),
-                        border: OutlineInputBorder(),
-                      ),
+                          labelText: 'Пароль',
+                          prefixIcon: Icon(Icons.lock_outline),
+                          border: OutlineInputBorder()),
                       validator: (v) =>
                           v?.isEmpty ?? true ? 'Введите пароль' : null,
                     ),
@@ -136,9 +137,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.errorContainer,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
+                            color: Theme.of(context).colorScheme.errorContainer,
+                            borderRadius: BorderRadius.circular(8)),
                         child: Row(
                           children: [
                             Icon(Icons.error_outline,
@@ -173,9 +173,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     const SizedBox(height: 16),
                     TextButton(
-                      onPressed: () => context.go('/public'),
-                      child: const Text('Открыть публичный рейтинг'),
-                    ),
+                        onPressed: () => context.go('/public'),
+                        child: const Text('Открыть публичный рейтинг')),
                   ],
                 ),
               ),

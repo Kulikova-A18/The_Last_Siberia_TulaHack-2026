@@ -5,9 +5,6 @@ import 'config/app_config.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Загружаем конфигурацию перед запуском
   await AppConfig.getInstance();
-
   runApp(const ProviderScope(child: HackRankApp()));
 }
