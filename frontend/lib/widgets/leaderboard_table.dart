@@ -15,11 +15,19 @@ class LeaderboardTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     if (entries.isEmpty) {
-      return const Center(
+      return Center(
         child: Padding(
-          padding: EdgeInsets.all(32),
-          child: Text('Нет данных для отображения'),
+          padding: const EdgeInsets.all(32),
+          child: Text(
+            'Нет данных для отображения',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: Colors.grey[500],
+            ),
+          ),
         ),
       );
     }
@@ -34,7 +42,7 @@ class LeaderboardTable extends StatelessWidget {
       children: [
         TableRow(
           decoration: BoxDecoration(
-            border: Border(bottom: BorderSide(color: Colors.grey[300]!)),
+            border: Border(bottom: BorderSide(color: Colors.grey[200]!)),
           ),
           children: [
             _HeaderCell('Место'),
@@ -44,19 +52,19 @@ class LeaderboardTable extends StatelessWidget {
         ),
         ...entries.map((entry) => TableRow(
               decoration: BoxDecoration(
-                border: Border(bottom: BorderSide(color: Colors.grey[200]!)),
+                border: Border(bottom: BorderSide(color: Colors.grey[100]!)),
               ),
               children: [
                 _PlaceCell(place: entry.place, showMedal: showMedals),
                 TableCell(
                   child: Padding(
                     padding: EdgeInsets.symmetric(
-                      horizontal: compact ? 8 : 16,
-                      vertical: compact ? 8 : 12,
+                      horizontal: compact ? 12 : 16,
+                      vertical: compact ? 10 : 14,
                     ),
                     child: Text(
                       entry.teamName,
-                      style: TextStyle(
+                      style: theme.textTheme.bodyMedium?.copyWith(
                         fontWeight: entry.place <= 3
                             ? FontWeight.w600
                             : FontWeight.normal,
@@ -67,14 +75,15 @@ class LeaderboardTable extends StatelessWidget {
                 TableCell(
                   child: Padding(
                     padding: EdgeInsets.symmetric(
-                      horizontal: compact ? 8 : 16,
-                      vertical: compact ? 8 : 12,
+                      horizontal: compact ? 12 : 16,
+                      vertical: compact ? 10 : 14,
                     ),
                     child: Text(
                       entry.finalScore.toStringAsFixed(1),
-                      style: const TextStyle(
+                      style: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w600,
-                        fontFeatures: [FontFeature.tabularFigures()],
+                        color: entry.place <= 3 ? colorScheme.primary : null,
+                        fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                       textAlign: TextAlign.right,
                     ),
@@ -90,21 +99,21 @@ class LeaderboardTable extends StatelessWidget {
 class _HeaderCell extends StatelessWidget {
   final String text;
   final Alignment alignment;
-
   const _HeaderCell(this.text, {this.alignment = Alignment.centerLeft});
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return TableCell(
       child: Container(
         alignment: alignment,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Text(
           text,
-          style: TextStyle(
+          style: theme.textTheme.labelSmall?.copyWith(
             fontWeight: FontWeight.w600,
-            color: Colors.grey[700],
-            fontSize: 12,
+            color: Colors.grey[600],
           ),
         ),
       ),
@@ -115,30 +124,31 @@ class _HeaderCell extends StatelessWidget {
 class _PlaceCell extends StatelessWidget {
   final int place;
   final bool showMedal;
-
   const _PlaceCell({required this.place, required this.showMedal});
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     Widget child;
+
     if (showMedal && place <= 3) {
       final colors = [
-        const Color(0xFFFFD700), // Gold
-        const Color(0xFFC0C0C0), // Silver
-        const Color(0xFFCD7F32), // Bronze
+        const Color(0xFFE6A817),
+        const Color(0xFF9E9E9E),
+        const Color(0xFF8D6E63),
       ];
       child = Container(
         width: 32,
         height: 32,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: colors[place - 1].withOpacity(0.2),
-          border: Border.all(color: colors[place - 1]),
+          color: colors[place - 1].withOpacity(0.15),
+          border: Border.all(color: colors[place - 1], width: 1.5),
         ),
         child: Center(
           child: Text(
             '$place',
-            style: TextStyle(
+            style: theme.textTheme.titleSmall?.copyWith(
               fontWeight: FontWeight.bold,
               color: colors[place - 1],
             ),
@@ -148,10 +158,12 @@ class _PlaceCell extends StatelessWidget {
     } else {
       child = Text(
         '$place',
-        style: const TextStyle(fontWeight: FontWeight.w500),
+        style: theme.textTheme.bodyMedium?.copyWith(
+          fontWeight: FontWeight.w500,
+          color: Colors.grey[600],
+        ),
       );
     }
-
     return TableCell(
       child: Padding(
         padding: const EdgeInsets.all(12),

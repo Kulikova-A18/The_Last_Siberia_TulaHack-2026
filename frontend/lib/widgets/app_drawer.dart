@@ -17,136 +17,181 @@ class AppDrawer extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Drawer(
       child: Column(
         children: [
-          UserAccountsDrawerHeader(
-            accountName: Text(user?.fullName ?? 'Пользователь'),
-            accountEmail: Text(user?.login ?? ''),
-            currentAccountPicture: CircleAvatar(
-              backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-              child: Text(
-                (user?.fullName ?? 'U')[0].toUpperCase(),
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onPrimaryContainer,
-                  fontSize: 24,
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(24, 48, 24, 24),
+            decoration: BoxDecoration(
+              color: colorScheme.primary.withOpacity(0.1),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: colorScheme.primary,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(
+                    Icons.analytics_outlined,
+                    size: 28,
+                    color: Colors.white,
+                  ),
                 ),
-              ),
+                const SizedBox(height: 16),
+                Text(
+                  user?.fullName ?? 'Пользователь',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  user?.login ?? '',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: Colors.grey[600],
+                  ),
+                ),
+              ],
             ),
           ),
           Expanded(
             child: ListView(
-              children: _buildMenuItems(context),
+              padding: EdgeInsets.zero,
+              children: _buildMenuItems(context, theme, colorScheme),
             ),
           ),
           const Divider(),
           ListTile(
-            leading: const Icon(Icons.logout),
+            leading: Icon(Icons.logout, color: Colors.grey[600]),
             title: const Text('Выйти'),
             onTap: () async {
               await ref.read(authStateProvider.notifier).logout();
-              if (context.mounted) {
-                context.go('/login');
-              }
+              if (context.mounted) context.go('/login');
             },
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 16),
         ],
       ),
     );
   }
 
-  List<Widget> _buildMenuItems(BuildContext context) {
+  List<Widget> _buildMenuItems(
+    BuildContext context,
+    ThemeData theme,
+    ColorScheme colorScheme,
+  ) {
+    final isSelected = (String route) => currentRoute == route;
+
     switch (role) {
       case UserRole.admin:
         return [
           _MenuItem(
             title: 'Дашборд',
-            icon: Icons.dashboard,
+            icon: Icons.dashboard_outlined,
+            selectedIcon: Icons.dashboard,
             route: '/admin',
-            currentRoute: currentRoute,
+            isSelected: isSelected('/admin'),
           ),
           _MenuItem(
             title: 'Пользователи',
-            icon: Icons.people,
+            icon: Icons.people_outline,
+            selectedIcon: Icons.people,
             route: '/admin/users',
-            currentRoute: currentRoute,
+            isSelected: isSelected('/admin/users'),
           ),
           _MenuItem(
             title: 'Команды',
-            icon: Icons.groups,
+            icon: Icons.groups_outlined,
+            selectedIcon: Icons.groups,
             route: '/admin/teams',
-            currentRoute: currentRoute,
+            isSelected: isSelected('/admin/teams'),
           ),
           _MenuItem(
             title: 'Критерии',
-            icon: Icons.rule,
+            icon: Icons.rule_outlined,
+            selectedIcon: Icons.rule,
             route: '/admin/criteria',
-            currentRoute: currentRoute,
+            isSelected: isSelected('/admin/criteria'),
           ),
           _MenuItem(
             title: 'Назначения',
-            icon: Icons.assignment_ind,
+            icon: Icons.assignment_outlined,
+            selectedIcon: Icons.assignment,
             route: '/admin/assignments',
-            currentRoute: currentRoute,
+            isSelected: isSelected('/admin/assignments'),
           ),
           _MenuItem(
             title: 'Результаты',
-            icon: Icons.leaderboard,
+            icon: Icons.leaderboard_outlined,
+            selectedIcon: Icons.leaderboard,
             route: '/admin/results',
-            currentRoute: currentRoute,
+            isSelected: isSelected('/admin/results'),
           ),
           const Divider(),
           _MenuItem(
             title: 'Публичный рейтинг',
-            icon: Icons.public,
+            icon: Icons.public_outlined,
+            selectedIcon: Icons.public,
             route: '/public',
-            currentRoute: currentRoute,
+            isSelected: isSelected('/public'),
           ),
         ];
       case UserRole.expert:
         return [
           _MenuItem(
             title: 'Мой дашборд',
-            icon: Icons.dashboard,
+            icon: Icons.dashboard_outlined,
+            selectedIcon: Icons.dashboard,
             route: '/expert',
-            currentRoute: currentRoute,
+            isSelected: isSelected('/expert'),
           ),
           _MenuItem(
             title: 'Назначенные команды',
-            icon: Icons.assignment,
+            icon: Icons.assignment_outlined,
+            selectedIcon: Icons.assignment,
             route: '/expert/teams',
-            currentRoute: currentRoute,
+            isSelected: isSelected('/expert/teams'),
           ),
           const Divider(),
           _MenuItem(
             title: 'Публичный рейтинг',
-            icon: Icons.public,
+            icon: Icons.public_outlined,
+            selectedIcon: Icons.public,
             route: '/public',
-            currentRoute: currentRoute,
+            isSelected: isSelected('/public'),
           ),
         ];
       case UserRole.team:
         return [
           _MenuItem(
             title: 'Профиль команды',
-            icon: Icons.info,
+            icon: Icons.info_outline,
+            selectedIcon: Icons.info,
             route: '/team',
-            currentRoute: currentRoute,
+            isSelected: isSelected('/team'),
           ),
           _MenuItem(
             title: 'Результаты',
-            icon: Icons.emoji_events,
+            icon: Icons.emoji_events_outlined,
+            selectedIcon: Icons.emoji_events,
             route: '/team/results',
-            currentRoute: currentRoute,
+            isSelected: isSelected('/team/results'),
           ),
           const Divider(),
           _MenuItem(
             title: 'Публичный рейтинг',
-            icon: Icons.public,
+            icon: Icons.public_outlined,
+            selectedIcon: Icons.public,
             route: '/public',
-            currentRoute: currentRoute,
+            isSelected: isSelected('/public'),
           ),
         ];
       case UserRole.public:
@@ -158,36 +203,39 @@ class AppDrawer extends ConsumerWidget {
 class _MenuItem extends StatelessWidget {
   final String title;
   final IconData icon;
+  final IconData selectedIcon;
   final String route;
-  final String currentRoute;
+  final bool isSelected;
 
   const _MenuItem({
     required this.title,
     required this.icon,
+    required this.selectedIcon,
     required this.route,
-    required this.currentRoute,
+    required this.isSelected,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isSelected = currentRoute == route;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return ListTile(
       leading: Icon(
-        icon,
-        color: isSelected ? Theme.of(context).colorScheme.primary : null,
+        isSelected ? selectedIcon : icon,
+        color: isSelected ? colorScheme.primary : Colors.grey[600],
       ),
       title: Text(
         title,
-        style: TextStyle(
-          color: isSelected ? Theme.of(context).colorScheme.primary : null,
-          fontWeight: isSelected ? FontWeight.w600 : null,
+        style: theme.textTheme.bodyLarge?.copyWith(
+          color: isSelected ? colorScheme.primary : Colors.grey[700],
+          fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
         ),
       ),
       selected: isSelected,
+      selectedTileColor: colorScheme.primary.withOpacity(0.05),
       onTap: () {
-        if (!isSelected) {
-          context.go(route);
-        }
+        if (!isSelected) context.go(route);
         Navigator.pop(context);
       },
     );

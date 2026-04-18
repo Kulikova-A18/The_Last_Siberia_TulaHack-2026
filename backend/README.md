@@ -1,46 +1,88 @@
-# Запуск
+# Бекенд
 
-# 1. Запуск базы данных (из папки database)
+## Настройка .env (в корне)
 
-```
-cd database
-chmod +x scripts/\*.sh
-./scripts/start.sh
-```
+Файл `.env` содержит конфигурацию окружения. Обязательные параметры:
 
-# 2. Запуск backend (из папки backend)
+| Параметр          | Описание           | Пример          |
+| ----------------- | ------------------ | --------------- |
+| POSTGRES_USER     | Пользователь БД    | hackathon_admin |
+| POSTGRES_PASSWORD | Пароль БД          | SecurePass123!  |
+| POSTGRES_DB       | Имя БД             | hackathon_db    |
+| BACKEND_PORT      | Порт API           | 8000            |
+| SECRET_KEY        | Секретный ключ JWT | random_string   |
+| DEBUG             | Режим отладки      | true/false      |
 
-```
+Остальные параметры имеют значения по умолчанию.
 
-cd ../backend
-chmod +x scripts/\*.sh
-./scripts/start.sh
+### Проверка
 
-```
-
-# Или запуск всего вместе из корня проекта:
-
-```
-
-cd backend && docker-compose up -d
-
+```bash
+curl http://localhost:8000/health
+# Ответ: {"status":"ok"}
 ```
 
-# Запуск из корня проекта
+---
 
-```
-# Остановить все контейнеры
-sudo docker-compose down -v
+## Таблица CURL команд
 
-# Очистить кэш Docker
-sudo docker system prune -a -f
-sudo docker builder prune -a -f
+Замените `<SERVER_IP>` на IP вашей машины.  
+Замените `<ACCESS_TOKEN>`, `<REFRESH_TOKEN>`, `<HACKATHON_ID>`, `<TEAM_ID>`, `<EXPERT_USER_ID>`, `<CRITERION_ID>` на полученные значения.
 
-# Удалить все тома (ВНИМАНИЕ! Удалит данные всех проектов)
-sudo docker volume prune -f
+| #   | Описание                        | Метод | Команда                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| --- | ------------------------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | Health Check                    | GET   | `curl http://<SERVER_IP>:8000/health`                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| 2   | Логин                           | POST  | `curl -X POST http://<SERVER_IP>:8000/api/v1/auth/login -H "Content-Type: application/json" -d '{"login":"admin","password":"Admin123!"}'`                                                                                                                                                                                                                                                                                                                                                             |
+| 3   | Информация о себе               | GET   | `curl http://<SERVER_IP>:8000/api/v1/auth/me -H "Authorization: Bearer <ACCESS_TOKEN>"`                                                                                                                                                                                                                                                                                                                                                                                                                |
+| 4   | Обновить токен                  | POST  | `curl -X POST http://<SERVER_IP>:8000/api/v1/auth/refresh -H "Content-Type: application/json" -d '{"refresh_token":"<REFRESH_TOKEN>"}'`                                                                                                                                                                                                                                                                                                                                                                |
+| 5   | Сменить пароль                  | POST  | `curl -X POST http://<SERVER_IP>:8000/api/v1/auth/change-password -H "Authorization: Bearer <ACCESS_TOKEN>" -H "Content-Type: application/json" -d '{"old_password":"Admin123!","new_password":"NewAdmin456!"}'`                                                                                                                                                                                                                                                                                       |
+| 6   | Выход                           | POST  | `curl -X POST http://<SERVER_IP>:8000/api/v1/auth/logout -H "Content-Type: application/json" -d '{"refresh_token":"<REFRESH_TOKEN>"}'`                                                                                                                                                                                                                                                                                                                                                                 |
+| 7   | Список пользователей            | GET   | `curl http://<SERVER_IP>:8000/api/v1/users/ -H "Authorization: Bearer <ACCESS_TOKEN>"`                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| 8   | Создать пользователя            | POST  | `curl -X POST http://<SERVER_IP>:8000/api/v1/users/ -H "Authorization: Bearer <ACCESS_TOKEN>" -H "Content-Type: application/json" -d '{"login":"expert1","password":"Expert123!","full_name":"John Expert","email":"expert1@example.com","role_code":"expert","is_active":true}'`                                                                                                                                                                                                                      |
+| 9   | Список хакатонов                | GET   | `curl http://<SERVER_IP>:8000/api/v1/hackathons/ -H "Authorization: Bearer <ACCESS_TOKEN>"`                                                                                                                                                                                                                                                                                                                                                                                                            |
+| 10  | Создать хакатон                 | POST  | `curl -X POST http://<SERVER_IP>:8000/api/v1/hackathons/ -H "Authorization: Bearer <ACCESS_TOKEN>" -H "Content-Type: application/json" -d '{"title":"HackRank 2024","description":"Annual hackathon","start_at":"2024-06-01T09:00:00Z","end_at":"2024-06-03T18:00:00Z"}'`                                                                                                                                                                                                                              |
+| 11  | Список команд                   | GET   | `curl "http://<SERVER_IP>:8000/api/v1/hackathons/<HACKATHON_ID>/teams?page=1&page_size=20" -H "Authorization: Bearer <ACCESS_TOKEN>"`                                                                                                                                                                                                                                                                                                                                                                  |
+| 12  | Создать команду                 | POST  | `curl -X POST http://<SERVER_IP>:8000/api/v1/hackathons/<HACKATHON_ID>/teams -H "Authorization: Bearer <ACCESS_TOKEN>" -H "Content-Type: application/json" -d '{"name":"Team Alpha","captain_name":"Alice Smith","contact_email":"alpha@example.com","project_title":"AI-Powered Solution","description":"Revolutionary AI platform","members":[{"full_name":"Alice Smith","email":"alice@example.com","is_captain":true},{"full_name":"Bob Johnson","email":"bob@example.com","is_captain":false}]}'` |
+| 13  | Список критериев                | GET   | `curl http://<SERVER_IP>:8000/api/v1/hackathons/<HACKATHON_ID>/criteria -H "Authorization: Bearer <ACCESS_TOKEN>"`                                                                                                                                                                                                                                                                                                                                                                                     |
+| 14  | Создать критерий                | POST  | `curl -X POST http://<SERVER_IP>:8000/api/v1/hackathons/<HACKATHON_ID>/criteria -H "Authorization: Bearer <ACCESS_TOKEN>" -H "Content-Type: application/json" -d '{"title":"Innovation","description":"How innovative is the solution","max_score":10.0,"weight_percent":25.0,"sort_order":1,"is_active":true}'`                                                                                                                                                                                       |
+| 15  | Назначить эксперта              | POST  | `curl -X POST http://<SERVER_IP>:8000/api/v1/hackathons/<HACKATHON_ID>/assignments -H "Authorization: Bearer <ACCESS_TOKEN>" -H "Content-Type: application/json" -d '{"expert_user_id":"<EXPERT_USER_ID>","team_id":"<TEAM_ID>"}'`                                                                                                                                                                                                                                                                     |
+| 16  | Массовое назначение             | POST  | `curl -X POST http://<SERVER_IP>:8000/api/v1/hackathons/<HACKATHON_ID>/assignments/bulk -H "Authorization: Bearer <ACCESS_TOKEN>" -H "Content-Type: application/json" -d '{"items":[{"expert_user_id":"<EXPERT_ID_1>","team_id":"<TEAM_ID_1>"}]}'`                                                                                                                                                                                                                                                     |
+| 17  | Назначенные команды (эксперт)   | GET   | `curl "http://<SERVER_IP>:8000/api/v1/hackathons/<HACKATHON_ID>/my/assigned-teams" -H "Authorization: Bearer <EXPERT_ACCESS_TOKEN>"`                                                                                                                                                                                                                                                                                                                                                                   |
+| 18  | Форма оценки (эксперт)          | GET   | `curl http://<SERVER_IP>:8000/api/v1/hackathons/<HACKATHON_ID>/teams/<TEAM_ID>/my-evaluation -H "Authorization: Bearer <EXPERT_ACCESS_TOKEN>"`                                                                                                                                                                                                                                                                                                                                                         |
+| 19  | Черновик оценки (эксперт)       | PUT   | `curl -X PUT http://<SERVER_IP>:8000/api/v1/hackathons/<HACKATHON_ID>/teams/<TEAM_ID>/my-evaluation/draft -H "Authorization: Bearer <EXPERT_ACCESS_TOKEN>" -H "Content-Type: application/json" -d '{"items":[{"criterion_id":"<CRITERION_ID>","raw_score":8.5,"comment":"Good work"}],"overall_comment":"Promising project"}'`                                                                                                                                                                         |
+| 20  | Отправить оценку (эксперт)      | POST  | `curl -X POST http://<SERVER_IP>:8000/api/v1/hackathons/<HACKATHON_ID>/teams/<TEAM_ID>/my-evaluation/submit -H "Authorization: Bearer <EXPERT_ACCESS_TOKEN>" -H "Content-Type: application/json" -d '{"items":[{"criterion_id":"<CRITERION_ID_1>","raw_score":8.5,"comment":"Excellent innovation"},{"criterion_id":"<CRITERION_ID_2>","raw_score":9.0,"comment":"Great technical execution"}],"overall_comment":"Very impressive project overall"}'`                                                  |
+| 21  | Лидерборд                       | GET   | `curl "http://<SERVER_IP>:8000/api/v1/hackathons/<HACKATHON_ID>/results/leaderboard" -H "Authorization: Bearer <ACCESS_TOKEN>"`                                                                                                                                                                                                                                                                                                                                                                        |
+| 22  | Пересчитать результаты (admin)  | POST  | `curl -X POST http://<SERVER_IP>:8000/api/v1/hackathons/<HACKATHON_ID>/results/recalculate -H "Authorization: Bearer <ACCESS_TOKEN>"`                                                                                                                                                                                                                                                                                                                                                                  |
+| 23  | Опубликовать результаты (admin) | POST  | `curl -X POST http://<SERVER_IP>:8000/api/v1/hackathons/<HACKATHON_ID>/results/publish -H "Authorization: Bearer <ACCESS_TOKEN>"`                                                                                                                                                                                                                                                                                                                                                                      |
+| 24  | Заморозить результаты (admin)   | POST  | `curl -X POST http://<SERVER_IP>:8000/api/v1/hackathons/<HACKATHON_ID>/results/freeze -H "Authorization: Bearer <ACCESS_TOKEN>"`                                                                                                                                                                                                                                                                                                                                                                       |
+| 25  | Получить победителей            | GET   | `curl "http://<SERVER_IP>:8000/api/v1/hackathons/<HACKATHON_ID>/results/winners?top=3" -H "Authorization: Bearer <ACCESS_TOKEN>"`                                                                                                                                                                                                                                                                                                                                                                      |
+| 26  | Экспорт результатов (admin)     | GET   | `curl "http://<SERVER_IP>:8000/api/v1/hackathons/<HACKATHON_ID>/results/export?format=csv" -H "Authorization: Bearer <ACCESS_TOKEN>" --output results.csv`                                                                                                                                                                                                                                                                                                                                             |
+| 27  | Публичный лидерборд             | GET   | `curl http://<SERVER_IP>:8000/api/v1/public/hackathons/<HACKATHON_ID>/leaderboard`                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| 28  | Публичный таймер                | GET   | `curl http://<SERVER_IP>:8000/api/v1/public/hackathons/<HACKATHON_ID>/timer`                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| 29  | Публичные победители            | GET   | `curl http://<SERVER_IP>:8000/api/v1/public/hackathons/<HACKATHON_ID>/winners`                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| 30  | WebSocket                       | WS    | `wscat -c ws://<SERVER_IP>:8000/api/v1/ws/public/hackathons/<HACKATHON_ID>/leaderboard`                                                                                                                                                                                                                                                                                                                                                                                                                |
 
-# Запустите 
-sudo  docker-compose up -d
+---
 
-```
+## Доступ к сервисам
 
+| Сервис             | URL                            | Логин               | Пароль         |
+| ------------------ | ------------------------------ | ------------------- | -------------- |
+| API                | `http://<SERVER_IP>:8000`      | -                   | -              |
+| API Docs (Swagger) | `http://<SERVER_IP>:8000/docs` | -                   | -              |
+| pgAdmin            | `http://<SERVER_IP>:5050`      | admin@hackathon.com | admin123       |
+| PostgreSQL         | `<SERVER_IP>:5432`             | hackathon_admin     | SecurePass123! |
+
+## Настройка pgAdmin
+
+В pgAdmin добавьте сервер:
+
+| Поле                  | Значение        |
+| --------------------- | --------------- |
+| Name                  | Hackathon DB    |
+| Host (изнутри Docker) | postgres        |
+| Host (с хоста)        | <SERVER_IP>     |
+| Port                  | 5432            |
+| Database              | hackathon_db    |
+| Username              | hackathon_admin |
+| Password              | SecurePass123!  |

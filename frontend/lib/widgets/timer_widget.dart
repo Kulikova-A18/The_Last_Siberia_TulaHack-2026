@@ -52,9 +52,10 @@ class _TimerWidgetState extends State<TimerWidget> {
   }
 
   Color _getColor() {
+    final theme = Theme.of(context);
     if (_remaining.inHours < 1) return Colors.red;
     if (_remaining.inHours < 6) return Colors.orange;
-    return Colors.green;
+    return theme.colorScheme.primary;
   }
 
   String _formatDuration(Duration d) {
@@ -68,29 +69,31 @@ class _TimerWidgetState extends State<TimerWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final color = _getColor();
+    final theme = Theme.of(context);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: _getColor().withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: _getColor().withOpacity(0.3)),
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.timer, color: _getColor(), size: 20),
+          Icon(Icons.timer_outlined, color: color, size: 20),
           const SizedBox(width: 8),
           Text(
             widget.label,
-            style: TextStyle(color: _getColor(), fontSize: 14),
+            style: theme.textTheme.bodySmall?.copyWith(color: color),
           ),
           const SizedBox(width: 8),
           Text(
             _formatDuration(_remaining),
-            style: TextStyle(
-              color: _getColor(),
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+            style: theme.textTheme.titleMedium?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w600,
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),

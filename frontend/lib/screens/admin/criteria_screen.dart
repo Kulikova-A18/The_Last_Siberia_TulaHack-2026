@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/hackathon_provider.dart';
 import '../../widgets/app_drawer.dart';
+import '../../services/api/api_service.dart';
+import '../../models/user.dart';
+import '../../models/criterion.dart';
 
 class CriteriaScreen extends ConsumerStatefulWidget {
   const CriteriaScreen({super.key});
@@ -11,447 +15,502 @@ class CriteriaScreen extends ConsumerStatefulWidget {
 }
 
 class _CriteriaScreenState extends ConsumerState<CriteriaScreen> {
-  final List<Map<String, dynamic>> _criteria = [
-    {
-      'id': '1',
-      'title': 'Инновационность',
-      'description': 'Новизна и оригинальность идеи',
-      'maxScore': 10.0,
-      'weight': 25.0,
-      'order': 1,
-      'active': true,
-    },
-    {
-      'id': '2',
-      'title': 'Техническая реализация',
-      'description': 'Качество кода, архитектура',
-      'maxScore': 10.0,
-      'weight': 25.0,
-      'order': 2,
-      'active': true,
-    },
-    {
-      'id': '3',
-      'title': 'Бизнес-ценность',
-      'description': 'Потенциал продукта на рынке',
-      'maxScore': 10.0,
-      'weight': 25.0,
-      'order': 3,
-      'active': true,
-    },
-    {
-      'id': '4',
-      'title': 'Презентация',
-      'description': 'Качество выступления и демо',
-      'maxScore': 10.0,
-      'weight': 25.0,
-      'order': 4,
-      'active': true,
-    },
-  ];
-
-  double get _totalWeight =>
-      _criteria.fold(0, (sum, c) => sum + (c['weight'] as num));
-
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
-    final isValid = _totalWeight == 100.0;
+    final hackathonIdAsync = ref.watch(hackathonIdProvider);
+    final apiService = ref.watch(apiServiceProvider);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Критерии оценки'),
         actions: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: isValid
-                  ? Colors.green.withOpacity(0.1)
-                  : Colors.red.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: isValid ? Colors.green : Colors.red,
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  isValid ? Icons.check_circle : Icons.error,
-                  color: isValid ? Colors.green : Colors.red,
-                  size: 18,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Сумма весов: ${_totalWeight.toStringAsFixed(0)}%',
-                  style: TextStyle(
-                    color: isValid ? Colors.green : Colors.red,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 16),
           IconButton(
-            onPressed: _addCriterion,
-            icon: const Icon(Icons.add),
+            onPressed: () => _showCreateCriterionDialog(context, apiService),
+            icon: Icon(Icons.add_outlined, color: colorScheme.secondary),
             tooltip: 'Добавить критерий',
           ),
         ],
       ),
       drawer: AppDrawer(
-        role: user!.role,
+        role: user?.role ?? UserRole.admin,
         currentRoute: '/admin/criteria',
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            if (!isValid)
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              colorScheme.primary.withOpacity(0.05),
+              colorScheme.background,
+            ],
+          ),
+        ),
+        child: hackathonIdAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (err, _) => Center(child: Text('Ошибка: $err')),
+          data: (hackathonId) => hackathonId.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.rule_outlined,
+                          size: 64, color: Colors.grey[400]),
+                      const SizedBox(height: 16),
+                      Text('Нет активного хакатона',
+                          style: theme.textTheme.bodyLarge),
+                    ],
+                  ),
+                )
+              : _CriteriaContent(hackathonId: hackathonId),
+        ),
+      ),
+    );
+  }
+
+  void _showCreateCriterionDialog(BuildContext context, ApiService apiService) {
+    final titleController = TextEditingController();
+    final descController = TextEditingController();
+    final maxScoreController = TextEditingController(text: '10');
+    final weightController = TextEditingController(text: '0');
+    final colorScheme = Theme.of(context).colorScheme;
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Новый критерий'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        content: SizedBox(
+          width: 450,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: titleController,
+                decoration: InputDecoration(
+                  labelText: 'Название',
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: descController,
+                decoration: InputDecoration(
+                  labelText: 'Описание',
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+                maxLines: 2,
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: maxScoreController,
+                      decoration: InputDecoration(
+                        labelText: 'Макс. балл',
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextField(
+                      controller: weightController,
+                      decoration: InputDecoration(
+                        labelText: 'Вес (%)',
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Отмена'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                    content: Text('Создание критерия будет реализовано')),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: colorScheme.primary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: const Text('Создать'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CriteriaContent extends ConsumerWidget {
+  final String hackathonId;
+  const _CriteriaContent({required this.hackathonId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final criteriaAsync = ref.watch(criteriaProvider(hackathonId));
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return criteriaAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (err, _) => Center(child: Text('Ошибка: $err')),
+      data: (data) {
+        final isValid = data.weightsValid;
+        return Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            children: [
               Container(
-                padding: const EdgeInsets.all(12),
-                margin: const EdgeInsets.only(bottom: 16),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
-                  color: Colors.red.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.red.withOpacity(0.3)),
+                  color: isValid
+                      ? Colors.green.withOpacity(0.1)
+                      : Colors.red.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                      color: isValid ? Colors.green : Colors.red, width: 1),
                 ),
                 child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.warning, color: Colors.red),
-                    const SizedBox(width: 12),
+                    Icon(
+                      isValid
+                          ? Icons.check_circle_outline
+                          : Icons.error_outline,
+                      color: isValid ? Colors.green : Colors.red,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
                     Text(
-                      'Сумма весов должна быть ровно 100%',
-                      style: TextStyle(color: Colors.red[700]),
+                      'Сумма весов: ${data.totalWeight.toStringAsFixed(0)}% ${isValid ? '' : '(должно быть 100%)'}',
+                      style: TextStyle(
+                        color: isValid ? Colors.green : Colors.red,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ],
                 ),
               ),
-            Expanded(
-              child: ReorderableListView(
-                onReorder: (oldIndex, newIndex) {
-                  setState(() {
-                    if (newIndex > oldIndex) newIndex--;
-                    final item = _criteria.removeAt(oldIndex);
-                    _criteria.insert(newIndex, item);
-                    _updateOrder();
-                  });
-                },
-                children: _criteria
-                    .map((criterion) => _CriterionCard(
-                          key: ValueKey(criterion['id']),
-                          criterion: criterion,
-                          onEdit: () => _editCriterion(criterion),
-                          onDelete: () => _deleteCriterion(criterion['id']),
-                          onToggleActive: () => _toggleActive(criterion['id']),
-                        ))
-                    .toList(),
+              const SizedBox(height: 24),
+              Expanded(
+                child: data.items.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.rule_outlined,
+                                size: 48, color: Colors.grey[400]),
+                            const SizedBox(height: 16),
+                            Text('Нет критериев. Добавьте критерии.',
+                                style: theme.textTheme.bodyLarge),
+                          ],
+                        ),
+                      )
+                    : ListView.builder(
+                        itemCount: data.items.length,
+                        itemBuilder: (context, index) {
+                          final c = data.items[index];
+                          return Card(
+                            elevation: 0,
+                            margin: const EdgeInsets.only(bottom: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(16),
+                              onTap: () => _showEditCriterionDialog(
+                                  context, ref, hackathonId, c),
+                              child: Padding(
+                                padding: const EdgeInsets.all(16),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 48,
+                                      height: 48,
+                                      decoration: BoxDecoration(
+                                        color: colorScheme.primary
+                                            .withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Center(
+                                        child: Text(
+                                          '${c.sortOrder}',
+                                          style: theme.textTheme.titleMedium
+                                              ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            color: colorScheme.primary,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Text(
+                                                c.title,
+                                                style: theme
+                                                    .textTheme.titleMedium
+                                                    ?.copyWith(
+                                                  fontWeight: FontWeight.w600,
+                                                  color: c.isActive
+                                                      ? null
+                                                      : Colors.grey,
+                                                ),
+                                              ),
+                                              if (!c.isActive) ...[
+                                                const SizedBox(width: 8),
+                                                Container(
+                                                  padding: const EdgeInsets
+                                                      .symmetric(
+                                                    horizontal: 6,
+                                                    vertical: 2,
+                                                  ),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.grey[200],
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                            4),
+                                                  ),
+                                                  child: const Text(
+                                                    'Неактивен',
+                                                    style:
+                                                        TextStyle(fontSize: 10),
+                                                  ),
+                                                ),
+                                              ],
+                                            ],
+                                          ),
+                                          if (c.description != null) ...[
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              c.description!,
+                                              style: theme.textTheme.bodySmall
+                                                  ?.copyWith(
+                                                color: Colors.grey[600],
+                                              ),
+                                            ),
+                                          ],
+                                          const SizedBox(height: 8),
+                                          Row(
+                                            children: [
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                  horizontal: 8,
+                                                  vertical: 4,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.blue
+                                                      .withOpacity(0.1),
+                                                  borderRadius:
+                                                      BorderRadius.circular(6),
+                                                ),
+                                                child: Text(
+                                                  'Макс: ${c.maxScore}',
+                                                  style: const TextStyle(
+                                                      fontSize: 12),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                  horizontal: 8,
+                                                  vertical: 4,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: colorScheme.primary
+                                                      .withOpacity(0.1),
+                                                  borderRadius:
+                                                      BorderRadius.circular(6),
+                                                ),
+                                                child: Text(
+                                                  'Вес: ${c.weightPercent}%',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: colorScheme.primary,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Icon(Icons.chevron_right,
+                                        color: Colors.grey[400]),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
               ),
-            ),
-          ],
-        ),
-      ),
+            ],
+          ),
+        );
+      },
     );
   }
 
-  void _updateOrder() {
-    for (var i = 0; i < _criteria.length; i++) {
-      _criteria[i]['order'] = i + 1;
-    }
-  }
+  void _showEditCriterionDialog(
+    BuildContext context,
+    WidgetRef ref,
+    String hackathonId,
+    Criterion criterion,
+  ) {
+    final titleController = TextEditingController(text: criterion.title);
+    final descController = TextEditingController(text: criterion.description);
+    final maxScoreController =
+        TextEditingController(text: criterion.maxScore.toString());
+    final weightController =
+        TextEditingController(text: criterion.weightPercent.toString());
+    final colorScheme = Theme.of(context).colorScheme;
 
-  void _addCriterion() {
     showDialog(
       context: context,
-      builder: (context) => _CriterionDialog(
-        onSave: (data) {
-          setState(() {
-            _criteria.add({
-              'id': DateTime.now().millisecondsSinceEpoch.toString(),
-              ...data,
-              'order': _criteria.length + 1,
-              'active': true,
-            });
-          });
-        },
-      ),
-    );
-  }
-
-  void _editCriterion(Map<String, dynamic> criterion) {
-    showDialog(
-      context: context,
-      builder: (context) => _CriterionDialog(
-        criterion: criterion,
-        onSave: (data) {
-          setState(() {
-            criterion['title'] = data['title'];
-            criterion['description'] = data['description'];
-            criterion['maxScore'] = data['maxScore'];
-            criterion['weight'] = data['weight'];
-          });
-        },
-      ),
-    );
-  }
-
-  void _deleteCriterion(String id) {
-    setState(() {
-      _criteria.removeWhere((c) => c['id'] == id);
-      _updateOrder();
-    });
-  }
-
-  void _toggleActive(String id) {
-    setState(() {
-      final criterion = _criteria.firstWhere((c) => c['id'] == id);
-      criterion['active'] = !criterion['active'];
-    });
-  }
-}
-
-class _CriterionCard extends StatelessWidget {
-  final Map<String, dynamic> criterion;
-  final VoidCallback onEdit;
-  final VoidCallback onDelete;
-  final VoidCallback onToggleActive;
-
-  const _CriterionCard({
-    super.key,
-    required this.criterion,
-    required this.onEdit,
-    required this.onDelete,
-    required this.onToggleActive,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: ListTile(
-        leading: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primaryContainer,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Center(
-            child: Text(
-              '${criterion['order']}',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: Theme.of(context).colorScheme.onPrimaryContainer,
+      builder: (context) => AlertDialog(
+        title: const Text('Редактировать критерий'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        content: SizedBox(
+          width: 450,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: titleController,
+                decoration: InputDecoration(
+                  labelText: 'Название',
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
               ),
-            ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: descController,
+                decoration: InputDecoration(
+                  labelText: 'Описание',
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+                maxLines: 2,
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: maxScoreController,
+                      decoration: InputDecoration(
+                        labelText: 'Макс. балл',
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextField(
+                      controller: weightController,
+                      decoration: InputDecoration(
+                        labelText: 'Вес (%)',
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
-        title: Row(
-          children: [
-            Text(
-              criterion['title'],
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: criterion['active'] ? null : Colors.grey,
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Отмена'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                    content: Text('Редактирование будет реализовано')),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: colorScheme.primary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
               ),
             ),
-            if (!criterion['active'])
-              Container(
-                margin: const EdgeInsets.only(left: 8),
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: const Text(
-                  'Неактивен',
-                  style: TextStyle(fontSize: 10),
-                ),
-              ),
-          ],
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (criterion['description'] != null)
-              Text(
-                criterion['description'],
-                style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-              ),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: Colors.blue.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    'Макс: ${criterion['maxScore']}',
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    'Вес: ${criterion['weight']}%',
-                    style: const TextStyle(fontSize: 12),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              icon: const Icon(Icons.edit, size: 20),
-              onPressed: onEdit,
-              tooltip: 'Редактировать',
-            ),
-            IconButton(
-              icon: Icon(
-                criterion['active'] ? Icons.visibility_off : Icons.visibility,
-                size: 20,
-              ),
-              onPressed: onToggleActive,
-              tooltip: criterion['active'] ? 'Деактивировать' : 'Активировать',
-            ),
-            IconButton(
-              icon: const Icon(Icons.delete, size: 20, color: Colors.red),
-              onPressed: onDelete,
-              tooltip: 'Удалить',
-            ),
-          ],
-        ),
+            child: const Text('Сохранить'),
+          ),
+        ],
       ),
-    );
-  }
-}
-
-class _CriterionDialog extends StatefulWidget {
-  final Map<String, dynamic>? criterion;
-  final Function(Map<String, dynamic>) onSave;
-
-  const _CriterionDialog({this.criterion, required this.onSave});
-
-  @override
-  State<_CriterionDialog> createState() => _CriterionDialogState();
-}
-
-class _CriterionDialogState extends State<_CriterionDialog> {
-  late TextEditingController _titleController;
-  late TextEditingController _descController;
-  late TextEditingController _maxScoreController;
-  late TextEditingController _weightController;
-
-  @override
-  void initState() {
-    super.initState();
-    _titleController =
-        TextEditingController(text: widget.criterion?['title'] ?? '');
-    _descController =
-        TextEditingController(text: widget.criterion?['description'] ?? '');
-    _maxScoreController = TextEditingController(
-        text: widget.criterion?['maxScore']?.toString() ?? '10');
-    _weightController = TextEditingController(
-        text: widget.criterion?['weight']?.toString() ?? '0');
-  }
-
-  @override
-  void dispose() {
-    _titleController.dispose();
-    _descController.dispose();
-    _maxScoreController.dispose();
-    _weightController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(widget.criterion == null
-          ? 'Новый критерий'
-          : 'Редактировать критерий'),
-      content: SizedBox(
-        width: 400,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _titleController,
-              decoration: const InputDecoration(
-                labelText: 'Название',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _descController,
-              decoration: const InputDecoration(
-                labelText: 'Описание',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 2,
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _maxScoreController,
-                    decoration: const InputDecoration(
-                      labelText: 'Макс. балл',
-                      border: OutlineInputBorder(),
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextField(
-                    controller: _weightController,
-                    decoration: const InputDecoration(
-                      labelText: 'Вес (%)',
-                      border: OutlineInputBorder(),
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Отмена'),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            final data = {
-              'title': _titleController.text,
-              'description': _descController.text,
-              'maxScore': double.tryParse(_maxScoreController.text) ?? 10.0,
-              'weight': double.tryParse(_weightController.text) ?? 0.0,
-            };
-            widget.onSave(data);
-            Navigator.pop(context);
-          },
-          child: const Text('Сохранить'),
-        ),
-      ],
     );
   }
 }

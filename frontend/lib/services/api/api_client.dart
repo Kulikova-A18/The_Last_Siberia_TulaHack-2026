@@ -5,9 +5,11 @@ import '../../config/app_config.dart';
 import '../token_storage.dart';
 import '../auth_service.dart';
 
-/// HTTP клиент с поддержкой JWT авторизации и автоматическим обновлением токенов
+typedef ApiLogCallback = void Function(String message);
+
 class ApiClient {
   static ApiClient? _instance;
+  static ApiLogCallback? _logCallback;
 
   late final Dio _dio;
   late final TokenStorage _tokenStorage;
@@ -22,15 +24,15 @@ class ApiClient {
     required TokenStorage tokenStorage,
   })  : _config = config,
         _tokenStorage = tokenStorage {
-    _dio = Dio(BaseOptions(
+    final options = BaseOptions(
       baseUrl: config.fullApiUrl,
       connectTimeout: Duration(seconds: config.connectTimeout),
       receiveTimeout: Duration(seconds: config.receiveTimeout),
-      sendTimeout: Duration(seconds: config.sendTimeout),
       headers: config.defaultHeaders,
       validateStatus: (status) => status != null && status < 500,
-    ));
+    );
 
+    _dio = Dio(options);
     _setupInterceptors();
   }
 
@@ -42,111 +44,133 @@ class ApiClient {
     return _instance!;
   }
 
+  static void setLogCallback(ApiLogCallback callback) {
+    _logCallback = callback;
+  }
+
+  void _log(String message) {
+    debugPrint(message);
+    _logCallback?.call(message);
+  }
+
   void setAuthService(AuthService authService) {
     _authService = authService;
   }
 
   void _setupInterceptors() {
-    // Request interceptor - добавляет токен
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
         final token = await _tokenStorage.getAccessToken();
         if (token != null) {
           options.headers['Authorization'] = 'Bearer $token';
+          _log('[REQUEST] AUTH ${options.method} ${options.uri}');
+        } else {
+          _log('[REQUEST] PUBLIC ${options.method} ${options.uri}');
         }
-
-        if (_config.logRequests) {
-          _logRequest(options);
+        if (options.data != null) {
+          _log('  Body: ${_truncate(options.data.toString())}');
         }
-
         return handler.next(options);
       },
       onResponse: (response, handler) {
-        if (_config.logResponses) {
-          _logResponse(response);
-        }
+        final status = response.statusCode != null && response.statusCode! < 300
+            ? 'SUCCESS'
+            : 'WARNING';
+        _log(
+            '[RESPONSE] $status HTTP ${response.statusCode} ${response.requestOptions.uri}');
         return handler.next(response);
       },
       onError: (DioException error, handler) async {
+        _log('[ERROR] ${error.message}');
+        _log('  URL: ${error.requestOptions.uri}');
+        if (error.response != null) {
+          _log('  Status: ${error.response?.statusCode}');
+          _log('  Data: ${error.response?.data}');
+        }
+
+        if (error.type == DioExceptionType.connectionError ||
+            error.type == DioExceptionType.connectionTimeout ||
+            error.type == DioExceptionType.receiveTimeout) {
+          _log(
+              '[NETWORK] Network error - check if backend is running and CORS is configured');
+          return handler.next(error);
+        }
+
         if (error.response?.statusCode == 401) {
-          // Токен истек или невалиден - пробуем обновить
+          _log('[AUTH] Attempting token refresh...');
           final shouldRetry = await _handleUnauthorized(error);
           if (shouldRetry) {
-            // Повторяем запрос с новым токеном
+            _log('[AUTH] Token refreshed, retrying request');
             final retryOptions = error.requestOptions;
             final newToken = await _tokenStorage.getAccessToken();
-
             if (newToken != null) {
               retryOptions.headers['Authorization'] = 'Bearer $newToken';
               try {
                 final response = await _dio.fetch(retryOptions);
                 return handler.resolve(response);
               } catch (e) {
+                _log('[ERROR] Retry failed: $e');
                 return handler.reject(e as DioException);
               }
             }
+          } else {
+            _log('[AUTH] Token refresh failed');
           }
 
-          // Если не удалось обновить - разлогиниваем
           if (_authService != null &&
               error.requestOptions.path != '/auth/login' &&
               error.requestOptions.path != '/auth/refresh') {
             await _authService!.logout();
+            _log('[AUTH] Logged out due to auth failure');
           }
         }
 
         return handler.next(error);
       },
     ));
+  }
 
-    // Logging interceptor
-    if (kDebugMode) {
-      _dio.interceptors.add(LogInterceptor(
-        requestBody: _config.logRequests,
-        responseBody: _config.logResponses,
-      ));
-    }
+  String _truncate(String text, {int maxLength = 200}) {
+    if (text.length <= maxLength) return text;
+    return '${text.substring(0, maxLength)}...';
   }
 
   Future<bool> _handleUnauthorized(DioException error) async {
     if (_isRefreshing) {
-      // Ждем завершения текущего обновления
       final completer = Completer<void>();
       _refreshCompleters.add(completer);
       await completer.future;
       return true;
     }
-
     _isRefreshing = true;
-
     try {
       final refreshToken = await _tokenStorage.getRefreshToken();
       if (refreshToken == null) {
+        _log('[AUTH] No refresh token available');
         return false;
       }
-
+      _log('[REQUEST] REFRESH POST /auth/refresh');
       final response = await _dio.post(
         '/auth/refresh',
         data: {'refresh_token': refreshToken},
+        options: Options(headers: {'Authorization': null}),
       );
-
       if (response.statusCode == 200) {
         final newAccessToken = response.data['access_token'];
+        final newRefreshToken = response.data['refresh_token'];
         await _tokenStorage.saveTokens(
           accessToken: newAccessToken,
-          refreshToken: refreshToken,
+          refreshToken: newRefreshToken,
         );
-
-        // Уведомляем всех ожидающих
+        _log('[AUTH] Tokens refreshed and saved');
         for (final completer in _refreshCompleters) {
           completer.complete();
         }
-
         return true;
       }
-
       return false;
     } catch (e) {
+      _log('[ERROR] Refresh error: $e');
       for (final completer in _refreshCompleters) {
         completer.completeError(e);
       }
@@ -157,89 +181,41 @@ class ApiClient {
     }
   }
 
-  void _logRequest(RequestOptions options) {
-    debugPrint('🌐 REQUEST: ${options.method} ${options.uri}');
-    if (options.data != null) {
-      debugPrint('📤 Body: ${options.data}');
-    }
-  }
-
-  void _logResponse(Response response) {
-    debugPrint(
-        '✅ RESPONSE: ${response.statusCode} ${response.requestOptions.uri}');
-  }
-
-  // Публичные методы API
-
-  Future<Response> get(
-    String path, {
-    Map<String, dynamic>? queryParameters,
-    Options? options,
-  }) async {
-    if (_config.mockEnabled && _shouldMock(path)) {
-      return _getMockResponse(path, queryParameters);
-    }
+  Future<Response> get(String path,
+      {Map<String, dynamic>? queryParameters, Options? options}) async {
     return await _dio.get(path,
         queryParameters: queryParameters, options: options);
   }
 
-  Future<Response> post(
-    String path, {
-    dynamic data,
-    Map<String, dynamic>? queryParameters,
-    Options? options,
-  }) async {
-    if (_config.mockEnabled && _shouldMock(path)) {
-      return _getMockResponse(path, queryParameters,
-          method: 'POST', data: data);
-    }
+  Future<Response> post(String path,
+      {dynamic data,
+      Map<String, dynamic>? queryParameters,
+      Options? options}) async {
     return await _dio.post(path,
         data: data, queryParameters: queryParameters, options: options);
   }
 
-  Future<Response> put(
-    String path, {
-    dynamic data,
-    Map<String, dynamic>? queryParameters,
-    Options? options,
-  }) async {
+  Future<Response> put(String path,
+      {dynamic data,
+      Map<String, dynamic>? queryParameters,
+      Options? options}) async {
     return await _dio.put(path,
         data: data, queryParameters: queryParameters, options: options);
   }
 
-  Future<Response> patch(
-    String path, {
-    dynamic data,
-    Map<String, dynamic>? queryParameters,
-    Options? options,
-  }) async {
+  Future<Response> patch(String path,
+      {dynamic data,
+      Map<String, dynamic>? queryParameters,
+      Options? options}) async {
     return await _dio.patch(path,
         data: data, queryParameters: queryParameters, options: options);
   }
 
-  Future<Response> delete(
-    String path, {
-    dynamic data,
-    Map<String, dynamic>? queryParameters,
-    Options? options,
-  }) async {
+  Future<Response> delete(String path,
+      {dynamic data,
+      Map<String, dynamic>? queryParameters,
+      Options? options}) async {
     return await _dio.delete(path,
         data: data, queryParameters: queryParameters, options: options);
-  }
-
-  bool _shouldMock(String path) {
-    // В мок-режиме обрабатываем только определенные эндпоинты
-    return true;
-  }
-
-  Response _getMockResponse(String path, Map<String, dynamic>? params,
-      {String method = 'GET', dynamic data}) {
-    // Здесь будет логика мок-ответов для демо-режима
-    // Пока возвращаем заглушку
-    return Response(
-      requestOptions: RequestOptions(path: path),
-      statusCode: 200,
-      data: {'mock': true, 'path': path},
-    );
   }
 }

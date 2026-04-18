@@ -1,9 +1,8 @@
-import 'package:hackrank_frontend/models/team.dart';
+import 'team.dart';
 
 class EvaluationItem {
   final String criterionId;
   final String title;
-  final String? description;
   final double maxScore;
   final double weightPercent;
   final double? rawScore;
@@ -12,7 +11,6 @@ class EvaluationItem {
   EvaluationItem({
     required this.criterionId,
     required this.title,
-    this.description,
     required this.maxScore,
     required this.weightPercent,
     this.rawScore,
@@ -23,7 +21,6 @@ class EvaluationItem {
     return EvaluationItem(
       criterionId: json['criterion_id'],
       title: json['title'],
-      description: json['description'],
       maxScore: (json['max_score'] as num).toDouble(),
       weightPercent: (json['weight_percent'] as num).toDouble(),
       rawScore: (json['raw_score'] as num?)?.toDouble(),
@@ -35,7 +32,7 @@ class EvaluationItem {
 class MyEvaluation {
   final String? evaluationId;
   final String status;
-  final Team team;
+  final Map<String, dynamic> team;
   final List<EvaluationItem> criteria;
   final String? overallComment;
 
@@ -51,10 +48,11 @@ class MyEvaluation {
     return MyEvaluation(
       evaluationId: json['evaluation_id'],
       status: json['status'],
-      team: Team.fromJson(json['team']),
-      criteria: (json['criteria'] as List)
-          .map((e) => EvaluationItem.fromJson(e))
-          .toList(),
+      team: json['team'] as Map<String, dynamic>? ?? {},
+      criteria: (json['criteria'] as List?)
+              ?.map((e) => EvaluationItem.fromJson(e))
+              .toList() ??
+          [],
       overallComment: json['overall_comment'],
     );
   }
@@ -84,6 +82,32 @@ class AssignedTeam {
       submittedAt: json['submitted_at'] != null
           ? DateTime.parse(json['submitted_at'])
           : null,
+    );
+  }
+}
+
+class AssignedTeamListResponse {
+  final List<AssignedTeam> items;
+  final int page;
+  final int pageSize;
+  final int total;
+
+  AssignedTeamListResponse({
+    required this.items,
+    required this.page,
+    required this.pageSize,
+    required this.total,
+  });
+
+  factory AssignedTeamListResponse.fromJson(Map<String, dynamic> json) {
+    return AssignedTeamListResponse(
+      items: (json['items'] as List?)
+              ?.map((e) => AssignedTeam.fromJson(e))
+              .toList() ??
+          [],
+      page: json['page'] ?? 1,
+      pageSize: json['page_size'] ?? 20,
+      total: json['total'] ?? 0,
     );
   }
 }

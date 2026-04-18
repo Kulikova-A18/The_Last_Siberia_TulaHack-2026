@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hackrank_frontend/screens/login_screen.dart';
 
 import 'providers/auth_provider.dart';
 import 'models/user.dart';
-import 'screens/login_screen.dart';
+
 import 'screens/admin/admin_dashboard_screen.dart';
 import 'screens/admin/users_screen.dart';
 import 'screens/admin/teams_screen.dart';
@@ -19,52 +20,70 @@ import 'screens/team/team_profile_screen.dart';
 import 'screens/team/team_result_screen.dart';
 import 'screens/public/public_leaderboard_screen.dart';
 
-class HackRankApp extends ConsumerWidget {
+final GlobalKey<NavigatorState> rootNavigatorKey = GlobalKey<NavigatorState>();
+
+class HackRankApp extends ConsumerStatefulWidget {
   const HackRankApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authStateProvider);
-    final config = ref.watch(appConfigProvider);
+  ConsumerState<HackRankApp> createState() => _HackRankAppState();
+}
 
-    final router = GoRouter(
-      initialLocation: '/public',
+class _HackRankAppState extends ConsumerState<HackRankApp> {
+  late final GoRouter _router;
+
+  @override
+  void initState() {
+    super.initState();
+    _router = _buildRouter();
+  }
+
+  GoRouter _buildRouter() {
+    return GoRouter(
+      navigatorKey: rootNavigatorKey,
+      initialLocation: '/login',
       redirect: (context, state) {
+        final authState = ref.read(authStateProvider);
         final user = authState.valueOrNull;
         final isLoggingIn = state.matchedLocation == '/login';
         final isPublic = state.matchedLocation.startsWith('/public');
 
-        // Публичные страницы доступны всегда
         if (isPublic) return null;
 
-        // Не авторизован и не на странице логина -> перенаправляем на логин
         if (user == null && !isLoggingIn) {
           return '/login';
         }
 
-        // Авторизован, но пытается зайти на логин -> перенаправляем на домашнюю
         if (user != null && isLoggingIn) {
           return _getHomePath(user.role);
+        }
+
+        if (user != null) {
+          final location = state.matchedLocation;
+          if (location.startsWith('/admin') && user.role != UserRole.admin) {
+            return _getHomePath(user.role);
+          }
+          if (location.startsWith('/expert') && user.role != UserRole.expert) {
+            return _getHomePath(user.role);
+          }
+          if (location.startsWith('/team') && user.role != UserRole.team) {
+            return _getHomePath(user.role);
+          }
         }
 
         return null;
       },
       routes: [
-        // Авторизация
         GoRoute(
           path: '/login',
           name: 'login',
           builder: (context, state) => const LoginScreen(),
         ),
-
-        // Публичные страницы
         GoRoute(
           path: '/public',
           name: 'public',
           builder: (context, state) => const PublicLeaderboardScreen(),
         ),
-
-        // Администратор
         GoRoute(
           path: '/admin',
           name: 'admin_dashboard',
@@ -95,8 +114,6 @@ class HackRankApp extends ConsumerWidget {
           name: 'admin_results',
           builder: (context, state) => const ResultsScreen(),
         ),
-
-        // Эксперт
         GoRoute(
           path: '/expert',
           name: 'expert_dashboard',
@@ -114,8 +131,6 @@ class HackRankApp extends ConsumerWidget {
             teamId: state.pathParameters['teamId']!,
           ),
         ),
-
-        // Команда
         GoRoute(
           path: '/team',
           name: 'team_profile',
@@ -132,13 +147,12 @@ class HackRankApp extends ConsumerWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.error_outline, size: 64, color: Colors.red),
+              Icon(Icons.error_outline, size: 64, color: Colors.grey[400]),
               const SizedBox(height: 16),
               const Text(
                 'Страница не найдена',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: 8),
               Text(
                 'Путь "${state.uri}" не существует',
                 style: TextStyle(color: Colors.grey[600]),
@@ -153,51 +167,6 @@ class HackRankApp extends ConsumerWidget {
         ),
       ),
     );
-
-    return MaterialApp.router(
-      title: 'HackRank',
-      debugShowCheckedModeBanner: config.isDevelopment,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF2563EB),
-          brightness: Brightness.light,
-        ),
-        useMaterial3: true,
-        textTheme: GoogleFonts.interTextTheme(),
-        cardTheme: CardThemeData(
-          elevation: 2,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 12,
-          ),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-        ),
-        outlinedButtonTheme: OutlinedButtonThemeData(
-          style: OutlinedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
-          ),
-        ),
-      ),
-      routerConfig: router,
-    );
   }
 
   String _getHomePath(UserRole role) {
@@ -211,5 +180,154 @@ class HackRankApp extends ConsumerWidget {
       case UserRole.public:
         return '/public';
     }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final authState = ref.watch(authStateProvider);
+
+    return MaterialApp.router(
+      title: 'HackRank',
+      debugShowCheckedModeBanner: false,
+      theme: _buildTheme(),
+      routerConfig: _router,
+      builder: (context, child) {
+        return authState.when(
+          data: (_) => child ?? const SizedBox(),
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (err, _) => Center(child: Text('Ошибка: $err')),
+        );
+      },
+    );
+  }
+
+  ThemeData _buildTheme() {
+    const primaryColor = Color(0xFFE6A817);
+    const secondaryColor = Color(0xFF2D2D2D);
+    const backgroundColor = Color(0xFFF5F5F5);
+    const surfaceColor = Color(0xFFFFFFFF);
+    const errorColor = Color(0xFFD32F2F);
+
+    return ThemeData(
+      useMaterial3: true,
+      colorScheme: ColorScheme.light(
+        primary: primaryColor,
+        secondary: secondaryColor,
+        surface: surfaceColor,
+        background: backgroundColor,
+        error: errorColor,
+        onPrimary: Colors.white,
+        onSecondary: Colors.white,
+        onSurface: secondaryColor,
+        onBackground: secondaryColor,
+        onError: Colors.white,
+        primaryContainer: primaryColor.withOpacity(0.1),
+        secondaryContainer: secondaryColor.withOpacity(0.1),
+      ),
+      scaffoldBackgroundColor: backgroundColor,
+      textTheme: GoogleFonts.interTextTheme().copyWith(
+        displayLarge:
+            const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+        displayMedium:
+            const TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+        displaySmall:
+            const TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
+        headlineLarge:
+            const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+        headlineMedium:
+            const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+        titleLarge: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        bodyLarge: const TextStyle(fontSize: 14),
+        bodyMedium: const TextStyle(fontSize: 13),
+        labelLarge: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+      ),
+      cardTheme: CardThemeData(
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        clipBehavior: Clip.antiAlias,
+        color: surfaceColor,
+        shadowColor: Colors.black.withOpacity(0.05),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey[200]!),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: primaryColor, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: errorColor),
+        ),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: primaryColor,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+        ),
+      ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: secondaryColor,
+          side: BorderSide(color: secondaryColor.withOpacity(0.3)),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+        ),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: primaryColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+      ),
+      appBarTheme: const AppBarTheme(
+        elevation: 0,
+        centerTitle: false,
+        backgroundColor: Colors.transparent,
+        foregroundColor: secondaryColor,
+        titleTextStyle: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          color: secondaryColor,
+        ),
+      ),
+      dividerTheme: DividerThemeData(
+        color: Colors.grey[200],
+        thickness: 1,
+        space: 1,
+      ),
+      chipTheme: ChipThemeData(
+        backgroundColor: primaryColor.withOpacity(0.1),
+        selectedColor: primaryColor,
+        labelStyle: const TextStyle(fontSize: 13),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+    );
   }
 }

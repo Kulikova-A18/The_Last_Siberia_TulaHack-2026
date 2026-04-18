@@ -22,10 +22,13 @@ class ScoreInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -37,8 +40,7 @@ class ScoreInput extends StatelessWidget {
                     children: [
                       Text(
                         label,
-                        style: const TextStyle(
-                          fontSize: 16,
+                        style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -46,8 +48,7 @@ class ScoreInput extends StatelessWidget {
                         const SizedBox(height: 4),
                         Text(
                           description!,
-                          style: TextStyle(
-                            fontSize: 13,
+                          style: theme.textTheme.bodySmall?.copyWith(
                             color: Colors.grey[600],
                           ),
                         ),
@@ -59,32 +60,37 @@ class ScoreInput extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: Colors.grey[100],
+                    color: colorScheme.primary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     'из $maxScore',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey[700],
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: colorScheme.primary,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             Row(
               children: [
                 SizedBox(
-                  width: 100,
+                  width: 80,
                   child: TextFormField(
                     initialValue: value?.toString() ?? '',
                     keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      contentPadding:
-                          EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
                     ),
+                    textAlign: TextAlign.center,
                     onChanged: (val) {
                       final parsed = double.tryParse(val);
                       if (parsed != null && parsed >= 0 && parsed <= maxScore) {
@@ -103,20 +109,25 @@ class ScoreInput extends StatelessWidget {
                     max: maxScore,
                     divisions: maxScore.toInt(),
                     label: value?.toStringAsFixed(1) ?? '0',
+                    activeColor: colorScheme.primary,
                     onChanged: onChanged,
                   ),
                 ),
               ],
             ),
             if (onCommentChanged != null) ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               TextField(
                 controller: TextEditingController(text: comment),
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   hintText: 'Комментарий (опционально)',
-                  border: OutlineInputBorder(),
-                  contentPadding:
-                      EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                 ),
                 maxLines: 2,
                 onChanged: onCommentChanged,

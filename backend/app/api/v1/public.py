@@ -61,19 +61,22 @@ async def get_public_leaderboard(
     
     items = []
     if hackathon.results_published:
-        result = await db.execute(
+        # Получаем результаты из team_results
+        results_query = (
             select(TeamResult, Team)
             .join(Team, (TeamResult.team_id == Team.id) & (TeamResult.hackathon_id == Team.hackathon_id))
             .where(TeamResult.hackathon_id == hackathon_id)
             .order_by(TeamResult.final_score.desc())
         )
-        rows = result.all()
+        
+        results_result = await db.execute(results_query)
+        rows = results_result.all()
         
         for tr, team in rows:
             items.append(PublicLeaderboardItem(
                 place=tr.place or 0,
                 team_name=team.name,
-                final_score=float(tr.final_score)
+                final_score=float(tr.final_score) if tr.final_score else 0.0
             ))
     
     return PublicLeaderboardResponse(
