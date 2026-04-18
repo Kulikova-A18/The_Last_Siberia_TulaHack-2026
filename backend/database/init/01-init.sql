@@ -232,7 +232,7 @@ CREATE TABLE criteria (
 );
 
 -- =========================================================
--- EXPERT -> TEAM ASSIGNMENTS
+-- EXPERT -> TEAM ASSIGNMENTS (FIXED: added updated_at)
 -- =========================================================
 
 CREATE TABLE expert_team_assignments (
@@ -243,6 +243,7 @@ CREATE TABLE expert_team_assignments (
     
     assigned_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     
     CONSTRAINT assignments_team_fk
         FOREIGN KEY (team_id, hackathon_id)
@@ -251,6 +252,13 @@ CREATE TABLE expert_team_assignments (
     
     CONSTRAINT assignments_uniq UNIQUE (hackathon_id, expert_user_id, team_id)
 );
+
+-- Триггер для updated_at в expert_team_assignments
+DROP TRIGGER IF EXISTS trg_expert_team_assignments_updated_at ON expert_team_assignments;
+CREATE TRIGGER trg_expert_team_assignments_updated_at
+    BEFORE UPDATE ON expert_team_assignments
+    FOR EACH ROW
+    EXECUTE FUNCTION fn_set_updated_at();
 
 -- =========================================================
 -- EVALUATIONS TABLE

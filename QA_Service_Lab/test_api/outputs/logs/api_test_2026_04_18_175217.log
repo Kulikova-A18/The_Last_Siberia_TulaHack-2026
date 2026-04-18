@@ -2,9 +2,9 @@
 ============================================================
 >>> HACKATHON API TEST EXECUTION
 ============================================================
-[INFO] Started at: 2026-04-18 17:31:57
+[INFO] Started at: 2026-04-18 17:52:17
 [INFO] Base URL: http://192.168.5.46:8000/api/v1
-[INFO] Log file: /home/vboxuser/The_Last_Siberia_TulaHack-2026/QA_Service_Lab/test_api/outputs/logs/api_test_2026_04_18_173157.log
+[INFO] Log file: /home/vboxuser/The_Last_Siberia_TulaHack-2026/QA_Service_Lab/test_api/outputs/logs/api_test_2026_04_18_175217.log
 
 ============================================================
 >>> 0. HEALTH CHECK
@@ -26,8 +26,8 @@
 }
 < Response (HTTP 200):
 {
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYTQ5ZmZmOC05YzNhLTRmYzktYWZlNC0xZDdlNTJlMTJiMzciLCJleHAiOjE3NzY2MDkxMTcsInR5cGUiOiJhY2Nlc3MifQ.5gVbsk_ciZcIZA8qq2IY_w_jK6rPJ_I4Vx_LxdWfzFo",
-  "refresh_token": "lnUm5fZjHvnC1ojTcnX-MAReenHSorl3p8aUDOhm_YUGEdFE4iVa5ZezBydYQA_pHenI1H9qkjKrObmc5Cgx_Q",
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYTQ5ZmZmOC05YzNhLTRmYzktYWZlNC0xZDdlNTJlMTJiMzciLCJleHAiOjE3NzY2MTAzMzcsInR5cGUiOiJhY2Nlc3MifQ.IRRG03TLyKqFJ_HpSBD5DsViICYRjkGxpemfo9vWZWY",
+  "refresh_token": "sUwqzfiw-wPNPOmSeSVtAjJZNbSvyZUrXuvCKm574-I1aUoy76_8ll0i9ZD9CiyTXGF5vvyRQWZiaEyWEO8E_Q",
   "token_type": "bearer",
   "user": {
     "id": "aa49fff8-9c3a-4fc9-afe4-1d7e52e12b37",
@@ -41,12 +41,12 @@
 [SUCCESS] Access Token obtained: eyJhbGciOiJIUzI1NiIs...
 > Request: POST http://192.168.5.46:8000/api/v1/auth/refresh
 > Body: {
-  "refresh_token": "lnUm5fZjHvnC1ojTcnX-MAReenHSorl3p8aUDOhm_YUGEdFE4iVa5ZezBydYQA_pHenI1H9qkjKrObmc5Cgx_Q"
+  "refresh_token": "sUwqzfiw-wPNPOmSeSVtAjJZNbSvyZUrXuvCKm574-I1aUoy76_8ll0i9ZD9CiyTXGF5vvyRQWZiaEyWEO8E_Q"
 }
 < Response (HTTP 200):
 {
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYTQ5ZmZmOC05YzNhLTRmYzktYWZlNC0xZDdlNTJlMTJiMzciLCJleHAiOjE3NzY2MDkxMTcsInR5cGUiOiJhY2Nlc3MifQ.5gVbsk_ciZcIZA8qq2IY_w_jK6rPJ_I4Vx_LxdWfzFo",
-  "refresh_token": "U7Bcfrmkidk7uecIiTNON4yX_qAgmK7kJZNP2H6JWiWcRaojs0_huqpOebAMTm4WP5gFzTCNPcMwUc4DFQ4MGQ",
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYTQ5ZmZmOC05YzNhLTRmYzktYWZlNC0xZDdlNTJlMTJiMzciLCJleHAiOjE3NzY2MTAzMzcsInR5cGUiOiJhY2Nlc3MifQ.IRRG03TLyKqFJ_HpSBD5DsViICYRjkGxpemfo9vWZWY",
+  "refresh_token": "XIZZUBhJZk-dUiBCeZlbdqhAK_hes7KolHW4hgDrPpt6-CtVmglcpMYy6q2KM4MO_KFyy9iGP_FnButXn4UWwQ",
   "token_type": "bearer",
   "user": {
     "id": "aa49fff8-9c3a-4fc9-afe4-1d7e52e12b37",
@@ -118,7 +118,7 @@
       "phone": null,
       "team_id": null,
       "is_active": true,
-      "last_login_at": "2026-04-18T14:23:15.333643Z",
+      "last_login_at": "2026-04-18T14:51:02.008635Z",
       "created_at": "2026-04-18T13:45:43.953330Z"
     },
     {
@@ -130,7 +130,7 @@
       "phone": null,
       "team_id": null,
       "is_active": true,
-      "last_login_at": "2026-04-18T14:23:15.297164Z",
+      "last_login_at": "2026-04-18T14:51:01.942581Z",
       "created_at": "2026-04-18T13:45:43.945237Z"
     },
     {
@@ -142,7 +142,7 @@
       "phone": null,
       "team_id": null,
       "is_active": true,
-      "last_login_at": "2026-04-18T14:31:57.798893Z",
+      "last_login_at": "2026-04-18T14:52:17.273901Z",
       "created_at": "2026-04-18T12:27:35.587071Z"
     }
   ],
@@ -192,12 +192,62 @@
 > Request: GET http://192.168.5.46:8000/api/v1/hackathons/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/teams?page=1&page_size=20
 < Response (HTTP 200):
 {
-  "items": [],
+  "items": [
+    {
+      "id": "1ac97476-967c-4a6e-99c1-0c1364ebb6b1",
+      "hackathon_id": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+      "name": "Code Wizards",
+      "captain_name": "Alex Johnson",
+      "contact_email": "alex.j@example.com",
+      "contact_phone": "+79001112233",
+      "project_title": "AI-Powered Code Review Assistant",
+      "description": "An intelligent tool that automatically reviews code quality",
+      "members_count": 0,
+      "evaluation_status": null,
+      "final_score": null,
+      "place": null,
+      "created_at": "2026-04-18T14:46:58.700528Z",
+      "updated_at": "2026-04-18T14:46:58.700528Z"
+    },
+    {
+      "id": "71686f49-e4a8-461a-aeb0-e2c04ad17a59",
+      "hackathon_id": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+      "name": "Data Dynamos",
+      "captain_name": "Maria Garcia",
+      "contact_email": "maria.g@example.com",
+      "contact_phone": "+79002223344",
+      "project_title": "Real-Time Fraud Detection System",
+      "description": "Machine learning system for detecting fraudulent transactions",
+      "members_count": 0,
+      "evaluation_status": null,
+      "final_score": null,
+      "place": null,
+      "created_at": "2026-04-18T14:46:58.700528Z",
+      "updated_at": "2026-04-18T14:46:58.700528Z"
+    },
+    {
+      "id": "8d000b7b-88e0-416f-b758-c046cbe3d498",
+      "hackathon_id": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+      "name": "Neural Ninjas",
+      "captain_name": "David Kim",
+      "contact_email": "david.k@example.com",
+      "contact_phone": "+79003334455",
+      "project_title": "Healthcare Diagnosis Assistant",
+      "description": "AI assistant that helps doctors diagnose diseases",
+      "members_count": 0,
+      "evaluation_status": null,
+      "final_score": null,
+      "place": null,
+      "created_at": "2026-04-18T14:46:58.700528Z",
+      "updated_at": "2026-04-18T14:46:58.700528Z"
+    }
+  ],
   "page": 1,
   "page_size": 20,
-  "total": 0
+  "total": 3
 }
-[INFO] Found 0 teams
+[INFO] Found 3 teams
+[INFO] Using team: Code Wizards (ID: 1ac97476-967c-4a6e-99c1-0c1364ebb6b1)
 
 ============================================================
 >>> 6. CRITERIA MANAGEMENT
@@ -207,7 +257,7 @@
 {
   "items": [],
   "total_weight": 0.0,
-  "weights_valid": true
+  "weights_valid": false
 }
 [INFO] Found 0 criteria
 
@@ -229,8 +279,8 @@
 }
 < Response (HTTP 200):
 {
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0ZmE2MTY3OC1kNzc2LTRhYmMtODhlNS1hZmFmODVhNTdkOTEiLCJleHAiOjE3NzY2MDkxMTcsInR5cGUiOiJhY2Nlc3MifQ.cZLHDaQP2OYBJpRTHHbIv1XD_OgZJBEt513rzYrEu9k",
-  "refresh_token": "z8LTupYGmdd6zMLigHzbvqBNsq48ntBi7iAWHxzInaFwGY4z66pAUY7lK4UXUFrP1ddq_Vo8lvLkizs8yKKXuQ",
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0ZmE2MTY3OC1kNzc2LTRhYmMtODhlNS1hZmFmODVhNTdkOTEiLCJleHAiOjE3NzY2MTAzMzcsInR5cGUiOiJhY2Nlc3MifQ.PwNOQGoT0_14U9dwD_wrLEa1ZUnCZyTaoipHbCNvNyM",
+  "refresh_token": "wvvDW_C12QY5rGDorOneilSvb5zYSGzMAVSDkdnTZcKyseJZMfOllOjffXEi6nL40hNzaVKz5oFH597_uZYRmg",
   "token_type": "bearer",
   "user": {
     "id": "4fa61678-d776-4abc-88e5-afaf85a57d91",
@@ -276,23 +326,30 @@
 >>> 10. PUBLIC ENDPOINTS
 ============================================================
 > Request: GET http://192.168.5.46:8000/api/v1/public/hackathons/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/leaderboard
-< Response (HTTP 501):
+< Response (HTTP 200):
 {
-  "detail": "Not implemented yet"
+  "published": false,
+  "items": [],
+  "updated_at": "2026-04-18T13:48:29.932649Z"
 }
-[WARNING] Public leaderboard not accessible
+[INFO] Public leaderboard accessible
 > Request: GET http://192.168.5.46:8000/api/v1/public/hackathons/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/timer
-< Response (HTTP 501):
+< Response (HTTP 200):
 {
-  "detail": "Not implemented yet"
+  "hackathon_status": "active",
+  "current_phase": "active",
+  "next_deadline_title": null,
+  "next_deadline_at": null,
+  "seconds_remaining": null
 }
-[WARNING] Public timer not accessible
+[INFO] Public timer accessible
 > Request: GET http://192.168.5.46:8000/api/v1/public/hackathons/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/winners
-< Response (HTTP 501):
+< Response (HTTP 200):
 {
-  "detail": "Not implemented yet"
+  "top_3": [],
+  "total_teams": 0
 }
-[WARNING] Public winners not accessible
+[INFO] Public winners accessible
 
 ============================================================
 >>> 11. TEAM CABINET
@@ -304,8 +361,8 @@
 }
 < Response (HTTP 200):
 {
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2ZTU1ZWE2Ny1hZWM2LTRiMjMtYTAyOS01NmI5Y2E4YWE4MzciLCJleHAiOjE3NzY2MDkxMTgsInR5cGUiOiJhY2Nlc3MifQ.XiopMDlrbeStEFGkd0MnwKLQAYGUspAr-xWBILn7uw4",
-  "refresh_token": "bGL12NXB2h3t_hpfBK7rSXly4QJocTjOsupO4Sqa2ZH6uEvva7roWL84xoPlTHpy0BHFA6fNUSqHrJaOIk_UYQ",
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2ZTU1ZWE2Ny1hZWM2LTRiMjMtYTAyOS01NmI5Y2E4YWE4MzciLCJleHAiOjE3NzY2MTAzMzcsInR5cGUiOiJhY2Nlc3MifQ.OQPdVTuzDbmhbpTU0QuJd4_GuNmALefDgdOW1vwNmBw",
+  "refresh_token": "8nHSvqhepfar4dQYvbCNj7TncInU7oAdnsYvOpJg7bRG_PIVwZ-8Nf0daMitpi4w1bHXy9ty2drPJPVefGV5jg",
   "token_type": "bearer",
   "user": {
     "id": "6e55ea67-aec6-4b23-a029-56b9ca8aa837",
@@ -323,33 +380,33 @@
 ============================================================
 > Request: POST http://192.168.5.46:8000/api/v1/auth/logout
 > Body: {
-  "refresh_token": "lnUm5fZjHvnC1ojTcnX-MAReenHSorl3p8aUDOhm_YUGEdFE4iVa5ZezBydYQA_pHenI1H9qkjKrObmc5Cgx_Q"
+  "refresh_token": "sUwqzfiw-wPNPOmSeSVtAjJZNbSvyZUrXuvCKm574-I1aUoy76_8ll0i9ZD9CiyTXGF5vvyRQWZiaEyWEO8E_Q"
 }
 < Response (HTTP 200):
 {
   "message": "Logged out successfully"
 }
 [SUCCESS] Logged out successfully
-[INFO] State saved to /home/vboxuser/The_Last_Siberia_TulaHack-2026/QA_Service_Lab/test_api/outputs/tokens/tokens_2026_04_18_173157.json
+[INFO] State saved to /home/vboxuser/The_Last_Siberia_TulaHack-2026/QA_Service_Lab/test_api/outputs/tokens/tokens_2026_04_18_175217.json
 
 ============================================================
 >>> TEST EXECUTION COMPLETED
 ============================================================
-[INFO] Finished at: 2026-04-18 17:31:58
-[INFO] Log file: /home/vboxuser/The_Last_Siberia_TulaHack-2026/QA_Service_Lab/test_api/outputs/logs/api_test_2026_04_18_173157.log
-[INFO] Tokens file: /home/vboxuser/The_Last_Siberia_TulaHack-2026/QA_Service_Lab/test_api/outputs/tokens/tokens_2026_04_18_173157.json
+[INFO] Finished at: 2026-04-18 17:52:17
+[INFO] Log file: /home/vboxuser/The_Last_Siberia_TulaHack-2026/QA_Service_Lab/test_api/outputs/logs/api_test_2026_04_18_175217.log
+[INFO] Tokens file: /home/vboxuser/The_Last_Siberia_TulaHack-2026/QA_Service_Lab/test_api/outputs/tokens/tokens_2026_04_18_175217.json
 
 ============================================================
                  TEST SUMMARY                      
 ============================================================
-  Passed:  16
+  Passed:  19
   Failed:  0
-  Skipped: 3
+  Skipped: 0
 ============================================================
 
 Test Data:
   Hackathon ID: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
-  Team ID: N/A
+  Team ID: 1ac97476-967c-4a6e-99c1-0c1364ebb6b1
   Criterion IDs: N/A
 
 WebSocket endpoint (manual test):

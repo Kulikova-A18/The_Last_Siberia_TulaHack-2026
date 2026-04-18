@@ -1,12 +1,12 @@
-# backend/app/api/v1/public.py
+# backend/app/api/v1/public.py (полный исправленный файл)
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, func
 from uuid import UUID
-from datetime import datetime
+from datetime import datetime, timezone
 
 from app.core.database import get_db
-from app.models.hackathon import Hackathon
+from app.models.hackathon import Hackathon, HackathonStatus
 from app.models.team_result import TeamResult
 from app.models.team import Team
 from app.models.deadline import Deadline
@@ -23,8 +23,6 @@ async def get_active_public_hackathon(
     db: AsyncSession = Depends(get_db)
 ):
     """Get active hackathon for public view"""
-    from app.models.hackathon import HackathonStatus
-    
     result = await db.execute(
         select(Hackathon)
         .where(Hackathon.status == HackathonStatus.ACTIVE)
@@ -55,7 +53,6 @@ async def get_public_leaderboard(
     db: AsyncSession = Depends(get_db)
 ):
     """Get public leaderboard"""
-    # Get hackathon to check if results are published
     result = await db.execute(select(Hackathon).where(Hackathon.id == hackathon_id))
     hackathon = result.scalar_one_or_none()
     
@@ -72,9 +69,9 @@ async def get_public_leaderboard(
         )
         rows = result.all()
         
-        for i, (tr, team) in enumerate(rows):
+        for tr, team in rows:
             items.append(PublicLeaderboardItem(
-                place=tr.place or i + 1,
+                place=tr.place or 0,
                 team_name=team.name,
                 final_score=float(tr.final_score)
             ))
@@ -92,19 +89,19 @@ async def get_public_timer(
     db: AsyncSession = Depends(get_db)
 ):
     """Get public timer"""
-    from datetime import datetime, timezone
-    
     result = await db.execute(select(Hackathon).where(Hackathon.id == hackathon_id))
     hackathon = result.scalar_one_or_none()
     
     if not hackathon:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Hackathon not found")
     
-    # Get next deadline
-    now = datetime.now(timezone.utc)  # ИСПРАВЛЕНИЕ: использовать timezone-aware datetime
+    # ИСПРАВЛЕНИЕ: использовать timezone-aware datetime и naive datetime для БД
+    now_aware = datetime.now(timezone.utc)
+    now_naive = now_aware.replace(tzinfo=None)  # Для сравнения с БД (TIMESTAMP WITHOUT TIME ZONE)
+    
     result = await db.execute(
         select(Deadline)
-        .where(Deadline.hackathon_id == hackathon_id, Deadline.deadline_at > now)
+        .where(Deadline.hackathon_id == hackathon_id, Deadline.deadline_at > now_naive)
         .order_by(Deadline.deadline_at)
         .limit(1)
     )
@@ -116,9 +113,10 @@ async def get_public_timer(
     next_deadline_at = None
     
     if hackathon.status.value == "active":
-        if hackathon.end_at < now:
+        # Использовать naive datetime для сравнения с полями БД
+        if hackathon.end_at.replace(tzinfo=None) < now_naive:
             current_phase = "finished"
-        elif hackathon.start_at > now:
+        elif hackathon.start_at.replace(tzinfo=None) > now_naive:
             current_phase = "not_started"
         else:
             current_phase = "active"
@@ -126,7 +124,9 @@ async def get_public_timer(
     if next_deadline:
         next_deadline_title = next_deadline.title
         next_deadline_at = next_deadline.deadline_at
-        seconds_remaining = int((next_deadline.deadline_at - now).total_seconds())
+        # Преобразовать naive datetime из БД в aware для вычисления разницы
+        deadline_aware = next_deadline.deadline_at.replace(tzinfo=timezone.utc)
+        seconds_remaining = int((deadline_aware - now_aware).total_seconds())
     
     return PublicTimerResponse(
         hackathon_status=hackathon.status.value,
@@ -170,7 +170,7 @@ async def get_public_winners(
     top_3 = []
     for tr, team in rows:
         top_3.append(PublicLeaderboardItem(
-            place=tr.place or (i + 1),
+            place=tr.place or 0,
             team_name=team.name,
             final_score=float(tr.final_score)
         ))
