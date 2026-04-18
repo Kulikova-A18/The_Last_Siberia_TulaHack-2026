@@ -78,8 +78,14 @@
 ```
 # чистка
 sudo docker-compose down
-sudo docker-compose build --no-cache backend
-sudo docker-compose up -d
+sudo docker-compose down -v
+
+# Очистить кэш Docker
+sudo docker system prune -a -f
+sudo docker builder prune -a -f
+
+# Удалить все тома (ВНИМАНИЕ! Удалит данные всех проектов)
+sudo docker volume prune -f
 
 # старт
 sudo docker-compose up -d
@@ -89,6 +95,8 @@ sudo docker-compose logs -f backend
 
 ```
 
----
+## ВАЖНО! Ручное исправление базы данных
 
-Главная ценность: Скорость, прозрачность, отсутствие Excel и ручного пересчёта.
+Данная глава обязательна, т.к. не все данные были отображены с помощью скриптов
+
+Смотреть в [главу по исправлению проблем](./Fix-bd.md)

@@ -29,134 +29,288 @@ class _UsersScreenState extends ConsumerState<UsersScreen> {
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
     final apiService = ref.watch(apiServiceProvider);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Пользователи'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.bug_report),
-            onPressed: () => Scaffold.of(context).openEndDrawer(),
-            tooltip: 'Отладка API',
-          ),
-          IconButton(
             onPressed: () => _showCreateUserDialog(context, apiService),
-            icon: const Icon(Icons.person_add),
+            icon: Icon(Icons.person_add_outlined, color: colorScheme.secondary),
             tooltip: 'Создать пользователя',
           ),
         ],
       ),
       drawer: AppDrawer(
-          role: user?.role ?? UserRole.admin, currentRoute: '/admin/users'),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _searchController,
-                    decoration: const InputDecoration(
-                      hintText: 'Поиск по имени или логину...',
-                      prefixIcon: Icon(Icons.search),
-                      border: OutlineInputBorder(),
+        role: user?.role ?? UserRole.admin,
+        currentRoute: '/admin/users',
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              colorScheme.primary.withOpacity(0.05),
+              colorScheme.background,
+            ],
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            children: [
+              // Search and Filter Bar
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _searchController,
+                      decoration: InputDecoration(
+                        hintText: 'Поиск по имени или логину...',
+                        prefixIcon: Icon(Icons.search, color: Colors.grey[400]),
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: Colors.grey[200]!),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                              color: Color(0xFFE6A817), width: 2),
+                        ),
+                      ),
+                      onSubmitted: (_) => setState(() => _page = 1),
                     ),
-                    onSubmitted: (_) => setState(() {}),
                   ),
-                ),
-                const SizedBox(width: 16),
-                DropdownButton<String?>(
-                  hint: const Text('Роль'),
-                  value: _selectedRole,
-                  items: const [
-                    DropdownMenuItem(value: null, child: Text('Все')),
-                    DropdownMenuItem(
-                        value: 'admin', child: Text('Администратор')),
-                    DropdownMenuItem(value: 'expert', child: Text('Эксперт')),
-                    DropdownMenuItem(value: 'team', child: Text('Команда')),
-                  ],
-                  onChanged: (value) => setState(() => _selectedRole = value),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            Expanded(
-              child: FutureBuilder<UserListResponse>(
-                future: apiService.getUsers(
-                  page: _page,
-                  pageSize: _pageSize,
-                  role: _selectedRole,
-                  search: _searchController.text.isEmpty
-                      ? null
-                      : _searchController.text,
-                ),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  if (snapshot.hasError) {
-                    return Center(child: Text('Ошибка: ${snapshot.error}'));
-                  }
-                  final data = snapshot.data!;
-                  if (data.items.isEmpty) {
-                    return const Center(child: Text('Нет пользователей'));
-                  }
-                  return Card(
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: DataTable(
-                        columns: const [
-                          DataColumn(label: Text('ФИО')),
-                          DataColumn(label: Text('Логин')),
-                          DataColumn(label: Text('Роль')),
-                          DataColumn(label: Text('Email')),
-                          DataColumn(label: Text('Статус')),
-                          DataColumn(label: Text('Действия')),
+                  const SizedBox(width: 16),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      border: Border.all(color: Colors.grey[200]!),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String?>(
+                        hint: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Text('Роль',
+                              style: TextStyle(color: Colors.grey[600])),
+                        ),
+                        value: _selectedRole,
+                        items: const [
+                          DropdownMenuItem(value: null, child: Text('Все')),
+                          DropdownMenuItem(
+                              value: 'admin', child: Text('Администратор')),
+                          DropdownMenuItem(
+                              value: 'expert', child: Text('Эксперт')),
+                          DropdownMenuItem(
+                              value: 'team', child: Text('Команда')),
                         ],
-                        rows: data.items
-                            .map((u) => DataRow(
-                                  cells: [
-                                    DataCell(Text(u.fullName)),
-                                    DataCell(Text(u.login)),
-                                    DataCell(Text(u.roleString)),
-                                    DataCell(Text(u.email ?? '-')),
-                                    DataCell(StatusBadge(
-                                        status: u.isActive
-                                            ? 'active'
-                                            : 'inactive')),
-                                    DataCell(Row(
-                                      children: [
-                                        IconButton(
-                                          icon:
-                                              const Icon(Icons.edit, size: 18),
-                                          onPressed: () => _showEditUserDialog(
-                                              context, apiService, u),
-                                          tooltip: 'Редактировать',
-                                        ),
-                                        IconButton(
-                                          icon: const Icon(Icons.lock_reset,
-                                              size: 18),
-                                          onPressed: () =>
-                                              _showResetPasswordDialog(
-                                                  context, apiService, u),
-                                          tooltip: 'Сбросить пароль',
-                                        ),
-                                      ],
-                                    )),
-                                  ],
-                                ))
-                            .toList(),
+                        onChanged: (value) => setState(() {
+                          _selectedRole = value;
+                          _page = 1;
+                        }),
                       ),
                     ),
-                  );
-                },
+                  ),
+                ],
               ),
-            ),
-          ],
+              const SizedBox(height: 24),
+
+              // Users Table
+              Expanded(
+                child: FutureBuilder<UserListResponse>(
+                  future: apiService.getUsers(
+                    page: _page,
+                    pageSize: _pageSize,
+                    role: _selectedRole,
+                    search: _searchController.text.isEmpty
+                        ? null
+                        : _searchController.text,
+                  ),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (snapshot.hasError) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.error_outline,
+                                size: 48, color: Colors.grey[400]),
+                            const SizedBox(height: 16),
+                            Text('Ошибка: ${snapshot.error}'),
+                          ],
+                        ),
+                      );
+                    }
+                    final data = snapshot.data!;
+                    if (data.items.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.people_outline,
+                                size: 48, color: Colors.grey[400]),
+                            const SizedBox(height: 16),
+                            Text('Нет пользователей',
+                                style: theme.textTheme.bodyLarge),
+                          ],
+                        ),
+                      );
+                    }
+                    return Card(
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: DataTable(
+                            columnSpacing: 16,
+                            headingRowColor: MaterialStateProperty.all(
+                              Colors.grey[50],
+                            ),
+                            headingRowHeight: 56,
+                            dataRowMinHeight: 60,
+                            columns: const [
+                              DataColumn(label: Text('ФИО')),
+                              DataColumn(label: Text('Логин')),
+                              DataColumn(label: Text('Роль')),
+                              DataColumn(label: Text('Email')),
+                              DataColumn(label: Text('Статус')),
+                              DataColumn(label: Text('Действия')),
+                            ],
+                            rows: data.items
+                                .map((u) => DataRow(
+                                      cells: [
+                                        DataCell(Text(u.fullName,
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.w500))),
+                                        DataCell(Text(u.login)),
+                                        DataCell(Container(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 8, vertical: 4),
+                                          decoration: BoxDecoration(
+                                            color: _getRoleColor(u.roleString)
+                                                .withOpacity(0.1),
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                          ),
+                                          child: Text(
+                                            _getRoleLabel(u.roleString),
+                                            style: TextStyle(
+                                              color:
+                                                  _getRoleColor(u.roleString),
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        )),
+                                        DataCell(Text(u.email ?? '-')),
+                                        DataCell(StatusBadge(
+                                            status: u.isActive
+                                                ? 'active'
+                                                : 'inactive')),
+                                        DataCell(
+                                          Row(
+                                            children: [
+                                              IconButton(
+                                                icon: Icon(Icons.edit_outlined,
+                                                    size: 20,
+                                                    color: Colors.grey[600]),
+                                                onPressed: () =>
+                                                    _showEditUserDialog(
+                                                        context, apiService, u),
+                                                tooltip: 'Редактировать',
+                                              ),
+                                              IconButton(
+                                                icon: Icon(
+                                                    Icons.lock_reset_outlined,
+                                                    size: 20,
+                                                    color: Colors.grey[600]),
+                                                onPressed: () =>
+                                                    _showResetPasswordDialog(
+                                                        context, apiService, u),
+                                                tooltip: 'Сбросить пароль',
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ))
+                                .toList(),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              // Pagination
+              const SizedBox(height: 16),
+              _buildPagination(),
+            ],
+          ),
         ),
       ),
     );
+  }
+
+  Widget _buildPagination() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.chevron_left),
+          onPressed: _page > 1 ? () => setState(() => _page--) : null,
+        ),
+        Text('Страница $_page'),
+        IconButton(
+          icon: const Icon(Icons.chevron_right),
+          onPressed: () => setState(() => _page++),
+        ),
+      ],
+    );
+  }
+
+  Color _getRoleColor(String role) {
+    switch (role) {
+      case 'admin':
+        return Colors.red;
+      case 'expert':
+        return Colors.blue;
+      case 'team':
+        return Colors.green;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String _getRoleLabel(String role) {
+    switch (role) {
+      case 'admin':
+        return 'Админ';
+      case 'expert':
+        return 'Эксперт';
+      case 'team':
+        return 'Команда';
+      default:
+        return role;
+    }
   }
 
   void _showCreateUserDialog(BuildContext context, ApiService apiService) {
@@ -165,40 +319,82 @@ class _UsersScreenState extends ConsumerState<UsersScreen> {
     final fullNameController = TextEditingController();
     final emailController = TextEditingController();
     String? selectedRole;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Создать пользователя'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         content: SizedBox(
-          width: 400,
+          width: 480,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
-                  controller: fullNameController,
-                  decoration: const InputDecoration(
-                      labelText: 'ФИО', border: OutlineInputBorder())),
+                controller: fullNameController,
+                decoration: InputDecoration(
+                  labelText: 'ФИО',
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
               const SizedBox(height: 12),
               TextField(
-                  controller: loginController,
-                  decoration: const InputDecoration(
-                      labelText: 'Логин', border: OutlineInputBorder())),
+                controller: loginController,
+                decoration: InputDecoration(
+                  labelText: 'Логин',
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
               const SizedBox(height: 12),
               TextField(
-                  controller: passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                      labelText: 'Пароль', border: OutlineInputBorder())),
+                controller: passwordController,
+                obscureText: true,
+                decoration: InputDecoration(
+                  labelText: 'Пароль',
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
               const SizedBox(height: 12),
               TextField(
-                  controller: emailController,
-                  decoration: const InputDecoration(
-                      labelText: 'Email', border: OutlineInputBorder())),
+                controller: emailController,
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                decoration: const InputDecoration(
-                    labelText: 'Роль', border: OutlineInputBorder()),
+                decoration: InputDecoration(
+                  labelText: 'Роль',
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
                 items: const [
                   DropdownMenuItem(
                       value: 'admin', child: Text('Администратор')),
@@ -212,8 +408,9 @@ class _UsersScreenState extends ConsumerState<UsersScreen> {
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Отмена')),
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Отмена'),
+          ),
           ElevatedButton(
             onPressed: () async {
               if (selectedRole == null ||
@@ -236,12 +433,20 @@ class _UsersScreenState extends ConsumerState<UsersScreen> {
                 Navigator.pop(context);
                 setState(() {});
                 ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Пользователь создан')));
+                  const SnackBar(content: Text('Пользователь создан')),
+                );
               } catch (e) {
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(SnackBar(content: Text('Ошибка: $e')));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Ошибка: $e')),
+                );
               }
             },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: colorScheme.primary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
             child: const Text('Создать'),
           ),
         ],
@@ -254,38 +459,59 @@ class _UsersScreenState extends ConsumerState<UsersScreen> {
     final fullNameController = TextEditingController(text: user.fullName);
     final emailController = TextEditingController(text: user.email ?? '');
     bool isActive = user.isActive;
+    final colorScheme = Theme.of(context).colorScheme;
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Редактировать пользователя'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         content: SizedBox(
           width: 400,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
-                  controller: fullNameController,
-                  decoration: const InputDecoration(
-                      labelText: 'ФИО', border: OutlineInputBorder())),
+                controller: fullNameController,
+                decoration: InputDecoration(
+                  labelText: 'ФИО',
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
               const SizedBox(height: 12),
               TextField(
-                  controller: emailController,
-                  decoration: const InputDecoration(
-                      labelText: 'Email', border: OutlineInputBorder())),
+                controller: emailController,
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
               const SizedBox(height: 12),
               CheckboxListTile(
                 title: const Text('Активен'),
                 value: isActive,
                 onChanged: (value) => isActive = value ?? true,
+                contentPadding: EdgeInsets.zero,
+                activeColor: colorScheme.primary,
               ),
             ],
           ),
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Отмена')),
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Отмена'),
+          ),
           ElevatedButton(
             onPressed: () async {
               try {
@@ -299,12 +525,20 @@ class _UsersScreenState extends ConsumerState<UsersScreen> {
                 Navigator.pop(context);
                 setState(() {});
                 ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Пользователь обновлён')));
+                  const SnackBar(content: Text('Пользователь обновлён')),
+                );
               } catch (e) {
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(SnackBar(content: Text('Ошибка: $e')));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Ошибка: $e')),
+                );
               }
             },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: colorScheme.primary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
             child: const Text('Сохранить'),
           ),
         ],
@@ -315,21 +549,31 @@ class _UsersScreenState extends ConsumerState<UsersScreen> {
   void _showResetPasswordDialog(
       BuildContext context, ApiService apiService, User user) {
     final passwordController = TextEditingController();
+    final colorScheme = Theme.of(context).colorScheme;
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Сброс пароля: ${user.fullName}'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         content: TextField(
           controller: passwordController,
           obscureText: true,
-          decoration: const InputDecoration(
-              labelText: 'Новый пароль', border: OutlineInputBorder()),
+          decoration: InputDecoration(
+            labelText: 'Новый пароль',
+            filled: true,
+            fillColor: Colors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+          ),
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Отмена')),
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Отмена'),
+          ),
           ElevatedButton(
             onPressed: () async {
               if (passwordController.text.isEmpty) return;
@@ -338,12 +582,20 @@ class _UsersScreenState extends ConsumerState<UsersScreen> {
                     user.id, passwordController.text);
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Пароль сброшен')));
+                  const SnackBar(content: Text('Пароль сброшен')),
+                );
               } catch (e) {
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(SnackBar(content: Text('Ошибка: $e')));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Ошибка: $e')),
+                );
               }
             },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: colorScheme.primary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
             child: const Text('Сбросить'),
           ),
         ],

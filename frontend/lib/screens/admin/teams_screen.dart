@@ -31,114 +31,215 @@ class _TeamsScreenState extends ConsumerState<TeamsScreen> {
     final user = ref.watch(currentUserProvider);
     final hackathonIdAsync = ref.watch(hackathonIdProvider);
     final apiService = ref.watch(apiServiceProvider);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Команды'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.bug_report),
-            onPressed: () => Scaffold.of(context).openEndDrawer(),
-            tooltip: 'Отладка API',
-          ),
-          IconButton(
             onPressed: () => _showCreateTeamDialog(context, apiService),
-            icon: const Icon(Icons.add),
+            icon: Icon(Icons.add_outlined, color: colorScheme.secondary),
             tooltip: 'Создать команду',
           ),
         ],
       ),
       drawer: AppDrawer(
-          role: user?.role ?? UserRole.admin, currentRoute: '/admin/teams'),
-      body: hackathonIdAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, _) => Center(child: Text('Ошибка: $err')),
-        data: (hackathonId) => hackathonId.isEmpty
-            ? const Center(child: Text('Нет активного хакатона'))
-            : Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  children: [
-                    TextField(
-                      controller: _searchController,
-                      decoration: const InputDecoration(
-                        hintText: 'Поиск по названию или проекту...',
-                        prefixIcon: Icon(Icons.search),
-                        border: OutlineInputBorder(),
-                      ),
-                      onSubmitted: (_) => setState(() {}),
-                    ),
-                    const SizedBox(height: 24),
-                    Expanded(
-                      child: FutureBuilder<TeamListResponse>(
-                        future: apiService.getTeams(
-                          hackathonId,
-                          page: _page,
-                          pageSize: _pageSize,
-                          search: _searchController.text.isEmpty
-                              ? null
-                              : _searchController.text,
+        role: user?.role ?? UserRole.admin,
+        currentRoute: '/admin/teams',
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              colorScheme.primary.withOpacity(0.05),
+              colorScheme.background,
+            ],
+          ),
+        ),
+        child: hackathonIdAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (err, _) => Center(child: Text('Ошибка: $err')),
+          data: (hackathonId) => hackathonId.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.groups_outlined,
+                          size: 64, color: Colors.grey[400]),
+                      const SizedBox(height: 16),
+                      Text('Нет активного хакатона',
+                          style: theme.textTheme.bodyLarge),
+                    ],
+                  ),
+                )
+              : Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    children: [
+                      // Search Bar
+                      TextField(
+                        controller: _searchController,
+                        decoration: InputDecoration(
+                          hintText: 'Поиск по названию или проекту...',
+                          prefixIcon:
+                              Icon(Icons.search, color: Colors.grey[400]),
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: BorderSide(color: Colors.grey[200]!),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                                color: Color(0xFFE6A817), width: 2),
+                          ),
                         ),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return const Center(
-                                child: CircularProgressIndicator());
-                          }
-                          if (snapshot.hasError) {
-                            return Center(
-                                child: Text('Ошибка: ${snapshot.error}'));
-                          }
-                          final data = snapshot.data!;
-                          if (data.items.isEmpty) {
-                            return const Center(child: Text('Нет команд'));
-                          }
-                          return Card(
-                            child: SingleChildScrollView(
-                              child: DataTable(
-                                columns: const [
-                                  DataColumn(label: Text('Название')),
-                                  DataColumn(label: Text('Капитан')),
-                                  DataColumn(label: Text('Участников')),
-                                  DataColumn(label: Text('Проект')),
-                                  DataColumn(label: Text('Статус')),
-                                  DataColumn(label: Text('Балл')),
-                                  DataColumn(label: Text('Место')),
-                                ],
-                                rows: data.items
-                                    .map((team) => DataRow(
-                                          onSelectChanged: (_) =>
-                                              _showTeamDetails(
-                                                  context,
-                                                  apiService,
-                                                  hackathonId,
-                                                  team.id),
-                                          cells: [
-                                            DataCell(Text(team.name)),
-                                            DataCell(Text(team.captainName)),
-                                            DataCell(
-                                                Text('${team.membersCount}')),
-                                            DataCell(Text(team.projectTitle)),
-                                            DataCell(StatusBadge(
-                                                status: team.evaluationStatus ??
-                                                    'not_started')),
-                                            DataCell(Text(team.finalScore
-                                                    ?.toStringAsFixed(1) ??
-                                                '-')),
-                                            DataCell(Text(
-                                                team.place?.toString() ?? '-')),
-                                          ],
-                                        ))
-                                    .toList(),
-                              ),
-                            ),
-                          );
-                        },
+                        onSubmitted: (_) => setState(() => _page = 1),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 24),
+
+                      // Teams Table
+                      Expanded(
+                        child: FutureBuilder<TeamListResponse>(
+                          future: apiService.getTeams(
+                            hackathonId,
+                            page: _page,
+                            pageSize: _pageSize,
+                            search: _searchController.text.isEmpty
+                                ? null
+                                : _searchController.text,
+                          ),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.waiting) {
+                              return const Center(
+                                  child: CircularProgressIndicator());
+                            }
+                            if (snapshot.hasError) {
+                              return Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.error_outline,
+                                        size: 48, color: Colors.grey[400]),
+                                    const SizedBox(height: 16),
+                                    Text('Ошибка: ${snapshot.error}'),
+                                  ],
+                                ),
+                              );
+                            }
+                            final data = snapshot.data!;
+                            if (data.items.isEmpty) {
+                              return Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.groups_outlined,
+                                        size: 48, color: Colors.grey[400]),
+                                    const SizedBox(height: 16),
+                                    Text('Нет команд',
+                                        style: theme.textTheme.bodyLarge),
+                                  ],
+                                ),
+                              );
+                            }
+                            return Card(
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(16),
+                                child: SingleChildScrollView(
+                                  scrollDirection: Axis.horizontal,
+                                  child: DataTable(
+                                    columnSpacing: 16,
+                                    headingRowColor: MaterialStateProperty.all(
+                                      Colors.grey[50],
+                                    ),
+                                    headingRowHeight: 56,
+                                    dataRowMinHeight: 60,
+                                    columns: const [
+                                      DataColumn(label: Text('Название')),
+                                      DataColumn(label: Text('Капитан')),
+                                      DataColumn(label: Text('Участников')),
+                                      DataColumn(label: Text('Проект')),
+                                      DataColumn(label: Text('Статус')),
+                                      DataColumn(label: Text('Балл')),
+                                      DataColumn(label: Text('Место')),
+                                    ],
+                                    rows: data.items
+                                        .map((team) => DataRow(
+                                              onSelectChanged: (_) =>
+                                                  _showTeamDetails(
+                                                context,
+                                                apiService,
+                                                hackathonId,
+                                                team.id,
+                                              ),
+                                              cells: [
+                                                DataCell(Text(team.name,
+                                                    style: const TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.w500))),
+                                                DataCell(
+                                                    Text(team.captainName)),
+                                                DataCell(Text(
+                                                    '${team.membersCount}')),
+                                                DataCell(
+                                                    Text(team.projectTitle)),
+                                                DataCell(StatusBadge(
+                                                    status:
+                                                        team.evaluationStatus ??
+                                                            'not_started')),
+                                                DataCell(Text(team.finalScore
+                                                        ?.toStringAsFixed(1) ??
+                                                    '-')),
+                                                DataCell(Text(
+                                                    team.place?.toString() ??
+                                                        '-')),
+                                              ],
+                                            ))
+                                        .toList(),
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+
+                      // Pagination
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          IconButton(
+                            icon: const Icon(Icons.chevron_left),
+                            onPressed: _page > 1
+                                ? () => setState(() => _page--)
+                                : null,
+                          ),
+                          Text('Страница $_page'),
+                          IconButton(
+                            icon: const Icon(Icons.chevron_right),
+                            onPressed: () => setState(() => _page++),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+        ),
       ),
     );
   }
@@ -150,61 +251,118 @@ class _TeamsScreenState extends ConsumerState<TeamsScreen> {
     final phoneController = TextEditingController();
     final projectController = TextEditingController();
     final descController = TextEditingController();
+    final colorScheme = Theme.of(context).colorScheme;
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Создать команду'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         content: SizedBox(
           width: 500,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
-                  controller: nameController,
-                  decoration: const InputDecoration(
-                      labelText: 'Название команды',
-                      border: OutlineInputBorder())),
+                controller: nameController,
+                decoration: InputDecoration(
+                  labelText: 'Название команды',
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
               const SizedBox(height: 12),
               TextField(
-                  controller: captainController,
-                  decoration: const InputDecoration(
-                      labelText: 'Капитан', border: OutlineInputBorder())),
+                controller: captainController,
+                decoration: InputDecoration(
+                  labelText: 'Капитан',
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
               const SizedBox(height: 12),
               TextField(
-                  controller: projectController,
-                  decoration: const InputDecoration(
-                      labelText: 'Название проекта',
-                      border: OutlineInputBorder())),
+                controller: projectController,
+                decoration: InputDecoration(
+                  labelText: 'Название проекта',
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
               const SizedBox(height: 12),
               TextField(
-                  controller: emailController,
-                  decoration: const InputDecoration(
-                      labelText: 'Email', border: OutlineInputBorder())),
+                controller: emailController,
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
               const SizedBox(height: 12),
               TextField(
-                  controller: phoneController,
-                  decoration: const InputDecoration(
-                      labelText: 'Телефон', border: OutlineInputBorder())),
+                controller: phoneController,
+                decoration: InputDecoration(
+                  labelText: 'Телефон',
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+              ),
               const SizedBox(height: 12),
               TextField(
-                  controller: descController,
-                  decoration: const InputDecoration(
-                      labelText: 'Описание', border: OutlineInputBorder()),
-                  maxLines: 3),
+                controller: descController,
+                decoration: InputDecoration(
+                  labelText: 'Описание',
+                  filled: true,
+                  fillColor: Colors.white,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+                maxLines: 3,
+              ),
             ],
           ),
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Отмена')),
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Отмена'),
+          ),
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                  content: Text('Создание команды будет реализовано')));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                    content: Text('Создание команды будет реализовано')),
+              );
             },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: colorScheme.primary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
             child: const Text('Создать'),
           ),
         ],
@@ -212,95 +370,157 @@ class _TeamsScreenState extends ConsumerState<TeamsScreen> {
     );
   }
 
-  void _showTeamDetails(BuildContext context, ApiService apiService,
-      String hackathonId, String teamId) async {
+  void _showTeamDetails(
+    BuildContext context,
+    ApiService apiService,
+    String hackathonId,
+    String teamId,
+  ) async {
     try {
       final team = await apiService.getTeam(hackathonId, teamId);
       if (!context.mounted) return;
-
-      showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        builder: (_) => Container(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Text(team.name,
-                      style: Theme.of(context).textTheme.headlineSmall),
-                  const SizedBox(width: 12),
-                  StatusBadge(status: team.evaluationStatus),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(team.projectTitle,
-                  style: const TextStyle(
-                      fontSize: 16, fontWeight: FontWeight.w500)),
-              if (team.description != null) ...[
-                const SizedBox(height: 8),
-                Text(team.description!,
-                    style: TextStyle(color: Colors.grey[600])),
-              ],
-              const SizedBox(height: 24),
-              const Text('Участники:',
-                  style: TextStyle(fontWeight: FontWeight.w600)),
-              const SizedBox(height: 8),
-              ...team.members.map((m) => Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: Row(
-                      children: [
-                        Icon(m.isCaptain ? Icons.star : Icons.person, size: 16),
-                        const SizedBox(width: 8),
-                        Text('${m.fullName}${m.isCaptain ? ' (капитан)' : ''}'),
-                      ],
-                    ),
-                  )),
-              const SizedBox(height: 16),
-              const Text('Назначенные эксперты:',
-                  style: TextStyle(fontWeight: FontWeight.w600)),
-              const SizedBox(height: 8),
-              if (team.assignedExperts.isEmpty)
-                const Text('Нет назначенных экспертов',
-                    style: TextStyle(color: Colors.grey))
-              else
-                ...team.assignedExperts.map((e) => Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: Row(
-                        children: [
-                          const Icon(Icons.person_outline, size: 16),
-                          const SizedBox(width: 8),
-                          Text(e['full_name']?.toString() ?? 'Неизвестно'),
-                        ],
-                      ),
-                    )),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('Закрыть'),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      );
+      _showTeamDetailsSheet(context, team);
     } catch (e) {
-      if (e.toString().contains('501')) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-              content: Text(
-                  'Детальная информация о команде временно недоступна (API не реализовано)')),
+            content: Text('Детальная информация о команде временно недоступна'),
+          ),
         );
-      } else {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Ошибка: $e')));
       }
     }
+  }
+
+  void _showTeamDetailsSheet(BuildContext context, TeamDetail team) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        minChildSize: 0.4,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (context, scrollController) => Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                colorScheme.primary.withOpacity(0.05),
+                Colors.white,
+              ],
+            ),
+          ),
+          child: SingleChildScrollView(
+            controller: scrollController,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        team.name,
+                        style: theme.textTheme.headlineMedium,
+                      ),
+                    ),
+                    StatusBadge(status: team.evaluationStatus),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  team.projectTitle,
+                  style: theme.textTheme.titleMedium,
+                ),
+                if (team.description != null) ...[
+                  const SizedBox(height: 8),
+                  Text(
+                    team.description!,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 24),
+                const Divider(),
+                const SizedBox(height: 16),
+                Text(
+                  'Участники',
+                  style: theme.textTheme.titleMedium,
+                ),
+                const SizedBox(height: 12),
+                if (team.members.isEmpty)
+                  Text(
+                    'Нет участников',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: Colors.grey[500],
+                    ),
+                  )
+                else
+                  ...team.members.map((m) => Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Row(
+                          children: [
+                            Icon(
+                              m.isCaptain ? Icons.star : Icons.person_outline,
+                              size: 18,
+                              color: m.isCaptain
+                                  ? colorScheme.primary
+                                  : Colors.grey[500],
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                                '${m.fullName}${m.isCaptain ? ' (капитан)' : ''}'),
+                          ],
+                        ),
+                      )),
+                const SizedBox(height: 16),
+                Text(
+                  'Назначенные эксперты',
+                  style: theme.textTheme.titleMedium,
+                ),
+                const SizedBox(height: 12),
+                if (team.assignedExperts.isEmpty)
+                  Text(
+                    'Нет назначенных экспертов',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: Colors.grey[500],
+                    ),
+                  )
+                else
+                  ...team.assignedExperts.map((e) => Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Row(
+                          children: [
+                            Icon(Icons.person_outline,
+                                size: 18, color: Colors.grey[500]),
+                            const SizedBox(width: 12),
+                            Text(e['full_name']?.toString() ?? 'Неизвестно'),
+                          ],
+                        ),
+                      )),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Закрыть'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

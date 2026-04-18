@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:hackrank_frontend/models/role.dart';
 import 'api_client.dart';
 import '../../models/user.dart';
@@ -253,9 +254,25 @@ class ApiService {
     }
   }
 
+  // Было неправильно - ожидался список, а приходит объект с пагинацией
   Future<List<Hackathon>> getHackathons() async {
-    final response = await _client.get('/hackathons/');
-    return (response.data as List).map((e) => Hackathon.fromJson(e)).toList();
+    try {
+      final response = await _client.get('/hackathons/');
+      // Бэкенд возвращает список, а не объект с items
+      if (response.data is List) {
+        return (response.data as List)
+            .map((e) => Hackathon.fromJson(e))
+            .toList();
+      } else if (response.data is Map && response.data.containsKey('items')) {
+        return (response.data['items'] as List)
+            .map((e) => Hackathon.fromJson(e))
+            .toList();
+      }
+      return [];
+    } catch (e) {
+      debugPrint('❌ Failed to get hackathons: $e');
+      return [];
+    }
   }
 
   Future<Hackathon> createHackathon(Map<String, dynamic> data) async {

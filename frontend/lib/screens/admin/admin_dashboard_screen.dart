@@ -17,16 +17,13 @@ class AdminDashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
     final hackathonIdAsync = ref.watch(hackathonIdProvider);
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Дашборд администратора'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.bug_report),
-            onPressed: () => Scaffold.of(context).openEndDrawer(),
-            tooltip: 'Отладка API',
-          ),
           hackathonIdAsync.when(
             data: (hackathonId) => hackathonId.isNotEmpty
                 ? Padding(
@@ -39,16 +36,53 @@ class AdminDashboardScreen extends ConsumerWidget {
           ),
         ],
       ),
-      drawer:
-          AppDrawer(role: user?.role ?? UserRole.admin, currentRoute: '/admin'),
-      body: hackathonIdAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, _) => Center(child: Text('Ошибка: $err')),
-        data: (hackathonId) => hackathonId.isEmpty
-            ? const Center(
-                child: Text(
-                    'Нет активного хакатона. Создайте хакатон в админ-панели.'))
-            : _DashboardContent(hackathonId: hackathonId),
+      drawer: AppDrawer(
+        role: user?.role ?? UserRole.admin,
+        currentRoute: '/admin',
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              colorScheme.primary.withOpacity(0.05),
+              colorScheme.background,
+            ],
+          ),
+        ),
+        child: hackathonIdAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (err, _) => Center(child: Text('Ошибка: $err')),
+          data: (hackathonId) => hackathonId.isEmpty
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.event_busy,
+                        size: 64,
+                        color: Colors.grey[400],
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        'Нет активного хакатона',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: Colors.grey[600],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Создайте хакатон в админ-панели',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: Colors.grey[500],
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              : _DashboardContent(hackathonId: hackathonId),
+        ),
       ),
     );
   }
@@ -83,7 +117,6 @@ class _DashboardContent extends ConsumerWidget {
     return dashboardAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (err, _) {
-        // Если дашборд не реализован, показываем заглушку с базовой информацией
         if (err.toString().contains('404')) {
           return _buildFallbackDashboard(context, ref);
         }
@@ -94,6 +127,9 @@ class _DashboardContent extends ConsumerWidget {
   }
 
   Widget _buildFallbackDashboard(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -102,171 +138,87 @@ class _DashboardContent extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.orange.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.orange),
+              color: colorScheme.primary.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: colorScheme.primary.withOpacity(0.3)),
             ),
             child: Row(
               children: [
-                const Icon(Icons.info_outline, color: Colors.orange),
+                Icon(Icons.info_outline, color: colorScheme.primary),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     'Дашборд администратора находится в разработке. Используйте меню для навигации.',
-                    style: TextStyle(color: Colors.orange[700]),
+                    style: TextStyle(color: colorScheme.secondary),
                   ),
                 ),
               ],
             ),
           ),
           const SizedBox(height: 32),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('Быстрые действия',
-                      style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 24),
-                  Wrap(
-                    spacing: 16,
-                    runSpacing: 16,
-                    children: [
-                      _buildActionCard(
-                        context,
-                        icon: Icons.groups,
-                        title: 'Команды',
-                        subtitle: 'Управление командами',
-                        onTap: () => context.go('/admin/teams'),
-                        color: Colors.blue,
-                      ),
-                      _buildActionCard(
-                        context,
-                        icon: Icons.people,
-                        title: 'Пользователи',
-                        subtitle: 'Управление пользователями',
-                        onTap: () => context.go('/admin/users'),
-                        color: Colors.green,
-                      ),
-                      _buildActionCard(
-                        context,
-                        icon: Icons.rule,
-                        title: 'Критерии',
-                        subtitle: 'Настройка критериев оценки',
-                        onTap: () => context.go('/admin/criteria'),
-                        color: Colors.orange,
-                      ),
-                      _buildActionCard(
-                        context,
-                        icon: Icons.assignment_ind,
-                        title: 'Назначения',
-                        subtitle: 'Назначение экспертов',
-                        onTap: () => context.go('/admin/assignments'),
-                        color: Colors.purple,
-                      ),
-                      _buildActionCard(
-                        context,
-                        icon: Icons.leaderboard,
-                        title: 'Результаты',
-                        subtitle: 'Просмотр и публикация результатов',
-                        onTap: () => context.go('/admin/results'),
-                        color: Colors.red,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
+          _buildQuickActionsGrid(context),
         ],
       ),
     );
   }
 
-  Widget _buildActionCard(
-    BuildContext context, {
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-    required Color color,
-  }) {
-    return SizedBox(
-      width: 200,
-      child: Card(
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(icon, color: color, size: 32),
-                ),
-                const SizedBox(height: 12),
-                Text(title,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 16)),
-                const SizedBox(height: 4),
-                Text(subtitle,
-                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                    textAlign: TextAlign.center),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildDashboard(BuildContext context, AdminDashboard dashboard) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // KPI Cards with click functionality
           GridView.count(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             crossAxisCount: 4,
-            childAspectRatio: 1.8,
+            childAspectRatio: 1.6,
             crossAxisSpacing: 16,
             mainAxisSpacing: 16,
             children: [
-              KpiCard(
-                  title: 'Всего команд',
-                  value: '${dashboard.teamsTotal}',
-                  icon: Icons.groups,
-                  color: Colors.blue),
-              KpiCard(
-                  title: 'Экспертов',
-                  value: '${dashboard.expertsTotal}',
-                  icon: Icons.people,
-                  color: Colors.green),
-              KpiCard(
-                  title: 'Критериев',
-                  value: '${dashboard.criteriaTotal}',
-                  icon: Icons.rule,
-                  color: Colors.orange),
-              KpiCard(
+              _ClickableKpiCard(
+                title: 'Всего команд',
+                value: '${dashboard.teamsTotal}',
+                icon: Icons.groups_outlined,
+                color: colorScheme.primary,
+                onTap: () => context.go('/admin/teams'),
+              ),
+              _ClickableKpiCard(
+                title: 'Экспертов',
+                value: '${dashboard.expertsTotal}',
+                icon: Icons.people_outline,
+                color: colorScheme.secondary,
+                onTap: () => context.go('/admin/users'),
+              ),
+              _ClickableKpiCard(
+                title: 'Критериев',
+                value: '${dashboard.criteriaTotal}',
+                icon: Icons.rule_outlined,
+                color: colorScheme.primary,
+                onTap: () => context.go('/admin/criteria'),
+              ),
+              _ClickableKpiCard(
                 title: 'Оценок отправлено',
                 value:
                     '${dashboard.evaluationsSubmitted}/${dashboard.evaluationsTotalExpected}',
-                icon: Icons.check_circle,
-                color: Colors.purple,
+                icon: Icons.check_circle_outline,
+                color: colorScheme.primary,
+                onTap: () => context.go('/admin/assignments'),
               ),
             ],
           ),
           const SizedBox(height: 32),
+
+          // Quick Actions Section
+          _buildQuickActionsGrid(context),
+
+          const SizedBox(height: 32),
+
+          // Leaderboard and Progress Section
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -274,16 +226,17 @@ class _DashboardContent extends ConsumerWidget {
                 flex: 2,
                 child: Card(
                   child: Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(20),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Text('Топ команд',
-                                style: TextStyle(
-                                    fontSize: 18, fontWeight: FontWeight.w600)),
+                            Text(
+                              'Топ команд',
+                              style: theme.textTheme.headlineMedium,
+                            ),
                             TextButton(
                               onPressed: () => context.go('/admin/results'),
                               child: const Text('Все результаты'),
@@ -292,13 +245,21 @@ class _DashboardContent extends ConsumerWidget {
                         ),
                         const SizedBox(height: 16),
                         dashboard.leaderboardTop.isEmpty
-                            ? const Center(
+                            ? Center(
                                 child: Padding(
-                                    padding: EdgeInsets.all(32),
-                                    child: Text('Нет данных')))
+                                  padding: const EdgeInsets.all(32),
+                                  child: Text(
+                                    'Нет данных',
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: Colors.grey[500],
+                                    ),
+                                  ),
+                                ),
+                              )
                             : LeaderboardTable(
                                 entries: dashboard.leaderboardTop,
-                                compact: true),
+                                compact: true,
+                              ),
                       ],
                     ),
                   ),
@@ -306,56 +267,254 @@ class _DashboardContent extends ConsumerWidget {
               ),
               const SizedBox(width: 24),
               Expanded(
-                child: Column(
-                  children: [
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Прогресс экспертов',
-                                style: TextStyle(
-                                    fontSize: 16, fontWeight: FontWeight.w600)),
-                            const SizedBox(height: 16),
-                            if (dashboard.expertsProgress.isEmpty)
-                              const Center(
-                                  child: Padding(
-                                      padding: EdgeInsets.all(16),
-                                      child: Text('Нет экспертов')))
-                            else
-                              Column(
-                                children:
-                                    dashboard.expertsProgress.map((expert) {
-                                  final progress = expert.totalAssigned > 0
-                                      ? expert.submitted / expert.totalAssigned
-                                      : 0.0;
-                                  return Padding(
-                                    padding: const EdgeInsets.only(bottom: 12),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                child: Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Прогресс экспертов',
+                          style: theme.textTheme.headlineMedium,
+                        ),
+                        const SizedBox(height: 16),
+                        if (dashboard.expertsProgress.isEmpty)
+                          Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(32),
+                              child: Text(
+                                'Нет экспертов',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: Colors.grey[500],
+                                ),
+                              ),
+                            ),
+                          )
+                        else
+                          Column(
+                            children: dashboard.expertsProgress.map((expert) {
+                              final progress = expert.totalAssigned > 0
+                                  ? expert.submitted / expert.totalAssigned
+                                  : 0.0;
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 16),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Text(expert.expertName),
-                                            Text(
-                                                '${expert.submitted}/${expert.totalAssigned}'),
-                                          ],
+                                        Text(
+                                          expert.expertName,
+                                          style: theme.textTheme.bodyMedium,
                                         ),
-                                        const SizedBox(height: 4),
-                                        LinearProgressIndicator(
-                                            value: progress,
-                                            backgroundColor: Colors.grey[200]),
+                                        Text(
+                                          '${expert.submitted}/${expert.totalAssigned}',
+                                          style: theme.textTheme.bodyMedium
+                                              ?.copyWith(
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
                                       ],
                                     ),
-                                  );
-                                }).toList(),
-                              ),
-                          ],
-                        ),
+                                    const SizedBox(height: 8),
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: LinearProgressIndicator(
+                                        value: progress,
+                                        backgroundColor: Colors.grey[200],
+                                        color: colorScheme.primary,
+                                        minHeight: 6,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickActionsGrid(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Быстрые действия',
+          style: theme.textTheme.headlineMedium,
+        ),
+        const SizedBox(height: 16),
+        GridView.count(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisCount: 5,
+          childAspectRatio: 1.2,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          children: [
+            _buildQuickActionCard(
+              context,
+              icon: Icons.groups_outlined,
+              title: 'Команды',
+              subtitle: 'Управление командами',
+              color: colorScheme.primary,
+              onTap: () => context.go('/admin/teams'),
+            ),
+            _buildQuickActionCard(
+              context,
+              icon: Icons.people_outline,
+              title: 'Пользователи',
+              subtitle: 'Управление пользователями',
+              color: colorScheme.secondary,
+              onTap: () => context.go('/admin/users'),
+            ),
+            _buildQuickActionCard(
+              context,
+              icon: Icons.rule_outlined,
+              title: 'Критерии',
+              subtitle: 'Настройка критериев оценки',
+              color: Colors.blue,
+              onTap: () => context.go('/admin/criteria'),
+            ),
+            _buildQuickActionCard(
+              context,
+              icon: Icons.assignment_outlined,
+              title: 'Назначения',
+              subtitle: 'Назначение экспертов',
+              color: Colors.purple,
+              onTap: () => context.go('/admin/assignments'),
+            ),
+            _buildQuickActionCard(
+              context,
+              icon: Icons.leaderboard_outlined,
+              title: 'Результаты',
+              subtitle: 'Просмотр и публикация',
+              color: Colors.orange,
+              onTap: () => context.go('/admin/results'),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildQuickActionCard(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    final theme = Theme.of(context);
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Card(
+        elevation: 2,
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: color, size: 28),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                title,
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: Colors.grey[600],
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ClickableKpiCard extends StatelessWidget {
+  final String title;
+  final String value;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _ClickableKpiCard({
+    required this.title,
+    required this.value,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: color, size: 28),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      value,
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
@@ -363,7 +522,7 @@ class _DashboardContent extends ConsumerWidget {
               ),
             ],
           ),
-        ],
+        ),
       ),
     );
   }
