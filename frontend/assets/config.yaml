@@ -1,7 +1,5 @@
-# HackRank Frontend Configuration
-
 api:
-  base_url: "http://localhost:8000"
+  base_url: "http://192.168.5.46:8000"
   prefix: "/api/v1"
   timeout:
     connect: 10
@@ -9,7 +7,7 @@ api:
     send: 30
 
 websocket:
-  url: "ws://localhost:8000"
+  url: "ws://192.168.5.46:8000"
   prefix: "/api/v1/ws"
   ping_interval: 30
 
@@ -19,11 +17,11 @@ auth:
   max_refresh_attempts: 3
 
 hackathon:
-  default_id: "demo-hackathon-id"
+  default_id: ""
 
 features:
-  mock_enabled: true
-  websocket_enabled: false
+  mock_enabled: false
+  websocket_enabled: true
   audit_enabled: true
   draft_autosave_interval: 30
 

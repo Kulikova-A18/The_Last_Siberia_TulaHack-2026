@@ -24,21 +24,9 @@ class Criterion {
       description: json['description'],
       maxScore: (json['max_score'] as num).toDouble(),
       weightPercent: (json['weight_percent'] as num).toDouble(),
-      sortOrder: json['sort_order'],
+      sortOrder: json['sort_order'] ?? 0,
       isActive: json['is_active'] ?? true,
     );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'title': title,
-      'description': description,
-      'max_score': maxScore,
-      'weight_percent': weightPercent,
-      'sort_order': sortOrder,
-      'is_active': isActive,
-    };
   }
 }
 
@@ -55,8 +43,11 @@ class CriteriaListResponse {
 
   factory CriteriaListResponse.fromJson(Map<String, dynamic> json) {
     return CriteriaListResponse(
-      items: (json['items'] as List).map((e) => Criterion.fromJson(e)).toList(),
-      totalWeight: (json['total_weight'] as num).toDouble(),
+      items: (json['items'] as List?)
+              ?.map((e) => Criterion.fromJson(e))
+              .toList() ??
+          [],
+      totalWeight: (json['total_weight'] as num?)?.toDouble() ?? 0.0,
       weightsValid: json['weights_valid'] ?? false,
     );
   }

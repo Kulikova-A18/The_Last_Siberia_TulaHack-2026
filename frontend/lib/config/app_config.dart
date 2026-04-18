@@ -72,20 +72,20 @@ class AppConfig {
 
     // Hackathon
     final hackathon = config['hackathon'] as Map<dynamic, dynamic>? ?? {};
-    defaultHackathonId =
-        hackathon['default_id']?.toString() ?? 'demo-hackathon-id';
+    defaultHackathonId = hackathon['default_id']?.toString() ?? '';
 
     // Features
     final features = config['features'] as Map<dynamic, dynamic>? ?? {};
-    mockEnabled = features['mock_enabled'] as bool? ?? true;
-    websocketEnabled = features['websocket_enabled'] as bool? ?? false;
+    mockEnabled = features['mock_enabled'] as bool? ??
+        false; // Отключаем моки для работы с API
+    websocketEnabled = features['websocket_enabled'] as bool? ?? true;
     auditEnabled = features['audit_enabled'] as bool? ?? true;
     draftAutosaveInterval = features['draft_autosave_interval'] as int? ?? 30;
 
     // Logging
     final logging = config['logging'] as Map<dynamic, dynamic>? ?? {};
     logLevel = logging['level']?.toString() ?? 'info';
-    logRequests = logging['log_requests'] as bool? ?? false;
+    logRequests = logging['log_requests'] as bool? ?? true;
     logResponses = logging['log_responses'] as bool? ?? false;
 
     // Environment
@@ -104,8 +104,6 @@ class AppConfig {
 
     try {
       String yamlString;
-
-      // Пробуем загрузить из assets
       try {
         yamlString = await rootBundle.loadString('assets/config.yaml');
         debugPrint('Loaded config.yaml from assets');
@@ -115,45 +113,25 @@ class AppConfig {
       }
 
       final yamlMap = loadYaml(yamlString);
-
       if (yamlMap is Map) {
         _instance = AppConfig._fromMap(yamlMap);
       } else {
-        debugPrint('Invalid YAML format, using defaults');
         _instance = AppConfig._fromMap(loadYaml(_getDefaultConfig()) as Map);
       }
     } catch (e, stack) {
       debugPrint('Error loading config: $e');
-      debugPrint('Stack: $stack');
-      // Используем конфигурацию по умолчанию
-      try {
-        final defaultYaml = loadYaml(_getDefaultConfig());
-        if (defaultYaml is Map) {
-          _instance = AppConfig._fromMap(defaultYaml);
-        } else {
-          _instance = AppConfig._createDefault();
-        }
-      } catch (e2) {
-        debugPrint('Fatal: Cannot load default config: $e2');
-        _instance = AppConfig._createDefault();
-      }
+      _instance = AppConfig._createDefault();
     }
 
     return _instance!;
   }
 
   static AppConfig _createDefault() {
-    debugPrint('Creating hardcoded default config');
-    // Создаем Map с правильными типами
     final defaultMap = <dynamic, dynamic>{
       'api': <dynamic, dynamic>{
         'base_url': 'http://localhost:8000',
         'prefix': '/api/v1',
-        'timeout': <dynamic, dynamic>{
-          'connect': 10,
-          'receive': 30,
-          'send': 30,
-        },
+        'timeout': <dynamic, dynamic>{'connect': 10, 'receive': 30, 'send': 30},
       },
       'websocket': <dynamic, dynamic>{
         'url': 'ws://localhost:8000',
@@ -165,12 +143,10 @@ class AppConfig {
         'refresh_before_expiry_minutes': 2,
         'max_refresh_attempts': 3,
       },
-      'hackathon': <dynamic, dynamic>{
-        'default_id': 'demo-hackathon-id',
-      },
+      'hackathon': <dynamic, dynamic>{'default_id': ''},
       'features': <dynamic, dynamic>{
-        'mock_enabled': true,
-        'websocket_enabled': false,
+        'mock_enabled': false,
+        'websocket_enabled': true,
         'audit_enabled': true,
         'draft_autosave_interval': 30,
       },
@@ -180,10 +156,7 @@ class AppConfig {
         'log_responses': false,
       },
       'environment': 'development',
-      'build': <dynamic, dynamic>{
-        'version': '1.0.0',
-        'build_number': '1',
-      },
+      'build': <dynamic, dynamic>{'version': '1.0.0', 'build_number': '1'},
     };
     return AppConfig._fromMap(defaultMap);
   }
@@ -197,33 +170,26 @@ api:
     connect: 10
     receive: 30
     send: 30
-
 websocket:
   url: "ws://localhost:8000"
   prefix: "/api/v1/ws"
   ping_interval: 30
-
 auth:
   access_token_lifetime_minutes: 15
   refresh_before_expiry_minutes: 2
   max_refresh_attempts: 3
-
 hackathon:
-  default_id: "demo-hackathon-id"
-
+  default_id: ""
 features:
-  mock_enabled: true
-  websocket_enabled: false
+  mock_enabled: false
+  websocket_enabled: true
   audit_enabled: true
   draft_autosave_interval: 30
-
 logging:
   level: "debug"
   log_requests: true
   log_responses: false
-
 environment: "development"
-
 build:
   version: "1.0.0"
   build_number: "1"
@@ -232,10 +198,8 @@ build:
 
   String get fullApiUrl => '$baseUrl$apiPrefix';
   String get fullWsUrl => '$wsUrl$wsPrefix';
-
   bool get isDevelopment => environment == 'development';
   bool get isProduction => environment == 'production';
-  bool get isStaging => environment == 'staging';
 
   Map<String, String> get defaultHeaders => {
         'Content-Type': 'application/json',
