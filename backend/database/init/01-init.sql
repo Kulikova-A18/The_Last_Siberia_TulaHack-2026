@@ -47,7 +47,7 @@ BEGIN
     NEW.updated_at = NOW();
     RETURN NEW;
 END;
-$$ LANGUAGE none;
+$$ LANGUAGE 'pl';
 
 -- =========================================================
 -- HACKATHONS TABLE
@@ -429,7 +429,7 @@ BEGIN
     
     RETURN NEW;
 END;
-$$ LANGUAGE none;
+$$ LANGUAGE 'pl';
 
 CREATE TRIGGER trg_evaluation_items_check
 BEFORE INSERT OR UPDATE ON evaluation_items
