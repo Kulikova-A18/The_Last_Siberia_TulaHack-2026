@@ -2,9 +2,9 @@
 ============================================================
 >>> HACKATHON API TEST EXECUTION
 ============================================================
-[INFO] Started at: 2026-04-18 23:55:25
+[INFO] Started at: 2026-04-19 01:03:36
 [INFO] Base URL: http://192.168.5.46:8000/api/v1
-[INFO] Log file: /home/vboxuser/The_Last_Siberia_TulaHack-2026/QA_Service_Lab/test_api/outputs/logs/api_test_2026_04_18_235525.log
+[INFO] Log file: /home/vboxuser/The_Last_Siberia_TulaHack-2026/QA_Service_Lab/test_api/outputs/logs/api_test_2026_04_19_010336.log
 
 ============================================================
 >>> 0. HEALTH CHECK
@@ -26,8 +26,8 @@
 }
 < Response (HTTP 200):
 {
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMTExMTExMS0xMTExLTExMTEtMTExMS0xMTExMTExMTExMTEiLCJleHAiOjE3NzY2MzIxMjUsInR5cGUiOiJhY2Nlc3MifQ.x-zD-IzBLRx0YGhqHJGINbQjDAhQRLnP_t_VCyRFDzw",
-  "refresh_token": "f_C_D0sjMOPt_JdRXvpklUCW6cdNOSYkBqlYIEYu7OBKB52KP7_YSBpwBTfsAhCmn6je6cAI7B9KEJ8FI9bMHQ",
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMTExMTExMS0xMTExLTExMTEtMTExMS0xMTExMTExMTExMTEiLCJleHAiOjE3NzY2MzYyMTYsInR5cGUiOiJhY2Nlc3MifQ.5p1yBsjumuZvUdFA3CDTxrFn7wcifrf4XVFQQoIiJ4Y",
+  "refresh_token": "Dnju05bRsLGFbRTz6_ZnJiYHw4k-6UG2lJ18_ZR0orqZvDK6ykYSYRuJRLYSXpIyKqwGk577dNO2BLtOynybVA",
   "token_type": "bearer",
   "user": {
     "id": "11111111-1111-1111-1111-111111111111",
@@ -41,12 +41,12 @@
 [SUCCESS] Access Token obtained: eyJhbGciOiJIUzI1NiIs...
 > Request: POST http://192.168.5.46:8000/api/v1/auth/refresh
 > Body: {
-  "refresh_token": "f_C_D0sjMOPt_JdRXvpklUCW6cdNOSYkBqlYIEYu7OBKB52KP7_YSBpwBTfsAhCmn6je6cAI7B9KEJ8FI9bMHQ"
+  "refresh_token": "Dnju05bRsLGFbRTz6_ZnJiYHw4k-6UG2lJ18_ZR0orqZvDK6ykYSYRuJRLYSXpIyKqwGk577dNO2BLtOynybVA"
 }
 < Response (HTTP 200):
 {
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMTExMTExMS0xMTExLTExMTEtMTExMS0xMTExMTExMTExMTEiLCJleHAiOjE3NzY2MzIxMjUsInR5cGUiOiJhY2Nlc3MifQ.x-zD-IzBLRx0YGhqHJGINbQjDAhQRLnP_t_VCyRFDzw",
-  "refresh_token": "aYSkhkjrr6yEMni3VuRISoFoC542KToUswicWT3m5tEmjbfXGaXMWXzzyf9h-G0fFs8qV0kFMt1TT5mWNeReOw",
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMTExMTExMS0xMTExLTExMTEtMTExMS0xMTExMTExMTExMTEiLCJleHAiOjE3NzY2MzYyMTYsInR5cGUiOiJhY2Nlc3MifQ.5p1yBsjumuZvUdFA3CDTxrFn7wcifrf4XVFQQoIiJ4Y",
+  "refresh_token": "c-jttuS9JXiTt0kgj49AOST8HTmObp35p4jJiI8KTVT1e8YthEFc0rSZq28j-eV6Q4Hd7RlvKpKH9QW9qn-6sg",
   "token_type": "bearer",
   "user": {
     "id": "11111111-1111-1111-1111-111111111111",
@@ -110,16 +110,136 @@
 {
   "items": [
     {
-      "id": "22222222-2222-2222-2222-222222222222",
-      "login": "expert2",
-      "full_name": "Елена Козлова",
-      "role_code": "expert",
-      "email": "elena.kozlova@example.com",
-      "phone": "+79002345678",
-      "team_id": null,
+      "id": "fb456b87-d815-43a6-a3db-423bbf5e6a70",
+      "login": "team_blockchain_pioneers",
+      "full_name": "Blockchain Pioneers Team Account",
+      "role_code": "team",
+      "email": "team_blockchain_pioneers@example.com",
+      "phone": null,
+      "team_id": "ce3ef709-2d60-470d-b500-5b61b139f802",
       "is_active": true,
       "last_login_at": null,
-      "created_at": "2026-04-18T20:49:35.770329Z"
+      "created_at": "2026-04-18T21:34:35.467260Z"
+    },
+    {
+      "id": "17a561cb-5eb4-4dbb-9c5a-b27425417d89",
+      "login": "team_cyber_defenders",
+      "full_name": "Cyber Defenders Team Account",
+      "role_code": "team",
+      "email": "team_cyber_defenders@example.com",
+      "phone": null,
+      "team_id": "c2c0267b-cebd-4e47-b4c2-c39045e62e36",
+      "is_active": true,
+      "last_login_at": null,
+      "created_at": "2026-04-18T21:34:35.467260Z"
+    },
+    {
+      "id": "4b4a872d-6c99-4e9a-98c6-14546f2ed19d",
+      "login": "team_ux_geniuses",
+      "full_name": "UX Geniuses Team Account",
+      "role_code": "team",
+      "email": "team_ux_geniuses@example.com",
+      "phone": null,
+      "team_id": "20bb64f7-bd18-4599-b8b3-428f26af77a3",
+      "is_active": true,
+      "last_login_at": null,
+      "created_at": "2026-04-18T21:34:35.467260Z"
+    },
+    {
+      "id": "32ee7d9c-e324-4837-82a2-d943eea7ec8c",
+      "login": "team_data_dynamos",
+      "full_name": "Data Dynamos Team Account",
+      "role_code": "team",
+      "email": "team_data_dynamos@example.com",
+      "phone": null,
+      "team_id": "dec3bb68-9fa5-4df7-a766-d532e1964689",
+      "is_active": true,
+      "last_login_at": null,
+      "created_at": "2026-04-18T21:34:35.467260Z"
+    },
+    {
+      "id": "2d93b816-ef78-44e4-82c1-e024c202db08",
+      "login": "team_code_wizards",
+      "full_name": "Code Wizards Team Account",
+      "role_code": "team",
+      "email": "team_code_wizards@example.com",
+      "phone": null,
+      "team_id": "bedae99d-d24e-464b-8e3f-4b4934a1be43",
+      "is_active": true,
+      "last_login_at": "2026-04-18T21:42:47.757933Z",
+      "created_at": "2026-04-18T21:34:35.467260Z"
+    },
+    {
+      "id": "6124c998-2569-4d1d-9e14-b7075e28fcbf",
+      "login": "team_neural_ninjas",
+      "full_name": "Neural Ninjas Team Account",
+      "role_code": "team",
+      "email": "team_neural_ninjas@example.com",
+      "phone": null,
+      "team_id": "5418eba3-147d-4375-a4cb-7ac7f4f684a0",
+      "is_active": true,
+      "last_login_at": null,
+      "created_at": "2026-04-18T21:34:35.467260Z"
+    },
+    {
+      "id": "8fe31adb-12a0-48c7-9097-26c460befdfc",
+      "login": "team_algorithm_masters",
+      "full_name": "Algorithm Masters Team Account",
+      "role_code": "team",
+      "email": "team_algorithm_masters@example.com",
+      "phone": null,
+      "team_id": "44d97654-4506-4130-8e40-dc551b161e68",
+      "is_active": true,
+      "last_login_at": null,
+      "created_at": "2026-04-18T21:34:35.467260Z"
+    },
+    {
+      "id": "ac6454e7-4103-45b2-a003-ba92ef3f7568",
+      "login": "team_quantum_leap",
+      "full_name": "Quantum Leap Team Account",
+      "role_code": "team",
+      "email": "team_quantum_leap@example.com",
+      "phone": null,
+      "team_id": "ed1729a7-4355-42cc-94a1-95c2d347ada1",
+      "is_active": true,
+      "last_login_at": null,
+      "created_at": "2026-04-18T21:34:35.467260Z"
+    },
+    {
+      "id": "b3e3b574-a575-4569-948a-ee56e94c1708",
+      "login": "team_cloud_guardians",
+      "full_name": "Cloud Guardians Team Account",
+      "role_code": "team",
+      "email": "team_cloud_guardians@example.com",
+      "phone": null,
+      "team_id": "71d325f7-a310-459a-aee6-c4f32cc53220",
+      "is_active": true,
+      "last_login_at": null,
+      "created_at": "2026-04-18T21:34:35.467260Z"
+    },
+    {
+      "id": "369356dc-0ab1-4714-b38f-dd54e1236032",
+      "login": "team_robo_coders",
+      "full_name": "Robo Coders Team Account",
+      "role_code": "team",
+      "email": "team_robo_coders@example.com",
+      "phone": null,
+      "team_id": "2f49b5b0-7deb-4304-9e0d-c0caf01fbff9",
+      "is_active": true,
+      "last_login_at": null,
+      "created_at": "2026-04-18T21:34:35.467260Z"
+    },
+    {
+      "id": "11111111-1111-1111-1111-111111111111",
+      "login": "admin",
+      "full_name": "Главный Администратор",
+      "role_code": "admin",
+      "email": "admin@hackathon.com",
+      "phone": null,
+      "team_id": null,
+      "is_active": true,
+      "last_login_at": "2026-04-18T22:03:36.599452Z",
+      "created_at": "2026-04-18T21:34:27.788658Z"
     },
     {
       "id": "22222222-2222-2222-2222-222222222223",
@@ -131,7 +251,7 @@
       "team_id": null,
       "is_active": true,
       "last_login_at": null,
-      "created_at": "2026-04-18T20:49:35.770329Z"
+      "created_at": "2026-04-18T21:34:27.788658Z"
     },
     {
       "id": "22222222-2222-2222-2222-222222222224",
@@ -143,7 +263,7 @@
       "team_id": null,
       "is_active": true,
       "last_login_at": null,
-      "created_at": "2026-04-18T20:49:35.770329Z"
+      "created_at": "2026-04-18T21:34:27.788658Z"
     },
     {
       "id": "22222222-2222-2222-2222-222222222225",
@@ -155,7 +275,7 @@
       "team_id": null,
       "is_active": true,
       "last_login_at": null,
-      "created_at": "2026-04-18T20:49:35.770329Z"
+      "created_at": "2026-04-18T21:34:27.788658Z"
     },
     {
       "id": "22222222-2222-2222-2222-222222222221",
@@ -166,27 +286,27 @@
       "phone": "+79001234567",
       "team_id": null,
       "is_active": true,
-      "last_login_at": "2026-04-18T20:50:04.916003Z",
-      "created_at": "2026-04-18T20:49:35.770329Z"
+      "last_login_at": "2026-04-18T21:42:47.677749Z",
+      "created_at": "2026-04-18T21:34:27.788658Z"
     },
     {
-      "id": "11111111-1111-1111-1111-111111111111",
-      "login": "admin",
-      "full_name": "Главный Администратор",
-      "role_code": "admin",
-      "email": "admin@hackathon.com",
-      "phone": null,
+      "id": "22222222-2222-2222-2222-222222222222",
+      "login": "expert2",
+      "full_name": "Елена Козлова",
+      "role_code": "expert",
+      "email": "elena.kozlova@example.com",
+      "phone": "+79002345678",
       "team_id": null,
       "is_active": true,
-      "last_login_at": "2026-04-18T20:55:25.552420Z",
-      "created_at": "2026-04-18T20:49:35.770329Z"
+      "last_login_at": null,
+      "created_at": "2026-04-18T21:34:27.788658Z"
     }
   ],
   "page": 1,
   "page_size": 20,
-  "total": 6
+  "total": 16
 }
-[INFO] Found 6 users
+[INFO] Found 16 users
 
 ============================================================
 >>> 4. HACKATHONS
@@ -195,32 +315,32 @@
 < Response (HTTP 200):
 {
   "id": "d3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44",
-  "title": "КиберЗащита 2024",
+  "title": "КиберЗащита 2026",
   "description": "24-часовой спринт по созданию инновационных инструментов безопасности.",
-  "start_at": "2026-04-16T20:49:35.773062Z",
-  "end_at": "2026-04-23T20:49:35.773062Z",
+  "start_at": "2026-04-16T21:34:34.263638Z",
+  "end_at": "2026-04-23T21:34:34.263638Z",
   "status": "active",
-  "results_published": false,
+  "results_published": true,
   "results_frozen": false,
-  "created_at": "2026-04-18T20:49:35.773062Z",
-  "updated_at": "2026-04-18T20:49:35.773062Z"
+  "created_at": "2026-04-18T21:34:27.791156Z",
+  "updated_at": "2026-04-18T21:34:27.791156Z"
 }
 [SUCCESS] Active hackathon found: d3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44
 > Request: GET http://192.168.5.46:8000/api/v1/hackathons/d3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44
 < Response (HTTP 200):
 {
   "id": "d3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44",
-  "title": "КиберЗащита 2024",
+  "title": "КиберЗащита 2026",
   "description": "24-часовой спринт по созданию инновационных инструментов безопасности.",
-  "start_at": "2026-04-16T20:49:35.773062Z",
-  "end_at": "2026-04-23T20:49:35.773062Z",
+  "start_at": "2026-04-16T21:34:34.263638Z",
+  "end_at": "2026-04-23T21:34:34.263638Z",
   "status": "active",
-  "results_published": false,
+  "results_published": true,
   "results_frozen": false,
-  "created_at": "2026-04-18T20:49:35.773062Z",
-  "updated_at": "2026-04-18T20:49:35.773062Z"
+  "created_at": "2026-04-18T21:34:27.791156Z",
+  "updated_at": "2026-04-18T21:34:27.791156Z"
 }
-[INFO] Hackathon: КиберЗащита 2024
+[INFO] Hackathon: КиберЗащита 2026
 
 ============================================================
 >>> 5. TEAMS MANAGEMENT
@@ -250,8 +370,8 @@
       "weight_percent": 40.0,
       "sort_order": 1,
       "is_active": true,
-      "created_at": "2026-04-18T20:49:35.775064Z",
-      "updated_at": "2026-04-18T20:49:35.775064Z"
+      "created_at": "2026-04-18T21:34:27.793195Z",
+      "updated_at": "2026-04-18T21:34:27.793195Z"
     },
     {
       "id": "c2222222-2222-2222-2222-222222222222",
@@ -261,8 +381,8 @@
       "weight_percent": 30.0,
       "sort_order": 2,
       "is_active": true,
-      "created_at": "2026-04-18T20:49:35.775064Z",
-      "updated_at": "2026-04-18T20:49:35.775064Z"
+      "created_at": "2026-04-18T21:34:27.793195Z",
+      "updated_at": "2026-04-18T21:34:27.793195Z"
     },
     {
       "id": "c2222222-2222-2222-2222-222222222223",
@@ -272,8 +392,8 @@
       "weight_percent": 30.0,
       "sort_order": 3,
       "is_active": true,
-      "created_at": "2026-04-18T20:49:35.775064Z",
-      "updated_at": "2026-04-18T20:49:35.775064Z"
+      "created_at": "2026-04-18T21:34:27.793195Z",
+      "updated_at": "2026-04-18T21:34:27.793195Z"
     }
   ],
   "total_weight": 100.0,
@@ -299,8 +419,8 @@
 }
 < Response (HTTP 200):
 {
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyMjIyMjIyMi0yMjIyLTIyMjItMjIyMi0yMjIyMjIyMjIyMjEiLCJleHAiOjE3NzY2MzIxMjUsInR5cGUiOiJhY2Nlc3MifQ.HWHgtLrZuNEf88esyvZqJc_1JypwtBK6R767mdEQlgE",
-  "refresh_token": "tcCQSRXvjRwbt6Nu8N2A5jq9oncDwKNzwIrw0UqWiLrpaUv0GjXpkWlchJImulqm1ogBQs9x-EJ8SbP5STJxWQ",
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyMjIyMjIyMi0yMjIyLTIyMjItMjIyMi0yMjIyMjIyMjIyMjEiLCJleHAiOjE3NzY2MzYyMTYsInR5cGUiOiJhY2Nlc3MifQ.xnmuqYKScFidtAyDIawEEsLbW5PXl0hFGWFjuIntpCQ",
+  "refresh_token": "ArcRUGSOHXlD3KFxfVGPJpN-9Ckw-bkn_bszJxb301n3nrSCqOtatu9qe0-MNN-LrJ9z5hN7qY40MKTj9bb4ew",
   "token_type": "bearer",
   "user": {
     "id": "22222222-2222-2222-2222-222222222221",
@@ -326,11 +446,14 @@
 >>> 9. RESULTS & LEADERBOARD
 ============================================================
 > Request: GET http://192.168.5.46:8000/api/v1/hackathons/d3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44/results/leaderboard
-< Response (HTTP 500):
+< Response (HTTP 200):
 {
-  "error": "Internal Server Error"
+  "published": true,
+  "frozen": false,
+  "items": [],
+  "updated_at": "2026-04-18T21:42:26.321475Z"
 }
-[WARNING] Could not get leaderboard
+[INFO] Leaderboard has 0 teams
 > Request: GET http://192.168.5.46:8000/api/v1/hackathons/d3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44/results/winners?top=3
 < Response (HTTP 200):
 {
@@ -345,9 +468,9 @@
 > Request: GET http://192.168.5.46:8000/api/v1/public/hackathons/d3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44/leaderboard
 < Response (HTTP 200):
 {
-  "published": false,
+  "published": true,
   "items": [],
-  "updated_at": "2026-04-18T20:49:35.773062Z"
+  "updated_at": "2026-04-18T21:42:26.321475Z"
 }
 [INFO] Public leaderboard accessible
 > Request: GET http://192.168.5.46:8000/api/v1/public/hackathons/d3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44/timer
@@ -376,39 +499,49 @@
   "login": "team_code_wizards",
   "password": "Team123!"
 }
-< Response (HTTP 401):
+< Response (HTTP 200):
 {
-  "detail": "Invalid credentials or inactive account"
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIyZDkzYjgxNi1lZjc4LTQ0ZTQtODJjMS1lMDI0YzIwMmRiMDgiLCJleHAiOjE3NzY2MzYyMTYsInR5cGUiOiJhY2Nlc3MifQ.OSW6a4VBK364IKEYq1nYd7oEEHIA_uJ5cNlvNgpSazc",
+  "refresh_token": "znfwBx-LRqjpcfzWx8BKQeIpBXnExVwwNESTyqCGWX2pA0jVigRmS3IEqnSu_94kOvEjhKc57O9pr2kVAd4oXQ",
+  "token_type": "bearer",
+  "user": {
+    "id": "2d93b816-ef78-44e4-82c1-e024c202db08",
+    "login": "team_code_wizards",
+    "full_name": "Code Wizards Team Account",
+    "role": "team",
+    "team_id": "bedae99d-d24e-464b-8e3f-4b4934a1be43",
+    "is_active": true
+  }
 }
-[WARNING] Could not login as team_code_wizards
+[SUCCESS] Team logged in: team_code_wizards
 
 ============================================================
 >>> 12. LOGOUT
 ============================================================
 > Request: POST http://192.168.5.46:8000/api/v1/auth/logout
 > Body: {
-  "refresh_token": "f_C_D0sjMOPt_JdRXvpklUCW6cdNOSYkBqlYIEYu7OBKB52KP7_YSBpwBTfsAhCmn6je6cAI7B9KEJ8FI9bMHQ"
+  "refresh_token": "Dnju05bRsLGFbRTz6_ZnJiYHw4k-6UG2lJ18_ZR0orqZvDK6ykYSYRuJRLYSXpIyKqwGk577dNO2BLtOynybVA"
 }
 < Response (HTTP 200):
 {
   "message": "Logged out successfully"
 }
 [SUCCESS] Logged out successfully
-[INFO] State saved to /home/vboxuser/The_Last_Siberia_TulaHack-2026/QA_Service_Lab/test_api/outputs/tokens/tokens_2026_04_18_235525.json
+[INFO] State saved to /home/vboxuser/The_Last_Siberia_TulaHack-2026/QA_Service_Lab/test_api/outputs/tokens/tokens_2026_04_19_010336.json
 
 ============================================================
 >>> TEST EXECUTION COMPLETED
 ============================================================
-[INFO] Finished at: 2026-04-18 23:55:25
-[INFO] Log file: /home/vboxuser/The_Last_Siberia_TulaHack-2026/QA_Service_Lab/test_api/outputs/logs/api_test_2026_04_18_235525.log
-[INFO] Tokens file: /home/vboxuser/The_Last_Siberia_TulaHack-2026/QA_Service_Lab/test_api/outputs/tokens/tokens_2026_04_18_235525.json
+[INFO] Finished at: 2026-04-19 01:03:36
+[INFO] Log file: /home/vboxuser/The_Last_Siberia_TulaHack-2026/QA_Service_Lab/test_api/outputs/logs/api_test_2026_04_19_010336.log
+[INFO] Tokens file: /home/vboxuser/The_Last_Siberia_TulaHack-2026/QA_Service_Lab/test_api/outputs/tokens/tokens_2026_04_19_010336.json
 
 ============================================================
                  TEST SUMMARY                      
 ============================================================
-  Passed:  17
+  Passed:  19
   Failed:  0
-  Skipped: 2
+  Skipped: 0
 ============================================================
 
 Test Data:
