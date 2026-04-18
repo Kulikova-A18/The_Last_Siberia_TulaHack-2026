@@ -78,7 +78,7 @@ jobs:
           echo "=========================================="
 
           INIT_DIR="database/init"
-          SCRIPTS=("01-init.sql" "02-seed.sql" "03-indexes.sql")
+          SCRIPTS=("00-plpgsql.sql 01-init.sql" "02-seed.sql" "03-indexes.sql")
 
           for script in "${SCRIPTS[@]}"; do
             if [ -f "$INIT_DIR/$script" ]; then

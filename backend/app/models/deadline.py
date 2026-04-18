@@ -4,7 +4,8 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy import Enum as PgEnum
 from sqlalchemy.orm import relationship
 from enum import Enum
-from app.models.base import Base
+from app.models.base import Base, IDMixin, TimestampMixin
+
 
 class DeadlineKind(str, Enum):
     REGISTRATION = "registration"
@@ -13,7 +14,8 @@ class DeadlineKind(str, Enum):
     EVALUATION = "evaluation"
     CUSTOM = "custom"
 
-class Deadline(Base):
+
+class Deadline(Base, IDMixin, TimestampMixin):
     __tablename__ = "deadlines"
     
     hackathon_id = Column(UUID(as_uuid=True), ForeignKey("hackathons.id", ondelete="CASCADE"), nullable=False)

@@ -2,9 +2,10 @@
 from sqlalchemy import Column, String, Boolean, ForeignKey, DateTime, CheckConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from app.models.base import Base
+from app.models.base import Base, IDMixin, TimestampMixin
 
-class User(Base):
+
+class User(Base, IDMixin, TimestampMixin):
     __tablename__ = "users"
     
     login = Column(String(50), unique=True, nullable=False, index=True)
@@ -17,7 +18,7 @@ class User(Base):
     team_id = Column(UUID(as_uuid=True), ForeignKey("teams.id", ondelete="SET NULL"), nullable=True)
     
     is_active = Column(Boolean, default=True)
-    last_login_at = Column(DateTime, nullable=True)
+    last_login_at = Column(DateTime(timezone=True), nullable=True)
     
     # Relationships
     role = relationship("Role", back_populates="users")

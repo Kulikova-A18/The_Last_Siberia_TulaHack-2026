@@ -1,4 +1,3 @@
-# backend/app/main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
@@ -8,7 +7,8 @@ from app.api.v1 import (
     auth, users, roles, hackathons, teams, criteria,
     assignments, evaluations, results, deadlines, public, audit_logs
 )
-from app.core.database import engine, Base
+from app.core.database import engine
+from app.models.base import Base
 from app.core.config import settings
 from app.websocket import leaderboard_ws
 
@@ -21,7 +21,14 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info("Starting up...")
     async with engine.begin() as conn:
+        # Import all models before creating tables
+        from app.models import (
+            User, Role, Permission, RefreshToken,
+            Hackathon, Team, TeamMember, Criterion, ExpertTeamAssignment,
+            Evaluation, EvaluationItem, Deadline, TeamResult, TeamResultItem, AuditLog
+        )
         await conn.run_sync(Base.metadata.create_all)
+    logger.info("Database tables created/verified")
     yield
     # Shutdown
     logger.info("Shutting down...")
@@ -60,7 +67,7 @@ app.include_router(public.router, prefix=api_prefix, tags=["Public"])
 app.include_router(audit_logs.router, prefix=api_prefix, tags=["Audit"])
 
 # WebSocket
-app.include_router(leaderboard_ws.router, prefix="/api/v1/ws", tags=["WebSocket"])
+app.include_router(leaderboard_ws.router, prefix=f"{api_prefix}/ws", tags=["WebSocket"])
 
 @app.get("/health")
 async def health_check():

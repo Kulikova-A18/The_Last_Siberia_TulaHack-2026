@@ -9,13 +9,13 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 CREATE EXTENSION IF NOT EXISTS "pg_stat_statements";
 
 -- =========================================================
--- ENUM TYPES
+-- ENUM TYPES (FIXED: UPPERCASE VALUES FOR TESTS)
 -- =========================================================
 
 CREATE TYPE hackathon_status AS ENUM (
-    'draft',
-    'active',
-    'finished'
+    'DRAFT',
+    'ACTIVE',
+    'FINISHED'
 );
 
 CREATE TYPE evaluation_status AS ENUM (
@@ -59,7 +59,7 @@ CREATE TABLE hackathons (
     description TEXT,
     start_at TIMESTAMPTZ NOT NULL,
     end_at TIMESTAMPTZ NOT NULL,
-    status hackathon_status NOT NULL DEFAULT 'draft',
+    status hackathon_status NOT NULL DEFAULT 'DRAFT',
     
     results_published BOOLEAN NOT NULL DEFAULT FALSE,
     results_published_at TIMESTAMPTZ,
@@ -168,9 +168,17 @@ CREATE TABLE refresh_tokens (
     ip_address INET,
     
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     
     CONSTRAINT refresh_tokens_expires_chk CHECK (expires_at > created_at)
 );
+
+-- Триггер для updated_at в refresh_tokens
+DROP TRIGGER IF EXISTS trg_refresh_tokens_updated_at ON refresh_tokens;
+CREATE TRIGGER trg_refresh_tokens_updated_at
+    BEFORE UPDATE ON refresh_tokens
+    FOR EACH ROW
+    EXECUTE FUNCTION fn_set_updated_at();
 
 -- =========================================================
 -- TEAM MEMBERS TABLE
@@ -224,7 +232,7 @@ CREATE TABLE criteria (
 );
 
 -- =========================================================
--- EXPERT -> TEAM ASSIGNMENTS
+-- EXPERT -> TEAM ASSIGNMENTS (FIXED: added updated_at)
 -- =========================================================
 
 CREATE TABLE expert_team_assignments (
@@ -235,6 +243,7 @@ CREATE TABLE expert_team_assignments (
     
     assigned_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     
     CONSTRAINT assignments_team_fk
         FOREIGN KEY (team_id, hackathon_id)
@@ -243,6 +252,13 @@ CREATE TABLE expert_team_assignments (
     
     CONSTRAINT assignments_uniq UNIQUE (hackathon_id, expert_user_id, team_id)
 );
+
+-- Триггер для updated_at в expert_team_assignments
+DROP TRIGGER IF EXISTS trg_expert_team_assignments_updated_at ON expert_team_assignments;
+CREATE TRIGGER trg_expert_team_assignments_updated_at
+    BEFORE UPDATE ON expert_team_assignments
+    FOR EACH ROW
+    EXECUTE FUNCTION fn_set_updated_at();
 
 -- =========================================================
 -- EVALUATIONS TABLE

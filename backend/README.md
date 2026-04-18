@@ -29,11 +29,18 @@ cd backend && docker-compose up -d
 # Запуск из корня проекта
 
 ```
+# Остановить все контейнеры
+sudo docker-compose down -v
 
-docker-compose up -d
+# Очистить кэш Docker
+sudo docker system prune -a -f
+sudo docker builder prune -a -f
+
+# Удалить все тома (ВНИМАНИЕ! Удалит данные всех проектов)
+sudo docker volume prune -f
+
+# Запустите 
+sudo  docker-compose up -d
 
 ```
 
-```
-
-```

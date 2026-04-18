@@ -31,4 +31,4 @@ httpx==0.27.0
 asgi-lifespan==2.1.0
 
 # Utilities
-python-dateutil==2.8.2
+python-dateutil==2.8.2passlib[argon2]==1.7.4

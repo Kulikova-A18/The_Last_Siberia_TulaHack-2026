@@ -1,7 +1,7 @@
 # backend/app/services/auth_service.py
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from datetime import datetime
+from datetime import datetime, timedelta
 from uuid import UUID
 import hashlib
 import secrets
@@ -10,7 +10,9 @@ from app.models.user import User
 from app.models.refresh_token import RefreshToken
 from app.models.role import Role
 from app.core.security import verify_password, get_password_hash, create_access_token, create_refresh_token
+from app.core.config import settings
 from app.schemas.auth import UserInfo
+
 
 class AuthService:
     def __init__(self, db: AsyncSession):
@@ -37,8 +39,7 @@ class AuthService:
         token = secrets.token_urlsafe(64)
         token_hash = hashlib.sha256(token.encode()).hexdigest()
         
-        from datetime import timedelta
-        expires_at = datetime.utcnow() + timedelta(days=7)
+        expires_at = datetime.utcnow() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
         
         refresh_token = RefreshToken(
             user_id=user_id,
@@ -69,7 +70,10 @@ class AuthService:
             return None
         
         result = await self.db.execute(
-            select(User).where(User.id == refresh_token.user_id, User.is_active == True)
+            select(User).where(
+                User.id == refresh_token.user_id,
+                User.is_active == True
+            )
         )
         return result.scalar_one_or_none()
     
@@ -110,5 +114,5 @@ class AuthService:
     
     async def generate_tokens(self, user: User) -> tuple[str, str]:
         access_token = create_access_token(data={"sub": str(user.id)})
-        refresh_token = create_refresh_token(data={"sub": str(user.id)})
-        return access_token, refresh_token
+        refresh_token_str = await self.create_refresh_token(user.id)  # Используем существующий метод
+        return access_token, refresh_token_str

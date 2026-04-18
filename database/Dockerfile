@@ -1,30 +1,23 @@
-FROM postgres:15-alpine
+FROM python:3.11-slim
 
-LABEL maintainer="Hackathon Team"
-LABEL description="PostgreSQL for Hackathon Evaluation System"
+WORKDIR /app
 
-# Install additional tools for monitoring
-RUN apk add --no-cache \
-    postgresql-contrib \
-    pgbackrest \
-    curl \
-    jq \
-    && rm -rf /var/cache/apk/*
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy custom configuration
-COPY conf/postgresql.conf /etc/postgresql/postgresql.conf
-COPY conf/pg_hba.conf /etc/postgresql/pg_hba.conf
+# Copy requirements and install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Set custom config
-RUN chmod 644 /etc/postgresql/postgresql.conf && \
-    chmod 600 /etc/postgresql/pg_hba.conf
+# Copy application code
+COPY . .
 
-# Health check script
-COPY scripts/healthcheck.sh /usr/local/bin/healthcheck.sh
-RUN chmod +x /usr/local/bin/healthcheck.sh
+# Create logs directory
+RUN mkdir -p /app/logs
 
-# Expose PostgreSQL port
-EXPOSE 5432
+EXPOSE 8000
 
-# Use custom config
-CMD ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
