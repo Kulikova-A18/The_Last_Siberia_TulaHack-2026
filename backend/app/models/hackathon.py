@@ -4,27 +4,27 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy import Enum as PgEnum
 from sqlalchemy.orm import relationship
 from enum import Enum
-from app.models.base import Base
+from app.models.base import Base, TimestampMixin
 
 class HackathonStatus(str, Enum):
     DRAFT = "draft"
     ACTIVE = "active"
     FINISHED = "finished"
 
-class Hackathon(Base):
+class Hackathon(Base, TimestampMixin):
     __tablename__ = "hackathons"
     
     title = Column(String(200), nullable=False)
     description = Column(String)
-    start_at = Column(DateTime, nullable=False)
-    end_at = Column(DateTime, nullable=False)
+    start_at = Column(DateTime(timezone=True), nullable=False)
+    end_at = Column(DateTime(timezone=True), nullable=False)
     status = Column(PgEnum(HackathonStatus), default=HackathonStatus.DRAFT, nullable=False)
     
     results_published = Column(Boolean, default=False)
-    results_published_at = Column(DateTime, nullable=True)
+    results_published_at = Column(DateTime(timezone=True), nullable=True)
     results_frozen = Column(Boolean, default=False)
-    results_frozen_at = Column(DateTime, nullable=True)
-    leaderboard_updated_at = Column(DateTime, nullable=True)
+    results_frozen_at = Column(DateTime(timezone=True), nullable=True)
+    leaderboard_updated_at = Column(DateTime(timezone=True), nullable=True)
     
     # Relationships
     teams = relationship("Team", back_populates="hackathon", cascade="all, delete-orphan")

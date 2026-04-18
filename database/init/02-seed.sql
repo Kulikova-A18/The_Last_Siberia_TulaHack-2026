@@ -124,7 +124,7 @@ BEGIN
     
     RETURN NEW;
 END;
-$$ LANGUAGE 'pl';
+$$ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS trg_validate_criteria_weights ON criteria;
 CREATE TRIGGER trg_validate_criteria_weights
