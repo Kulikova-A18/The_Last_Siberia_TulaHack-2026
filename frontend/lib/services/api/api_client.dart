@@ -5,7 +5,6 @@ import '../../config/app_config.dart';
 import '../token_storage.dart';
 import '../auth_service.dart';
 
-// Глобальный коллбэк для логирования в UI
 typedef ApiLogCallback = void Function(String message);
 
 class ApiClient {
@@ -63,36 +62,27 @@ class ApiClient {
         final token = await _tokenStorage.getAccessToken();
         if (token != null) {
           options.headers['Authorization'] = 'Bearer $token';
+          _log('📤 🔐 ${options.method} ${options.path}');
+        } else {
+          _log('📤 🌐 ${options.method} ${options.path}');
         }
-
-        // Логируем запрос
-        final method = options.method;
-        final path = options.path;
-        final hasToken = token != null ? '🔐' : '🌐';
-        _log('📤 $hasToken $method $path');
         if (options.data != null) {
           _log('   Body: ${_truncate(options.data.toString())}');
         }
-        if (options.queryParameters.isNotEmpty) {
-          _log('   Query: ${options.queryParameters}');
-        }
-
         return handler.next(options);
       },
       onResponse: (response, handler) {
-        // Логируем ответ
-        final statusCode = response.statusCode;
-        final emoji = statusCode != null && statusCode < 300 ? '✅' : '⚠️';
-        _log('📥 $emoji HTTP $statusCode ${response.requestOptions.path}');
-
+        final emoji = response.statusCode != null && response.statusCode! < 300
+            ? '✅'
+            : '⚠️';
+        _log(
+            '📥 $emoji HTTP ${response.statusCode} ${response.requestOptions.path}');
         return handler.next(response);
       },
       onError: (DioException error, handler) async {
-        // Логируем ошибку
         _log('❌ ERROR: ${error.message}');
         if (error.response != null) {
           _log('   Status: ${error.response?.statusCode}');
-          _log('   Body: ${_truncate(error.response?.data.toString() ?? '')}');
         }
 
         if (error.response?.statusCode == 401) {
@@ -144,14 +134,24 @@ class ApiClient {
     _isRefreshing = true;
     try {
       final refreshToken = await _tokenStorage.getRefreshToken();
-      if (refreshToken == null) return false;
-      final response = await _dio
-          .post('/auth/refresh', data: {'refresh_token': refreshToken});
+      if (refreshToken == null) {
+        _log('❌ No refresh token available');
+        return false;
+      }
+      _log('📤 🔄 POST /auth/refresh');
+      final response = await _dio.post(
+        '/auth/refresh',
+        data: {'refresh_token': refreshToken},
+        options: Options(headers: {'Authorization': null}),
+      );
       if (response.statusCode == 200) {
         final newAccessToken = response.data['access_token'];
         final newRefreshToken = response.data['refresh_token'];
         await _tokenStorage.saveTokens(
-            accessToken: newAccessToken, refreshToken: newRefreshToken);
+          accessToken: newAccessToken,
+          refreshToken: newRefreshToken,
+        );
+        _log('✅ Tokens refreshed and saved');
         for (final completer in _refreshCompleters) {
           completer.complete();
         }
@@ -159,6 +159,7 @@ class ApiClient {
       }
       return false;
     } catch (e) {
+      _log('❌ Refresh error: $e');
       for (final completer in _refreshCompleters) {
         completer.completeError(e);
       }
