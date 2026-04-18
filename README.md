@@ -56,27 +56,6 @@
 5. Администратор публикует рейтинг.
 6. Команды и гости видят live-рейтинг.
 
-
-## Быстрый старт (пример)
-
-Backend
-
-```
-cd backend
-cp .env.example .env
-docker-compose up -d
-alembic upgrade head
-uvicorn app.main:app --reload
-```
-
-Frontend (Flutter Web)
-
-```
-cd frontend
-flutter pub get
-flutter run -d chrome
-```
-
 ---
 
 Главная ценность:
