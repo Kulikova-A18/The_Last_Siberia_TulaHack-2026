@@ -16,10 +16,21 @@ async def get_active_hackathon(
     db: AsyncSession = Depends(get_db)
 ):
     """Get the active hackathon"""
-    raise HTTPException(
-        status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Not implemented yet"
+    from sqlalchemy import select
+    from app.models.hackathon import Hackathon
+    
+    result = await db.execute(
+        select(Hackathon).where(Hackathon.status == 'active').order_by(Hackathon.created_at.desc()).limit(1)
     )
+    hackathon = result.scalar_one_or_none()
+    
+    if not hackathon:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No active hackathon found"
+        )
+    
+    return hackathon
 
 @router.get("/", response_model=list[HackathonResponse])
 async def get_hackathons(

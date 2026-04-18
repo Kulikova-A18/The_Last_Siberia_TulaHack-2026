@@ -12,11 +12,7 @@ services:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      # Правильные пути к init скриптам
-      - ./backend/database/init:/docker-entrypoint-initdb.d:ro
-      # Правильные пути к конфигам
-      - ./backend/database/conf/postgresql.conf:/etc/postgresql/postgresql.conf:ro
-      - ./backend/database/conf/pg_hba.conf:/etc/postgresql/pg_hba.conf:ro
+      - ./database/init:/docker-entrypoint-initdb.d:ro
     networks:
       - hackathon_network
     healthcheck:
@@ -30,10 +26,6 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
-    command: >
-      postgres
-      -c config_file=/etc/postgresql/postgresql.conf
-      -c hba_file=/etc/postgresql/pg_hba.conf
 
   pgadmin:
     image: dpage/pgadmin4:latest
@@ -71,6 +63,7 @@ services:
       ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-1440}
       REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:-7}
       DEBUG: ${DEBUG:-true}
+      CORS_ORIGINS: '["http://localhost:3000", "http://localhost:8080", "http://localhost:8000", "http://<YOUR_SERVER_IP>:3000", "http://<YOUR_SERVER_IP>:8000", "*"]'
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     depends_on:

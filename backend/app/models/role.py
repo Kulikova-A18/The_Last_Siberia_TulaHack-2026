@@ -2,9 +2,9 @@
 from sqlalchemy import Column, String, Table, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from app.models.base import Base, IDMixin, TimestampMixin
+from app.models.base import Base, IDMixin  # убрали TimestampMixin
 
-# Association table for role_permissions
+# Association table
 role_permissions = Table(
     "role_permissions",
     Base.metadata,
@@ -12,22 +12,24 @@ role_permissions = Table(
     Column("permission_id", UUID(as_uuid=True), ForeignKey("permissions.id", ondelete="CASCADE"), primary_key=True),
 )
 
-class Role(Base, IDMixin, TimestampMixin):
+class Role(Base, IDMixin):  # убрали TimestampMixin
     __tablename__ = "roles"
     
     code = Column(String(50), unique=True, nullable=False)
     name = Column(String(100), unique=True, nullable=False)
+    created_at = Column(String)  # заглушка, если нужно
     
     # Relationships
     users = relationship("User", back_populates="role")
     permissions = relationship("Permission", secondary=role_permissions, back_populates="roles")
 
-class Permission(Base, IDMixin, TimestampMixin):
+class Permission(Base, IDMixin):  # убрали TimestampMixin
     __tablename__ = "permissions"
     
     code = Column(String(100), unique=True, nullable=False)
     name = Column(String(150), nullable=False)
     description = Column(String(255))
+    created_at = Column(String)  # заглушка
     
     # Relationships
     roles = relationship("Role", secondary=role_permissions, back_populates="permissions")

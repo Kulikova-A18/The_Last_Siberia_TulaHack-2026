@@ -168,9 +168,17 @@ CREATE TABLE refresh_tokens (
     ip_address INET,
     
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     
     CONSTRAINT refresh_tokens_expires_chk CHECK (expires_at > created_at)
 );
+
+-- Триггер для updated_at в refresh_tokens (добавлено вручную)
+DROP TRIGGER IF EXISTS trg_refresh_tokens_updated_at ON refresh_tokens;
+CREATE TRIGGER trg_refresh_tokens_updated_at
+    BEFORE UPDATE ON refresh_tokens
+    FOR EACH ROW
+    EXECUTE FUNCTION fn_set_updated_at();
 
 -- =========================================================
 -- TEAM MEMBERS TABLE

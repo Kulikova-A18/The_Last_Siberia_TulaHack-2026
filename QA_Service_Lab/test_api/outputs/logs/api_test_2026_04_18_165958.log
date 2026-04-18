@@ -1,0 +1,222 @@
+
+============================================================
+>>> HACKATHON API TEST EXECUTION
+============================================================
+[INFO] Started at: 2026-04-18 16:59:58
+[INFO] Base URL: http://192.168.5.46:8000/api/v1
+[INFO] Log file: /home/vboxuser/The_Last_Siberia_TulaHack-2026/QA_Service_Lab/test_api/outputs/logs/api_test_2026_04_18_165958.log
+
+============================================================
+>>> 0. HEALTH CHECK
+============================================================
+> Request: GET http://192.168.5.46:8000/api/v1/../../health
+< Response (HTTP 200):
+{
+  "status": "ok"
+}
+[SUCCESS] Backend is ready!
+
+============================================================
+>>> 1. AUTHENTICATION
+============================================================
+> Request: POST http://192.168.5.46:8000/api/v1/auth/login
+> Body: {
+  "login": "admin",
+  "password": "Admin123!"
+}
+< Response (HTTP 200):
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYTQ5ZmZmOC05YzNhLTRmYzktYWZlNC0xZDdlNTJlMTJiMzciLCJleHAiOjE3NzY2MDcxOTgsInR5cGUiOiJhY2Nlc3MifQ.wwnoiCcw74I9uJjoOofynRBGRYAPm4nRCbo7yJcpk_g",
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYTQ5ZmZmOC05YzNhLTRmYzktYWZlNC0xZDdlNTJlMTJiMzciLCJleHAiOjE3NzcxMjU1OTgsInR5cGUiOiJyZWZyZXNoIn0.2tKD6P3UVTGjQZYCTX6Ei6F4FHWXfe5hh1HFPCmy1QU",
+  "token_type": "bearer",
+  "user": {
+    "id": "aa49fff8-9c3a-4fc9-afe4-1d7e52e12b37",
+    "login": "admin",
+    "full_name": "Main Administrator",
+    "role": "admin",
+    "team_id": null,
+    "is_active": true
+  }
+}
+[SUCCESS] Access Token obtained: eyJhbGciOiJIUzI1NiIs...
+> Request: POST http://192.168.5.46:8000/api/v1/auth/refresh
+> Body: {
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYTQ5ZmZmOC05YzNhLTRmYzktYWZlNC0xZDdlNTJlMTJiMzciLCJleHAiOjE3NzcxMjU1OTgsInR5cGUiOiJyZWZyZXNoIn0.2tKD6P3UVTGjQZYCTX6Ei6F4FHWXfe5hh1HFPCmy1QU"
+}
+< Response (HTTP 401):
+{
+  "detail": "Invalid or expired refresh token"
+}
+[WARNING] Token refresh failed
+
+============================================================
+>>> 1b. CHANGE PASSWORD
+============================================================
+> Request: POST http://192.168.5.46:8000/api/v1/auth/change-password
+> Body: {
+  "old_password": "Admin123!",
+  "new_password": "NewAdmin456!"
+}
+< Response (HTTP 200):
+{
+  "message": "Password changed successfully"
+}
+> Request: POST http://192.168.5.46:8000/api/v1/auth/change-password
+> Body: {
+  "old_password": "NewAdmin456!",
+  "new_password": "Admin123!"
+}
+< Response (HTTP 200):
+{
+  "message": "Password changed successfully"
+}
+[SUCCESS] Password changed and restored
+
+============================================================
+>>> 2. CURRENT USER INFO
+============================================================
+> Request: GET http://192.168.5.46:8000/api/v1/auth/me
+< Response (HTTP 200):
+{
+  "access_token": "",
+  "refresh_token": "",
+  "token_type": "bearer",
+  "user": {
+    "id": "aa49fff8-9c3a-4fc9-afe4-1d7e52e12b37",
+    "login": "admin",
+    "full_name": "Main Administrator",
+    "role": "admin",
+    "team_id": null,
+    "is_active": true
+  }
+}
+[INFO] User: None (None)
+
+============================================================
+>>> 3. USERS MANAGEMENT
+============================================================
+> Request: GET http://192.168.5.46:8000/api/v1/users/?page=1&page_size=20
+< Response (HTTP 200):
+{
+  "items": [],
+  "page": 1,
+  "page_size": 20,
+  "total": 0
+}
+[INFO] Found 0 users
+
+============================================================
+>>> 4. HACKATHONS
+============================================================
+> Request: GET http://192.168.5.46:8000/api/v1/hackathons/active
+< Response (HTTP 500):
+{
+  "error": "Internal Server Error"
+}
+> Request: GET http://192.168.5.46:8000/api/v1/hackathons/
+< Response (HTTP 200):
+[]
+[WARNING] No hackathons found
+
+============================================================
+>>> 5. TEAMS MANAGEMENT
+============================================================
+[WARNING] Skipping team tests - no hackathon ID
+
+============================================================
+>>> 6. CRITERIA MANAGEMENT
+============================================================
+[WARNING] Skipping criteria tests - no hackathon ID
+
+============================================================
+>>> 7. EXPERT ASSIGNMENTS
+============================================================
+[WARNING] Skipping assignment tests - no hackathon ID
+
+============================================================
+>>> 8. EXPERT EVALUATIONS
+============================================================
+> Request: POST http://192.168.5.46:8000/api/v1/auth/login
+> Body: {
+  "login": "expert1",
+  "password": "Expert123!"
+}
+< Response (HTTP 200):
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0ZmE2MTY3OC1kNzc2LTRhYmMtODhlNS1hZmFmODVhNTdkOTEiLCJleHAiOjE3NzY2MDcxOTgsInR5cGUiOiJhY2Nlc3MifQ.sgo__3QHHwyIAk1V0yyJZhNaVS3cw0EJR6yBd1viPIg",
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0ZmE2MTY3OC1kNzc2LTRhYmMtODhlNS1hZmFmODVhNTdkOTEiLCJleHAiOjE3NzcxMjU1OTgsInR5cGUiOiJyZWZyZXNoIn0.t-AKFKAaVHlQ8kJRZnm5rEr0SRXwpuHNw_N1SyBVsnQ",
+  "token_type": "bearer",
+  "user": {
+    "id": "4fa61678-d776-4abc-88e5-afaf85a57d91",
+    "login": "expert1",
+    "full_name": "Dr. Sarah Chen",
+    "role": "expert",
+    "team_id": null,
+    "is_active": true
+  }
+}
+[SUCCESS] Expert logged in: expert1
+[WARNING] Skipping evaluation tests - no hackathon ID
+
+============================================================
+>>> 9. RESULTS & LEADERBOARD
+============================================================
+[WARNING] Skipping results tests - no hackathon ID
+
+============================================================
+>>> 10. PUBLIC ENDPOINTS
+============================================================
+[WARNING] Skipping public endpoints - no hackathon ID
+
+============================================================
+>>> 11. TEAM CABINET
+============================================================
+> Request: POST http://192.168.5.46:8000/api/v1/auth/login
+> Body: {
+  "login": "team_code_wizards",
+  "password": "Team123!"
+}
+< Response (HTTP 200):
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2ZTU1ZWE2Ny1hZWM2LTRiMjMtYTAyOS01NmI5Y2E4YWE4MzciLCJleHAiOjE3NzY2MDcxOTgsInR5cGUiOiJhY2Nlc3MifQ.28VOH9H_UouQZMYzw_Vp_UU2h-rnw5bW1xy6UgwApBM",
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2ZTU1ZWE2Ny1hZWM2LTRiMjMtYTAyOS01NmI5Y2E4YWE4MzciLCJleHAiOjE3NzcxMjU1OTgsInR5cGUiOiJyZWZyZXNoIn0.AURQ1XshlqvaxLCQlVq813rfBnoscfOf8eJNWSP3qiU",
+  "token_type": "bearer",
+  "user": {
+    "id": "6e55ea67-aec6-4b23-a029-56b9ca8aa837",
+    "login": "team_code_wizards",
+    "full_name": "Code Wizards Team Account",
+    "role": "team",
+    "team_id": null,
+    "is_active": true
+  }
+}
+[SUCCESS] Team logged in: team_code_wizards
+
+============================================================
+>>> 12. LOGOUT
+============================================================
+> Request: POST http://192.168.5.46:8000/api/v1/auth/logout
+> Body: {
+  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYTQ5ZmZmOC05YzNhLTRmYzktYWZlNC0xZDdlNTJlMTJiMzciLCJleHAiOjE3NzcxMjU1OTgsInR5cGUiOiJyZWZyZXNoIn0.2tKD6P3UVTGjQZYCTX6Ei6F4FHWXfe5hh1HFPCmy1QU"
+}
+< Response (HTTP 200):
+{
+  "message": "Logged out successfully"
+}
+[SUCCESS] Logged out successfully
+[INFO] State saved to /home/vboxuser/The_Last_Siberia_TulaHack-2026/QA_Service_Lab/test_api/outputs/tokens/tokens_2026_04_18_165958.json
+
+============================================================
+>>> TEST EXECUTION COMPLETED
+============================================================
+[INFO] Finished at: 2026-04-18 16:59:58
+[INFO] Log file: /home/vboxuser/The_Last_Siberia_TulaHack-2026/QA_Service_Lab/test_api/outputs/logs/api_test_2026_04_18_165958.log
+[INFO] Tokens file: /home/vboxuser/The_Last_Siberia_TulaHack-2026/QA_Service_Lab/test_api/outputs/tokens/tokens_2026_04_18_165958.json
+
+============================================================
+                 TEST SUMMARY                      
+============================================================
+  Passed:  7
+  Failed:  0
+  Skipped: 8
+============================================================
