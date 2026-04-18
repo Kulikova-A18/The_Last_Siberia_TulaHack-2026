@@ -1,0 +1,17 @@
+# docker-compose.yml (в корне проекта)
+services:
+  backend:
+    extends:
+      file: backend/docker-compose.yml
+      service: backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+networks:
+  hackathon_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local

@@ -2,6 +2,9 @@
 -- SEED DATA FOR HACKATHON DATABASE
 -- =========================================================
 
+-- Enable pgcrypto for crypt() function
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 -- Insert roles
 INSERT INTO roles (code, name) VALUES
 ('admin', 'Administrator'),

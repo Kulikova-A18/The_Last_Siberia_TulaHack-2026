@@ -1,4 +1,3 @@
-# backend/app/core/config.py
 from pydantic_settings import BaseSettings
 from typing import List
 
@@ -7,7 +6,7 @@ class Settings(BaseSettings):
     POSTGRES_USER: str = "hackathon_admin"
     POSTGRES_PASSWORD: str = "SecurePass123!"
     POSTGRES_DB: str = "hackathon_db"
-    POSTGRES_HOST: str = "localhost"
+    POSTGRES_HOST: str = "postgres"  # Важно: имя сервиса из docker-compose
     POSTGRES_PORT: str = "5432"
     
     @property
@@ -21,7 +20,7 @@ class Settings(BaseSettings):
     # JWT
     SECRET_KEY: str = "your-super-secret-key-change-in-production"
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24  # 24 hours
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     
     # CORS

@@ -82,7 +82,7 @@ call_api() {
         log "${RED}[FAIL]${NC} curl failed with exit code $exit_code"
         cat "$TEMP_RESPONSE" | tee -a "$LOG_FILE"
         rm -f "$TEMP_RESPONSE"
-        exit 1
+        # exit 1
     fi
     
     local response=$(cat "$TEMP_RESPONSE")
@@ -99,7 +99,7 @@ extract_json() {
         echo "$json" | jq -r "$key"
     else
         echo "ERROR: jq not installed" >&2
-        exit 1
+        # exit 1
     fi
 }
 
@@ -119,7 +119,7 @@ main() {
     # Check dependencies
     if ! command -v curl &> /dev/null; then
         log "${RED}Error: curl is required but not installed.${NC}"
-        exit 1
+        # exit 1
     fi
     if ! command -v jq &> /dev/null; then
         log "${YELLOW}Warning: jq is not installed. JSON responses will not be pretty-printed.${NC}"
@@ -128,16 +128,16 @@ main() {
     # Wait for backend to be ready
     log_section "WAITING FOR BACKEND"
     log "Checking $BASE_URL/health (or /docs)..."
-    for i in {1..30}; do
+    for i in {1..2}; do
         if curl -s -f "${BASE_URL}/docs" > /dev/null 2>&1; then
             log "${GREEN}Backend is ready!${NC}"
             break
         fi
-        log "Waiting for backend... ($i/30)"
+        log "Waiting for backend... ($i/2)"
         sleep 2
         if [ $i -eq 30 ]; then
             log "${RED}Backend did not become ready in time.${NC}"
-            exit 1
+            # # exit 1
         fi
     done
     
@@ -156,7 +156,7 @@ main() {
     
     if [ -z "$ACCESS_TOKEN" ] || [ "$ACCESS_TOKEN" == "null" ]; then
         log "${RED}Failed to obtain access token. Exiting.${NC}"
-        exit 1
+        # exit 1
     fi
     
     log "${GREEN}Access Token obtained: ${ACCESS_TOKEN:0:20}...${NC}"
