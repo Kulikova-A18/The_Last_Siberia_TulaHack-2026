@@ -4,13 +4,15 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy import Enum as PgEnum
 from sqlalchemy.orm import relationship
 from enum import Enum
-from app.models.base import Base
+from app.models.base import Base, IDMixin, TimestampMixin
+
 
 class EvaluationStatus(str, Enum):
     DRAFT = "draft"
     SUBMITTED = "submitted"
 
-class Evaluation(Base):
+
+class Evaluation(Base, IDMixin, TimestampMixin):
     __tablename__ = "evaluations"
     
     hackathon_id = Column(UUID(as_uuid=True), ForeignKey("hackathons.id", ondelete="CASCADE"), nullable=False)

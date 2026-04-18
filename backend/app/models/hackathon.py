@@ -4,14 +4,16 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy import Enum as PgEnum
 from sqlalchemy.orm import relationship
 from enum import Enum
-from app.models.base import Base, TimestampMixin
+from app.models.base import Base, IDMixin, TimestampMixin
+
 
 class HackathonStatus(str, Enum):
     DRAFT = "draft"
     ACTIVE = "active"
     FINISHED = "finished"
 
-class Hackathon(Base, TimestampMixin):
+
+class Hackathon(Base, IDMixin, TimestampMixin):
     __tablename__ = "hackathons"
     
     title = Column(String(200), nullable=False)

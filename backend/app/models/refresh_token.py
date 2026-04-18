@@ -2,9 +2,10 @@
 from sqlalchemy import Column, String, ForeignKey, DateTime, CheckConstraint
 from sqlalchemy.dialects.postgresql import UUID, INET
 from sqlalchemy.orm import relationship
-from app.models.base import Base
+from app.models.base import Base, IDMixin, TimestampMixin
 
-class RefreshToken(Base):
+
+class RefreshToken(Base, IDMixin, TimestampMixin):
     __tablename__ = "refresh_tokens"
     
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)

@@ -2,7 +2,7 @@
 from sqlalchemy import Column, String, Table, ForeignKey
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from app.models.base import Base
+from app.models.base import Base, IDMixin, TimestampMixin
 
 # Association table for role_permissions
 role_permissions = Table(
@@ -12,7 +12,7 @@ role_permissions = Table(
     Column("permission_id", UUID(as_uuid=True), ForeignKey("permissions.id", ondelete="CASCADE"), primary_key=True),
 )
 
-class Role(Base):
+class Role(Base, IDMixin, TimestampMixin):
     __tablename__ = "roles"
     
     code = Column(String(50), unique=True, nullable=False)
@@ -22,7 +22,7 @@ class Role(Base):
     users = relationship("User", back_populates="role")
     permissions = relationship("Permission", secondary=role_permissions, back_populates="roles")
 
-class Permission(Base):
+class Permission(Base, IDMixin, TimestampMixin):
     __tablename__ = "permissions"
     
     code = Column(String(100), unique=True, nullable=False)

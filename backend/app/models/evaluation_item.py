@@ -2,9 +2,10 @@
 from sqlalchemy import Column, Numeric, String, ForeignKey, CheckConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from app.models.base import Base
+from app.models.base import Base, IDMixin, TimestampMixin
 
-class EvaluationItem(Base):
+
+class EvaluationItem(Base, IDMixin, TimestampMixin):
     __tablename__ = "evaluation_items"
     
     evaluation_id = Column(UUID(as_uuid=True), ForeignKey("evaluations.id", ondelete="CASCADE"), nullable=False)

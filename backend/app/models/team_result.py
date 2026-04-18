@@ -4,14 +4,16 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy import Enum as PgEnum
 from sqlalchemy.orm import relationship
 from enum import Enum
-from app.models.base import Base
+from app.models.base import Base, IDMixin, TimestampMixin
+
 
 class ResultStatus(str, Enum):
     NOT_STARTED = "not_started"
     IN_PROGRESS = "in_progress"
     COMPLETED = "completed"
 
-class TeamResult(Base):
+
+class TeamResult(Base, IDMixin, TimestampMixin):
     __tablename__ = "team_results"
     
     hackathon_id = Column(UUID(as_uuid=True), ForeignKey("hackathons.id", ondelete="CASCADE"), nullable=False)
@@ -46,7 +48,8 @@ class TeamResult(Base):
         CheckConstraint("evaluated_by_count >= 0", name="team_results_evaluated_by_chk"),
     )
 
-class TeamResultItem(Base):
+
+class TeamResultItem(Base, IDMixin, TimestampMixin):
     __tablename__ = "team_result_items"
     
     team_result_id = Column(UUID(as_uuid=True), ForeignKey("team_results.id", ondelete="CASCADE"), nullable=False)

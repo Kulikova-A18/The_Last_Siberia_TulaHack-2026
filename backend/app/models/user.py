@@ -2,9 +2,10 @@
 from sqlalchemy import Column, String, Boolean, ForeignKey, DateTime, CheckConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from app.models.base import Base, TimestampMixin
+from app.models.base import Base, IDMixin, TimestampMixin
 
-class User(Base, TimestampMixin):
+
+class User(Base, IDMixin, TimestampMixin):
     __tablename__ = "users"
     
     login = Column(String(50), unique=True, nullable=False, index=True)

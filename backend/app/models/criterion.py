@@ -2,9 +2,10 @@
 from sqlalchemy import Column, String, Numeric, Integer, Boolean, ForeignKey, CheckConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from app.models.base import Base
+from app.models.base import Base, IDMixin, TimestampMixin
 
-class Criterion(Base):
+
+class Criterion(Base, IDMixin, TimestampMixin):
     __tablename__ = "criteria"
     
     hackathon_id = Column(UUID(as_uuid=True), ForeignKey("hackathons.id", ondelete="CASCADE"), nullable=False)

@@ -2,9 +2,10 @@
 from sqlalchemy import Column, ForeignKey, DateTime, ForeignKeyConstraint, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
-from app.models.base import Base
+from app.models.base import Base, IDMixin, TimestampMixin
 
-class ExpertTeamAssignment(Base):
+
+class ExpertTeamAssignment(Base, IDMixin, TimestampMixin):
     __tablename__ = "expert_team_assignments"
     
     hackathon_id = Column(UUID(as_uuid=True), ForeignKey("hackathons.id", ondelete="CASCADE"), nullable=False)
