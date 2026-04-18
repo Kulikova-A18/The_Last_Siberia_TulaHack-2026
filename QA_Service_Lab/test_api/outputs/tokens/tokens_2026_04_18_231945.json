@@ -1,0 +1,19 @@
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYTQ5ZmZmOC05YzNhLTRmYzktYWZlNC0xZDdlNTJlMTJiMzciLCJleHAiOjE3NzY2Mjk5ODYsInR5cGUiOiJhY2Nlc3MifQ.0DYjZ5BF_U4XZ29RNY0cBkCGCSjhKUjm3GwmiAQ97OY",
+  "refresh_token": "WDGthy0N8NJLg9jeJcVHh8Ek-zQ0c4tIu6_xAVRrn8k68t-Dik_6in5zIDJS3OogjppwlCZGCjJaW_imstcfzQ",
+  "admin_user_id": "aa49fff8-9c3a-4fc9-afe4-1d7e52e12b37",
+  "expert_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0ZmE2MTY3OC1kNzc2LTRhYmMtODhlNS1hZmFmODVhNTdkOTEiLCJleHAiOjE3NzY2Mjk5ODYsInR5cGUiOiJhY2Nlc3MifQ.EyP9VIk29lX0xL4qM6uACt0GqNaYERzbCAIgmh89weQ",
+  "expert_id": "4fa61678-d776-4abc-88e5-afaf85a57d91",
+  "team_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2ZTU1ZWE2Ny1hZWM2LTRiMjMtYTAyOS01NmI5Y2E4YWE4MzciLCJleHAiOjE3NzY2Mjk5ODYsInR5cGUiOiJhY2Nlc3MifQ.Zky9AWE90EQl2lmmhl8cJglGWVJqPi0B_1OvEU9LgHY",
+  "team_user_id": "6e55ea67-aec6-4b23-a029-56b9ca8aa837",
+  "hackathon_id": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+  "team_id": "1ac97476-967c-4a6e-99c1-0c1364ebb6b1",
+  "criterion_ids": [
+    "838b850a-cb1c-4b0f-9c1c-8d146885f9a6",
+    "05e3402c-4191-445b-b22e-3f620fd27c8a",
+    "ef8ab5ec-982c-43ed-ab5b-14536292d3d5"
+  ],
+  "assignment_id": null,
+  "evaluation_id": null,
+  "timestamp": "2026-04-18T23:19:46.271053"
+}

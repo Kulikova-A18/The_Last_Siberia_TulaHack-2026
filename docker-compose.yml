@@ -12,7 +12,7 @@ services:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./database/init:/docker-entrypoint-initdb.d:ro
+      - ./backend/database/init:/docker-entrypoint-initdb.d:ro
     networks:
       - hackathon_network
     healthcheck:
@@ -63,7 +63,7 @@ services:
       ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-1440}
       REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:-7}
       DEBUG: ${DEBUG:-true}
-      CORS_ORIGINS: '["http://localhost:3000", "http://localhost:8080", "http://localhost:8000", "http://<YOUR_SERVER_IP>:3000", "http://<YOUR_SERVER_IP>:8000", "*"]'
+      CORS_ORIGINS: '["http://localhost:3000", "http://localhost:8080", "http://localhost:8000"]'
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     depends_on:

@@ -1,0 +1,572 @@
+
+============================================================
+>>> HACKATHON API TEST EXECUTION
+============================================================
+[INFO] Started at: 2026-04-18 23:18:07
+[INFO] Base URL: http://192.168.5.46:8000/api/v1
+[INFO] Log file: /home/vboxuser/The_Last_Siberia_TulaHack-2026/QA_Service_Lab/test_api/outputs/logs/api_test_2026_04_18_231807.log
+
+============================================================
+>>> 0. HEALTH CHECK
+============================================================
+> Request: GET http://192.168.5.46:8000/api/v1/../../health
+< Response (HTTP 200):
+{
+  "status": "ok"
+}
+[SUCCESS] Backend is ready!
+
+============================================================
+>>> 1. AUTHENTICATION
+============================================================
+> Request: POST http://192.168.5.46:8000/api/v1/auth/login
+> Body: {
+  "login": "admin",
+  "password": "Admin123!"
+}
+< Response (HTTP 200):
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYTQ5ZmZmOC05YzNhLTRmYzktYWZlNC0xZDdlNTJlMTJiMzciLCJleHAiOjE3NzY2Mjk4ODcsInR5cGUiOiJhY2Nlc3MifQ.M29pCYpqxEu_gCT7X1HzdlAJqCiQCi-ckV-_b8N2drY",
+  "refresh_token": "qCQVvJPu5meP4OzLB8qH7NQcZ_zG9IEMkTRh3nS9_sCYcCJdDHe_A52o9QQlGICbozwJ52lipvKHChmaCfypSA",
+  "token_type": "bearer",
+  "user": {
+    "id": "aa49fff8-9c3a-4fc9-afe4-1d7e52e12b37",
+    "login": "admin",
+    "full_name": "Main Administrator",
+    "role": "admin",
+    "team_id": null,
+    "is_active": true
+  }
+}
+[SUCCESS] Access Token obtained: eyJhbGciOiJIUzI1NiIs...
+> Request: POST http://192.168.5.46:8000/api/v1/auth/refresh
+> Body: {
+  "refresh_token": "qCQVvJPu5meP4OzLB8qH7NQcZ_zG9IEMkTRh3nS9_sCYcCJdDHe_A52o9QQlGICbozwJ52lipvKHChmaCfypSA"
+}
+< Response (HTTP 200):
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhYTQ5ZmZmOC05YzNhLTRmYzktYWZlNC0xZDdlNTJlMTJiMzciLCJleHAiOjE3NzY2Mjk4ODcsInR5cGUiOiJhY2Nlc3MifQ.M29pCYpqxEu_gCT7X1HzdlAJqCiQCi-ckV-_b8N2drY",
+  "refresh_token": "IDdPjxT7I4WreiEI5sSYXWjTooRHQS21QS5s5HV9xklgz4n-LcS54s4vqRR8Uhf_uZmr-ariDpt-BJ53QMEmkQ",
+  "token_type": "bearer",
+  "user": {
+    "id": "aa49fff8-9c3a-4fc9-afe4-1d7e52e12b37",
+    "login": "admin",
+    "full_name": "Main Administrator",
+    "role": "admin",
+    "team_id": null,
+    "is_active": true
+  }
+}
+[SUCCESS] Token refreshed successfully
+
+============================================================
+>>> 1b. CHANGE PASSWORD
+============================================================
+> Request: POST http://192.168.5.46:8000/api/v1/auth/change-password
+> Body: {
+  "old_password": "Admin123!",
+  "new_password": "NewAdmin456!"
+}
+< Response (HTTP 200):
+{
+  "message": "Password changed successfully"
+}
+> Request: POST http://192.168.5.46:8000/api/v1/auth/change-password
+> Body: {
+  "old_password": "NewAdmin456!",
+  "new_password": "Admin123!"
+}
+< Response (HTTP 200):
+{
+  "message": "Password changed successfully"
+}
+[SUCCESS] Password changed and restored
+
+============================================================
+>>> 2. CURRENT USER INFO
+============================================================
+> Request: GET http://192.168.5.46:8000/api/v1/auth/me
+< Response (HTTP 200):
+{
+  "access_token": "",
+  "refresh_token": "",
+  "token_type": "bearer",
+  "user": {
+    "id": "aa49fff8-9c3a-4fc9-afe4-1d7e52e12b37",
+    "login": "admin",
+    "full_name": "Main Administrator",
+    "role": "admin",
+    "team_id": null,
+    "is_active": true
+  }
+}
+[INFO] User: None (None)
+
+============================================================
+>>> 3. USERS MANAGEMENT
+============================================================
+> Request: GET http://192.168.5.46:8000/api/v1/users/?page=1&page_size=20
+< Response (HTTP 200):
+{
+  "items": [
+    {
+      "id": "50cd0e8f-dd5d-4fed-86d1-3d9ba19a9dec",
+      "login": "expert3",
+      "full_name": "Anna Kowalski",
+      "role_code": "expert",
+      "email": "anna.kowalski@example.com",
+      "phone": null,
+      "team_id": null,
+      "is_active": true,
+      "last_login_at": null,
+      "created_at": "2026-04-18T19:26:56.984273Z"
+    },
+    {
+      "id": "9812ca25-81a7-485d-8fed-30bde9102e3f",
+      "login": "expert2",
+      "full_name": "Prof. Michael Roberts",
+      "role_code": "expert",
+      "email": "michael.roberts@example.com",
+      "phone": null,
+      "team_id": null,
+      "is_active": true,
+      "last_login_at": null,
+      "created_at": "2026-04-18T19:26:56.981439Z"
+    },
+    {
+      "id": "6e55ea67-aec6-4b23-a029-56b9ca8aa837",
+      "login": "team_code_wizards",
+      "full_name": "Code Wizards Team Account",
+      "role_code": "team",
+      "email": "contact@s.example.com",
+      "phone": null,
+      "team_id": null,
+      "is_active": true,
+      "last_login_at": "2026-04-18T19:52:13.865711Z",
+      "created_at": "2026-04-18T13:45:43.953330Z"
+    },
+    {
+      "id": "4fa61678-d776-4abc-88e5-afaf85a57d91",
+      "login": "expert1",
+      "full_name": "Dr. Sarah Chen",
+      "role_code": "expert",
+      "email": "sarah.chen@example.com",
+      "phone": null,
+      "team_id": null,
+      "is_active": true,
+      "last_login_at": "2026-04-18T19:52:13.805498Z",
+      "created_at": "2026-04-18T13:45:43.945237Z"
+    },
+    {
+      "id": "aa49fff8-9c3a-4fc9-afe4-1d7e52e12b37",
+      "login": "admin",
+      "full_name": "Main Administrator",
+      "role_code": "admin",
+      "email": "admin@hackathon.com",
+      "phone": null,
+      "team_id": null,
+      "is_active": true,
+      "last_login_at": "2026-04-18T20:18:07.815096Z",
+      "created_at": "2026-04-18T12:27:35.587071Z"
+    }
+  ],
+  "page": 1,
+  "page_size": 20,
+  "total": 5
+}
+[INFO] Found 5 users
+
+============================================================
+>>> 4. HACKATHONS
+============================================================
+> Request: GET http://192.168.5.46:8000/api/v1/hackathons/active
+< Response (HTTP 200):
+{
+  "id": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+  "title": "HackRank AI Challenge 2024",
+  "description": "Annual hackathon focused on AI",
+  "start_at": "2026-04-18T13:48:29.932649Z",
+  "end_at": "2026-04-25T13:48:29.932649Z",
+  "status": "active",
+  "results_published": true,
+  "results_frozen": false,
+  "created_at": "2026-04-18T13:48:29.932649Z",
+  "updated_at": "2026-04-18T19:57:04.922928Z"
+}
+[SUCCESS] Active hackathon found: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
+> Request: GET http://192.168.5.46:8000/api/v1/hackathons/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
+< Response (HTTP 200):
+{
+  "id": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+  "title": "HackRank AI Challenge 2024",
+  "description": "Annual hackathon focused on AI",
+  "start_at": "2026-04-18T13:48:29.932649Z",
+  "end_at": "2026-04-25T13:48:29.932649Z",
+  "status": "active",
+  "results_published": true,
+  "results_frozen": false,
+  "created_at": "2026-04-18T13:48:29.932649Z",
+  "updated_at": "2026-04-18T19:57:04.922928Z"
+}
+[INFO] Hackathon: HackRank AI Challenge 2024
+
+============================================================
+>>> 5. TEAMS MANAGEMENT
+============================================================
+> Request: GET http://192.168.5.46:8000/api/v1/hackathons/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/teams?page=1&page_size=20
+< Response (HTTP 200):
+{
+  "items": [
+    {
+      "id": "1ac97476-967c-4a6e-99c1-0c1364ebb6b1",
+      "hackathon_id": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+      "name": "Code Wizards",
+      "captain_name": "Alex Johnson",
+      "contact_email": "alex.j@example.com",
+      "contact_phone": "+79001112233",
+      "project_title": "AI-Powered Code Review Assistant",
+      "description": "An intelligent tool that automatically reviews code quality",
+      "members_count": 0,
+      "evaluation_status": "in_progress",
+      "final_score": 87.5,
+      "place": 1,
+      "created_at": "2026-04-18T14:46:58.700528Z",
+      "updated_at": "2026-04-18T14:46:58.700528Z"
+    },
+    {
+      "id": "71686f49-e4a8-461a-aeb0-e2c04ad17a59",
+      "hackathon_id": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+      "name": "Data Dynamos",
+      "captain_name": "Maria Garcia",
+      "contact_email": "maria.g@example.com",
+      "contact_phone": "+79002223344",
+      "project_title": "Real-Time Fraud Detection System",
+      "description": "Machine learning system for detecting fraudulent transactions",
+      "members_count": 0,
+      "evaluation_status": "in_progress",
+      "final_score": 82.3,
+      "place": 2,
+      "created_at": "2026-04-18T14:46:58.700528Z",
+      "updated_at": "2026-04-18T14:46:58.700528Z"
+    },
+    {
+      "id": "8d000b7b-88e0-416f-b758-c046cbe3d498",
+      "hackathon_id": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+      "name": "Neural Ninjas",
+      "captain_name": "David Kim",
+      "contact_email": "david.k@example.com",
+      "contact_phone": "+79003334455",
+      "project_title": "Healthcare Diagnosis Assistant",
+      "description": "AI assistant that helps doctors diagnose diseases",
+      "members_count": 0,
+      "evaluation_status": "in_progress",
+      "final_score": 79.8,
+      "place": 3,
+      "created_at": "2026-04-18T14:46:58.700528Z",
+      "updated_at": "2026-04-18T14:46:58.700528Z"
+    }
+  ],
+  "page": 1,
+  "page_size": 20,
+  "total": 3
+}
+[INFO] Found 3 teams
+[INFO] Using team: Code Wizards (ID: 1ac97476-967c-4a6e-99c1-0c1364ebb6b1)
+
+============================================================
+>>> 6. CRITERIA MANAGEMENT
+============================================================
+> Request: GET http://192.168.5.46:8000/api/v1/hackathons/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/criteria
+< Response (HTTP 200):
+{
+  "items": [
+    {
+      "id": "838b850a-cb1c-4b0f-9c1c-8d146885f9a6",
+      "title": "Innovation",
+      "description": "Originality and creativity of the solution",
+      "max_score": 10.0,
+      "weight_percent": 25.0,
+      "sort_order": 1,
+      "is_active": true,
+      "created_at": "2026-04-18T19:51:38.764121Z",
+      "updated_at": "2026-04-18T19:51:38.764121Z"
+    },
+    {
+      "id": "05e3402c-4191-445b-b22e-3f620fd27c8a",
+      "title": "Technical Complexity",
+      "description": "Sophistication of technology stack and implementation",
+      "max_score": 10.0,
+      "weight_percent": 25.0,
+      "sort_order": 2,
+      "is_active": true,
+      "created_at": "2026-04-18T19:51:38.764121Z",
+      "updated_at": "2026-04-18T19:51:38.764121Z"
+    },
+    {
+      "id": "ef8ab5ec-982c-43ed-ab5b-14536292d3d5",
+      "title": "Business Value",
+      "description": "Market potential and practical applicability",
+      "max_score": 10.0,
+      "weight_percent": 20.0,
+      "sort_order": 3,
+      "is_active": true,
+      "created_at": "2026-04-18T19:51:38.764121Z",
+      "updated_at": "2026-04-18T19:51:38.764121Z"
+    },
+    {
+      "id": "a3f966e1-85db-4f69-8edc-2f415a0be790",
+      "title": "Presentation",
+      "description": "Quality of demo and pitch delivery",
+      "max_score": 10.0,
+      "weight_percent": 15.0,
+      "sort_order": 4,
+      "is_active": true,
+      "created_at": "2026-04-18T19:51:38.764121Z",
+      "updated_at": "2026-04-18T19:51:38.764121Z"
+    },
+    {
+      "id": "53c01324-1995-43a7-bf14-019b3063cde2",
+      "title": "Teamwork",
+      "description": "Collaboration and team dynamics",
+      "max_score": 5.0,
+      "weight_percent": 15.0,
+      "sort_order": 5,
+      "is_active": true,
+      "created_at": "2026-04-18T19:51:38.764121Z",
+      "updated_at": "2026-04-18T19:51:38.764121Z"
+    }
+  ],
+  "total_weight": 100.0,
+  "weights_valid": true
+}
+[INFO] Found 5 criteria
+
+============================================================
+>>> 7. EXPERT ASSIGNMENTS
+============================================================
+> Request: GET http://192.168.5.46:8000/api/v1/hackathons/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/assignments
+< Response (HTTP 200):
+[{'id': 'ae2164dd-3206-4b5b-b3db-8eb36b51c52d', 'hackathon_id': 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'expert_user_id': '9812ca25-81a7-485d-8fed-30bde9102e3f', 'team_id': '1ac97476-967c-4a6e-99c1-0c1364ebb6b1', 'assigned_at': '2026-04-18T19:51:38.767822Z', 'created_at': '2026-04-18T19:51:38.767822Z'}, {'id': '8f449c54-dc5c-480c-8f7f-1d3000c5f50a', 'hackathon_id': 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'expert_user_id': '9812ca25-81a7-485d-8fed-30bde9102e3f', 'team_id': '71686f49-e4a8-461a-aeb0-e2c04ad17a59', 'assigned_at': '2026-04-18T19:51:38.767822Z', 'created_at': '2026-04-18T19:51:38.767822Z'}, {'id': 'adcb641c-74b4-4eae-bf9c-9113fc48d290', 'hackathon_id': 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'expert_user_id': '9812ca25-81a7-485d-8fed-30bde9102e3f', 'team_id': '8d000b7b-88e0-416f-b758-c046cbe3d498', 'assigned_at': '2026-04-18T19:51:38.767822Z', 'created_at': '2026-04-18T19:51:38.767822Z'}, {'id': '538d3277-12e0-4d29-90ba-62936c4c347b', 'hackathon_id': 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'expert_user_id': '50cd0e8f-dd5d-4fed-86d1-3d9ba19a9dec', 'team_id': '1ac97476-967c-4a6e-99c1-0c1364ebb6b1', 'assigned_at': '2026-04-18T19:51:38.767822Z', 'created_at': '2026-04-18T19:51:38.767822Z'}, {'id': 'ae0081f9-f2f4-4d5d-aa96-cb0b4480cd2c', 'hackathon_id': 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'expert_user_id': '50cd0e8f-dd5d-4fed-86d1-3d9ba19a9dec', 'team_id': '71686f49-e4a8-461a-aeb0-e2c04ad17a59', 'assigned_at': '2026-04-18T19:51:38.767822Z', 'created_at': '2026-04-18T19:51:38.767822Z'}, {'id': 'b9dd9d87-681c-4419-a173-290968ca9f36', 'hackathon_id': 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'expert_user_id': '50cd0e8f-dd5d-4fed-86d1-3d9ba19a9dec', 'team_id': '8d000b7b-88e0-416f-b758-c046cbe3d498', 'assigned_at': '2026-04-18T19:51:38.767822Z', 'created_at': '2026-04-18T19:51:38.767822Z'}]
+[INFO] Found 6 assignments
+
+============================================================
+>>> 8. EXPERT EVALUATIONS
+============================================================
+> Request: POST http://192.168.5.46:8000/api/v1/auth/login
+> Body: {
+  "login": "expert1",
+  "password": "Expert123!"
+}
+< Response (HTTP 200):
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0ZmE2MTY3OC1kNzc2LTRhYmMtODhlNS1hZmFmODVhNTdkOTEiLCJleHAiOjE3NzY2Mjk4ODcsInR5cGUiOiJhY2Nlc3MifQ.YxJJmbX7Pin6_ynpaaOFrOF1gC3WdB6eT9WOd1RQTvQ",
+  "refresh_token": "_FPz7KDS-WIRsDUz2IdcgYBuva6nxuEKUDba4FeiP2WdIxTJL5EwkV8rrZZ8vVsa1S6h_xn62lrMQoN1hixUlg",
+  "token_type": "bearer",
+  "user": {
+    "id": "4fa61678-d776-4abc-88e5-afaf85a57d91",
+    "login": "expert1",
+    "full_name": "Dr. Sarah Chen",
+    "role": "expert",
+    "team_id": null,
+    "is_active": true
+  }
+}
+[SUCCESS] Expert logged in: expert1
+> Request: GET http://192.168.5.46:8000/api/v1/hackathons/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/my/assigned-teams
+< Response (HTTP 200):
+{
+  "items": [],
+  "page": 1,
+  "page_size": 20,
+  "total": 0
+}
+[INFO] Expert assigned to 0 teams
+
+============================================================
+>>> 9. RESULTS & LEADERBOARD
+============================================================
+> Request: GET http://192.168.5.46:8000/api/v1/hackathons/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/results/leaderboard
+< Response (HTTP 200):
+{
+  "published": true,
+  "frozen": false,
+  "items": [
+    {
+      "place": 1,
+      "team_id": "1ac97476-967c-4a6e-99c1-0c1364ebb6b1",
+      "team_name": "Code Wizards",
+      "project_title": "AI-Powered Code Review Assistant",
+      "final_score": 87.5,
+      "evaluated_by_count": 2,
+      "status": "in_progress"
+    },
+    {
+      "place": 2,
+      "team_id": "71686f49-e4a8-461a-aeb0-e2c04ad17a59",
+      "team_name": "Data Dynamos",
+      "project_title": "Real-Time Fraud Detection System",
+      "final_score": 82.3,
+      "evaluated_by_count": 2,
+      "status": "in_progress"
+    },
+    {
+      "place": 3,
+      "team_id": "8d000b7b-88e0-416f-b758-c046cbe3d498",
+      "team_name": "Neural Ninjas",
+      "project_title": "Healthcare Diagnosis Assistant",
+      "final_score": 79.8,
+      "evaluated_by_count": 2,
+      "status": "in_progress"
+    }
+  ],
+  "updated_at": "2026-04-18T19:57:04.925457Z"
+}
+[INFO] Leaderboard has 3 teams
+> Request: GET http://192.168.5.46:8000/api/v1/hackathons/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/results/winners?top=3
+< Response (HTTP 200):
+{
+  "items": [
+    {
+      "place": 1,
+      "team_id": "1ac97476-967c-4a6e-99c1-0c1364ebb6b1",
+      "team_name": "Code Wizards",
+      "final_score": 87.5
+    },
+    {
+      "place": 2,
+      "team_id": "71686f49-e4a8-461a-aeb0-e2c04ad17a59",
+      "team_name": "Data Dynamos",
+      "final_score": 82.3
+    },
+    {
+      "place": 3,
+      "team_id": "8d000b7b-88e0-416f-b758-c046cbe3d498",
+      "team_name": "Neural Ninjas",
+      "final_score": 79.8
+    }
+  ],
+  "total_teams": 3
+}
+[INFO] Found 3 winners
+
+============================================================
+>>> 10. PUBLIC ENDPOINTS
+============================================================
+> Request: GET http://192.168.5.46:8000/api/v1/public/hackathons/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/leaderboard
+< Response (HTTP 200):
+{
+  "published": true,
+  "items": [
+    {
+      "place": 1,
+      "team_name": "Code Wizards",
+      "final_score": 87.5
+    },
+    {
+      "place": 2,
+      "team_name": "Data Dynamos",
+      "final_score": 82.3
+    },
+    {
+      "place": 3,
+      "team_name": "Neural Ninjas",
+      "final_score": 79.8
+    }
+  ],
+  "updated_at": "2026-04-18T19:57:04.925457Z"
+}
+[INFO] Public leaderboard accessible
+> Request: GET http://192.168.5.46:8000/api/v1/public/hackathons/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/timer
+< Response (HTTP 200):
+{
+  "hackathon_status": "active",
+  "current_phase": "active",
+  "next_deadline_title": null,
+  "next_deadline_at": null,
+  "seconds_remaining": null
+}
+[INFO] Public timer accessible
+> Request: GET http://192.168.5.46:8000/api/v1/public/hackathons/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/winners
+< Response (HTTP 200):
+{
+  "top_3": [
+    {
+      "place": 1,
+      "team_name": "Code Wizards",
+      "final_score": 87.5
+    },
+    {
+      "place": 2,
+      "team_name": "Data Dynamos",
+      "final_score": 82.3
+    },
+    {
+      "place": 3,
+      "team_name": "Neural Ninjas",
+      "final_score": 79.8
+    }
+  ],
+  "total_teams": 3
+}
+[INFO] Public winners accessible
+
+============================================================
+>>> 11. TEAM CABINET
+============================================================
+> Request: POST http://192.168.5.46:8000/api/v1/auth/login
+> Body: {
+  "login": "team_code_wizards",
+  "password": "Team123!"
+}
+< Response (HTTP 200):
+{
+  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2ZTU1ZWE2Ny1hZWM2LTRiMjMtYTAyOS01NmI5Y2E4YWE4MzciLCJleHAiOjE3NzY2Mjk4ODgsInR5cGUiOiJhY2Nlc3MifQ.J7dbveeVwJWkZZfObJ-h7oH6sC0JIolQcwd1wxuz2xw",
+  "refresh_token": "NOheN-iY3q_36NyL-DKCr_0Oy7IFWLyzdzPODrs2M_QYNEMWM5YGibHoKhjHzBRWwUyVKvQUbbO93wZ2xqG4zA",
+  "token_type": "bearer",
+  "user": {
+    "id": "6e55ea67-aec6-4b23-a029-56b9ca8aa837",
+    "login": "team_code_wizards",
+    "full_name": "Code Wizards Team Account",
+    "role": "team",
+    "team_id": null,
+    "is_active": true
+  }
+}
+[SUCCESS] Team logged in: team_code_wizards
+
+============================================================
+>>> 12. LOGOUT
+============================================================
+> Request: POST http://192.168.5.46:8000/api/v1/auth/logout
+> Body: {
+  "refresh_token": "qCQVvJPu5meP4OzLB8qH7NQcZ_zG9IEMkTRh3nS9_sCYcCJdDHe_A52o9QQlGICbozwJ52lipvKHChmaCfypSA"
+}
+< Response (HTTP 200):
+{
+  "message": "Logged out successfully"
+}
+[SUCCESS] Logged out successfully
+[INFO] State saved to /home/vboxuser/The_Last_Siberia_TulaHack-2026/QA_Service_Lab/test_api/outputs/tokens/tokens_2026_04_18_231807.json
+
+============================================================
+>>> TEST EXECUTION COMPLETED
+============================================================
+[INFO] Finished at: 2026-04-18 23:18:08
+[INFO] Log file: /home/vboxuser/The_Last_Siberia_TulaHack-2026/QA_Service_Lab/test_api/outputs/logs/api_test_2026_04_18_231807.log
+[INFO] Tokens file: /home/vboxuser/The_Last_Siberia_TulaHack-2026/QA_Service_Lab/test_api/outputs/tokens/tokens_2026_04_18_231807.json
+
+============================================================
+                 TEST SUMMARY                      
+============================================================
+  Passed:  19
+  Failed:  0
+  Skipped: 0
+============================================================
+
+Test Data:
+  Hackathon ID: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
+  Team ID: 1ac97476-967c-4a6e-99c1-0c1364ebb6b1
+  Criterion IDs: ['838b850a-cb1c-4b0f-9c1c-8d146885f9a6', '05e3402c-4191-445b-b22e-3f620fd27c8a', 'ef8ab5ec-982c-43ed-ab5b-14536292d3d5']
+
+WebSocket endpoint (manual test):
+  wscat -c ws://192.168.5.46:8000/api/v1/ws/public/hackathons/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/leaderboard
