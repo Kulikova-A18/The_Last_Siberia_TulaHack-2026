@@ -17,7 +17,7 @@ sudo docker-compose exec postgres psql -U hackathon_admin -d hackathon_db -f /do
 
 ```bash
 -- Подключаемся к базе
-sudo docker-compose exec postgres psql -U hackathon_admin -d hackathon_db
+sudo docker compose exec postgres psql -U hackathon_admin -d hackathon_db
 
 -- 1. Создаем команды для CyberDef хакатона
 INSERT INTO teams (id, hackathon_id, name, captain_name, contact_email, contact_phone, project_title, description)
@@ -298,7 +298,7 @@ ORDER BY tr.place;
 
 ```sql
 -- Подключаемся к базе
-sudo docker-compose exec postgres psql -U hackathon_admin -d hackathon_db
+sudo docker compose exec postgres psql -U hackathon_admin -d hackathon_db
 
 -- 1. Проверяем текущие значения ENUM
 SELECT enumlabel FROM pg_enum WHERE enumtypid = 'result_status'::regtype ORDER BY enumsortorder;
