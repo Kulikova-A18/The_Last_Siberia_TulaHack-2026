@@ -16,7 +16,11 @@ services:
     networks:
       - hackathon_network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hackathon_admin} -d ${POSTGRES_DB:-hackathon_db}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-hackathon_admin} -d ${POSTGRES_DB:-hackathon_db}",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -80,6 +84,22 @@ services:
         max-size: "10m"
         max-file: "3"
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --log-level debug
+
+  flutter:
+    build: ./frontend
+    container_name: hackathon_flutter
+    restart: unless-stopped
+    ports:
+      - "${FLUTTER_PORT:-8080}:80"
+    networks:
+      - hackathon_network
+    depends_on:
+      - backend
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 volumes:
   postgres_data:
