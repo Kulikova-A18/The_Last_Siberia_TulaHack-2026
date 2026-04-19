@@ -67,7 +67,7 @@ services:
       ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-1440}
       REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS:-7}
       DEBUG: ${DEBUG:-true}
-      CORS_ORIGINS: '["http://localhost:3000", "http://localhost:8080", "http://localhost:8000"]'
+      CORS_ORIGINS: '["http://localhost", "http://localhost:80", "http://localhost:8080", "http://flutter", "http://hackathon_flutter"]'
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     depends_on:
@@ -86,7 +86,14 @@ services:
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --log-level debug
 
   flutter:
-    build: ./frontend
+    build:
+      context: ./frontend
+      args:
+        # Используем имя сервиса backend вместо IP для Docker сети
+        API_BASE_URL: ${API_BASE_URL:-http://backend:8000}
+        WS_URL: ${WS_URL:-ws://backend:8000}
+        MOCK_ENABLED: ${MOCK_ENABLED:-false}
+        ENVIRONMENT: ${ENVIRONMENT:-production}
     container_name: hackathon_flutter
     restart: unless-stopped
     ports:
@@ -95,6 +102,9 @@ services:
       - hackathon_network
     depends_on:
       - backend
+    environment:
+      - API_BASE_URL=${API_BASE_URL:-http://backend:8000}
+      - WS_URL=${WS_URL:-ws://backend:8000}
     logging:
       driver: "json-file"
       options:
