@@ -150,7 +150,7 @@ class AppConfig {
   static String _getDefaultConfig() {
     return '''
 api:
-  base_url: "http://94.141.160.86:8000"
+  base_url: "http://192.168.5.46:8000"
   prefix: "/api/v1"
   use_proxy: false
   timeout:
@@ -158,7 +158,7 @@ api:
     receive: 30
     send: 30
 websocket:
-  url: "ws://94.141.160.86:8000"
+  url: "ws://192.168.5.46:8000"
   prefix: "/api/v1/ws"
   ping_interval: 30
 auth:
