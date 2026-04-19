@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     
     # CORS - stored as string in env, parsed in property
-    CORS_ORIGINS_STR: str = '["http://localhost:3000", "http://localhost:8080", "http://localhost:8000", "http://192.168.5.46:3000", "http://192.168.5.46:8000", "*"]'
+    CORS_ORIGINS_STR: str = '["http://localhost:3000", "http://localhost:8080", "http://localhost:8000", "http://94.141.160.86:3000", "http://94.141.160.86:8000", "*"]'
     
     # App
     DEBUG: bool = True

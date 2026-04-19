@@ -88,21 +88,6 @@ class AppConfig {
     if (_instance != null) return _instance!;
 
     try {
-      // Получаем переменные окружения из dart-define
-      final envBaseUrl = const String.fromEnvironment('API_BASE_URL');
-      final envWsUrl = const String.fromEnvironment('WS_URL');
-      final envMockEnabled = const String.fromEnvironment('MOCK_ENABLED');
-      final envEnvironment = const String.fromEnvironment('ENVIRONMENT');
-
-      debugPrint('Environment variables:');
-      debugPrint(
-          '  API_BASE_URL: ${envBaseUrl.isNotEmpty ? envBaseUrl : "not set"}');
-      debugPrint('  WS_URL: ${envWsUrl.isNotEmpty ? envWsUrl : "not set"}');
-      debugPrint(
-          '  MOCK_ENABLED: ${envMockEnabled.isNotEmpty ? envMockEnabled : "not set"}');
-      debugPrint(
-          '  ENVIRONMENT: ${envEnvironment.isNotEmpty ? envEnvironment : "not set"}');
-
       String yamlString;
       try {
         yamlString = await rootBundle.loadString('assets/config.yaml');
@@ -113,42 +98,13 @@ class AppConfig {
       }
 
       final yamlMap = loadYaml(yamlString);
-      Map<dynamic, dynamic> configMap;
-
       if (yamlMap is Map) {
-        configMap = Map<dynamic, dynamic>.from(yamlMap);
+        _instance = AppConfig._fromMap(yamlMap);
       } else {
-        configMap = loadYaml(_getDefaultConfig()) as Map;
+        _instance = AppConfig._fromMap(loadYaml(_getDefaultConfig()) as Map);
       }
-
-      // Переопределяем значения из переменных окружения
-      if (envBaseUrl.isNotEmpty) {
-        configMap['api'] ??= {};
-        configMap['api']['base_url'] = envBaseUrl;
-        debugPrint('Overriding base_url with: $envBaseUrl');
-      }
-
-      if (envWsUrl.isNotEmpty) {
-        configMap['websocket'] ??= {};
-        configMap['websocket']['url'] = envWsUrl;
-        debugPrint('Overriding ws_url with: $envWsUrl');
-      }
-
-      if (envMockEnabled.isNotEmpty) {
-        configMap['features'] ??= {};
-        configMap['features']['mock_enabled'] = envMockEnabled == 'true';
-        debugPrint('Overriding mock_enabled with: ${envMockEnabled == 'true'}');
-      }
-
-      if (envEnvironment.isNotEmpty) {
-        configMap['environment'] = envEnvironment;
-        debugPrint('Overriding environment with: $envEnvironment');
-      }
-
-      _instance = AppConfig._fromMap(configMap);
     } catch (e, stack) {
       debugPrint('Error loading config: $e');
-      debugPrint('Stack: $stack');
       _instance = AppConfig._createDefault();
     }
 
@@ -194,7 +150,7 @@ class AppConfig {
   static String _getDefaultConfig() {
     return '''
 api:
-  base_url: "http://localhost:8000"
+  base_url: "http://94.141.160.86:8000"
   prefix: "/api/v1"
   use_proxy: false
   timeout:
@@ -202,7 +158,7 @@ api:
     receive: 30
     send: 30
 websocket:
-  url: "ws://localhost:8000"
+  url: "ws://94.141.160.86:8000"
   prefix: "/api/v1/ws"
   ping_interval: 30
 auth:

@@ -82,7 +82,7 @@ class AuthService {
       String errorMessage = 'Network error';
       if (e.type == DioExceptionType.connectionError) {
         errorMessage = 'Failed to connect to server. Check:\n'
-            '1. Backend is running at http://192.168.5.46:8000\n'
+            '1. Backend is running at http://94.141.160.86:8000\n'
             '2. CORS is configured on backend\n'
             '3. No browser blocking';
       } else if (e.response?.statusCode == 404) {

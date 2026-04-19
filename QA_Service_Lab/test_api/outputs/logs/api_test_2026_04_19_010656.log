@@ -3,13 +3,13 @@
 >>> HACKATHON API TEST EXECUTION
 ============================================================
 [INFO] Started at: 2026-04-19 01:06:56
-[INFO] Base URL: http://192.168.5.46:8000/api/v1
+[INFO] Base URL: http://94.141.160.86:8000/api/v1
 [INFO] Log file: /home/vboxuser/The_Last_Siberia_TulaHack-2026/QA_Service_Lab/test_api/outputs/logs/api_test_2026_04_19_010656.log
 
 ============================================================
 >>> 0. HEALTH CHECK
 ============================================================
-> Request: GET http://192.168.5.46:8000/api/v1/../../health
+> Request: GET http://94.141.160.86:8000/api/v1/../../health
 < Response (HTTP 200):
 {
   "status": "ok"
@@ -19,7 +19,7 @@
 ============================================================
 >>> 1. AUTHENTICATION
 ============================================================
-> Request: POST http://192.168.5.46:8000/api/v1/auth/login
+> Request: POST http://94.141.160.86:8000/api/v1/auth/login
 > Body: {
   "login": "admin",
   "password": "Admin123!"
@@ -39,7 +39,7 @@
   }
 }
 [SUCCESS] Access Token obtained: eyJhbGciOiJIUzI1NiIs...
-> Request: POST http://192.168.5.46:8000/api/v1/auth/refresh
+> Request: POST http://94.141.160.86:8000/api/v1/auth/refresh
 > Body: {
   "refresh_token": "BoMNS5CvxcDm-fIuCs9EuI6vIs7XjrZK8epOMRF012G1_5sG01mJD9Gn9uTh-HmMCIOhFLJZCmZFSpQgo5sn1g"
 }
@@ -62,7 +62,7 @@
 ============================================================
 >>> 1b. CHANGE PASSWORD
 ============================================================
-> Request: POST http://192.168.5.46:8000/api/v1/auth/change-password
+> Request: POST http://94.141.160.86:8000/api/v1/auth/change-password
 > Body: {
   "old_password": "Admin123!",
   "new_password": "NewAdmin456!"
@@ -71,7 +71,7 @@
 {
   "message": "Password changed successfully"
 }
-> Request: POST http://192.168.5.46:8000/api/v1/auth/change-password
+> Request: POST http://94.141.160.86:8000/api/v1/auth/change-password
 > Body: {
   "old_password": "NewAdmin456!",
   "new_password": "Admin123!"
@@ -85,7 +85,7 @@
 ============================================================
 >>> 2. CURRENT USER INFO
 ============================================================
-> Request: GET http://192.168.5.46:8000/api/v1/auth/me
+> Request: GET http://94.141.160.86:8000/api/v1/auth/me
 < Response (HTTP 200):
 {
   "access_token": "",
@@ -105,7 +105,7 @@
 ============================================================
 >>> 3. USERS MANAGEMENT
 ============================================================
-> Request: GET http://192.168.5.46:8000/api/v1/users/?page=1&page_size=20
+> Request: GET http://94.141.160.86:8000/api/v1/users/?page=1&page_size=20
 < Response (HTTP 200):
 {
   "items": [
@@ -311,7 +311,7 @@
 ============================================================
 >>> 4. HACKATHONS
 ============================================================
-> Request: GET http://192.168.5.46:8000/api/v1/hackathons/active
+> Request: GET http://94.141.160.86:8000/api/v1/hackathons/active
 < Response (HTTP 200):
 {
   "id": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
@@ -326,7 +326,7 @@
   "updated_at": "2026-04-18T21:55:24.717669Z"
 }
 [SUCCESS] Active hackathon found: a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
-> Request: GET http://192.168.5.46:8000/api/v1/hackathons/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
+> Request: GET http://94.141.160.86:8000/api/v1/hackathons/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11
 < Response (HTTP 200):
 {
   "id": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
@@ -345,7 +345,7 @@
 ============================================================
 >>> 5. TEAMS MANAGEMENT
 ============================================================
-> Request: GET http://192.168.5.46:8000/api/v1/hackathons/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/teams?page=1&page_size=20
+> Request: GET http://94.141.160.86:8000/api/v1/hackathons/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/teams?page=1&page_size=20
 < Response (HTTP 200):
 {
   "items": [
@@ -520,7 +520,7 @@
 ============================================================
 >>> 6. CRITERIA MANAGEMENT
 ============================================================
-> Request: GET http://192.168.5.46:8000/api/v1/hackathons/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/criteria
+> Request: GET http://94.141.160.86:8000/api/v1/hackathons/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/criteria
 < Response (HTTP 200):
 {
   "items": [
@@ -588,7 +588,7 @@
 ============================================================
 >>> 7. EXPERT ASSIGNMENTS
 ============================================================
-> Request: GET http://192.168.5.46:8000/api/v1/hackathons/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/assignments
+> Request: GET http://94.141.160.86:8000/api/v1/hackathons/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/assignments
 < Response (HTTP 200):
 [{'id': 'c09d7b43-4682-4f62-b768-49ff3caa6f9a', 'hackathon_id': 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'expert_user_id': '22222222-2222-2222-2222-222222222221', 'team_id': '44d97654-4506-4130-8e40-dc551b161e68', 'assigned_at': '2026-04-18T21:34:35.458453Z', 'created_at': '2026-04-18T21:34:35.458453Z'}, {'id': 'fa3ff907-f802-4406-9752-8b5f8ebb0fe4', 'hackathon_id': 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'expert_user_id': '22222222-2222-2222-2222-222222222222', 'team_id': '44d97654-4506-4130-8e40-dc551b161e68', 'assigned_at': '2026-04-18T21:34:35.458453Z', 'created_at': '2026-04-18T21:34:35.458453Z'}, {'id': '15c4d3e7-10d2-4604-936d-ce3f7ab0da3a', 'hackathon_id': 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'expert_user_id': '22222222-2222-2222-2222-222222222223', 'team_id': 'ce3ef709-2d60-470d-b500-5b61b139f802', 'assigned_at': '2026-04-18T21:34:35.458453Z', 'created_at': '2026-04-18T21:34:35.458453Z'}, {'id': '75ffb86d-1363-4398-bc04-f6aa3ec73307', 'hackathon_id': 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'expert_user_id': '22222222-2222-2222-2222-222222222224', 'team_id': 'ce3ef709-2d60-470d-b500-5b61b139f802', 'assigned_at': '2026-04-18T21:34:35.458453Z', 'created_at': '2026-04-18T21:34:35.458453Z'}, {'id': '347906c8-fd37-4802-bb11-39d23c8435ad', 'hackathon_id': 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'expert_user_id': '22222222-2222-2222-2222-222222222225', 'team_id': '71d325f7-a310-459a-aee6-c4f32cc53220', 'assigned_at': '2026-04-18T21:34:35.458453Z', 'created_at': '2026-04-18T21:34:35.458453Z'}, {'id': '393f3f19-1501-4e06-8fca-2d1bc5e31af9', 'hackathon_id': 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'expert_user_id': '22222222-2222-2222-2222-222222222221', 'team_id': '71d325f7-a310-459a-aee6-c4f32cc53220', 'assigned_at': '2026-04-18T21:34:35.458453Z', 'created_at': '2026-04-18T21:34:35.458453Z'}, {'id': '7be55b70-fe5c-4132-aad9-0c094cd0dd37', 'hackathon_id': 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'expert_user_id': '22222222-2222-2222-2222-222222222222', 'team_id': 'bedae99d-d24e-464b-8e3f-4b4934a1be43', 'assigned_at': '2026-04-18T21:34:35.458453Z', 'created_at': '2026-04-18T21:34:35.458453Z'}, {'id': '028c1e62-137f-4089-b2ae-5215d4124a83', 'hackathon_id': 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'expert_user_id': '22222222-2222-2222-2222-222222222223', 'team_id': 'bedae99d-d24e-464b-8e3f-4b4934a1be43', 'assigned_at': '2026-04-18T21:34:35.458453Z', 'created_at': '2026-04-18T21:34:35.458453Z'}, {'id': 'cd9ffb32-089f-4334-abed-154e3d388f71', 'hackathon_id': 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'expert_user_id': '22222222-2222-2222-2222-222222222224', 'team_id': 'c2c0267b-cebd-4e47-b4c2-c39045e62e36', 'assigned_at': '2026-04-18T21:34:35.458453Z', 'created_at': '2026-04-18T21:34:35.458453Z'}, {'id': '89f8839a-a225-4f26-8449-1491d9d6dbd9', 'hackathon_id': 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'expert_user_id': '22222222-2222-2222-2222-222222222225', 'team_id': 'c2c0267b-cebd-4e47-b4c2-c39045e62e36', 'assigned_at': '2026-04-18T21:34:35.458453Z', 'created_at': '2026-04-18T21:34:35.458453Z'}, {'id': '9251c270-f4c4-4d6f-a2f5-0d6d6ebd226b', 'hackathon_id': 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'expert_user_id': '22222222-2222-2222-2222-222222222221', 'team_id': 'dec3bb68-9fa5-4df7-a766-d532e1964689', 'assigned_at': '2026-04-18T21:34:35.458453Z', 'created_at': '2026-04-18T21:34:35.458453Z'}, {'id': '5787f8ea-1b22-4c4d-af7c-ebb700092900', 'hackathon_id': 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'expert_user_id': '22222222-2222-2222-2222-222222222222', 'team_id': 'dec3bb68-9fa5-4df7-a766-d532e1964689', 'assigned_at': '2026-04-18T21:34:35.458453Z', 'created_at': '2026-04-18T21:34:35.458453Z'}, {'id': '23bbc10f-44be-4373-bf28-04c41e58582d', 'hackathon_id': 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'expert_user_id': '22222222-2222-2222-2222-222222222223', 'team_id': '5418eba3-147d-4375-a4cb-7ac7f4f684a0', 'assigned_at': '2026-04-18T21:34:35.458453Z', 'created_at': '2026-04-18T21:34:35.458453Z'}, {'id': '8ad3566c-b033-4edf-a765-de99ea21c23b', 'hackathon_id': 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'expert_user_id': '22222222-2222-2222-2222-222222222224', 'team_id': '5418eba3-147d-4375-a4cb-7ac7f4f684a0', 'assigned_at': '2026-04-18T21:34:35.458453Z', 'created_at': '2026-04-18T21:34:35.458453Z'}, {'id': 'f4ddf910-c0ad-49bd-aba9-a56df7633183', 'hackathon_id': 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'expert_user_id': '22222222-2222-2222-2222-222222222225', 'team_id': 'ed1729a7-4355-42cc-94a1-95c2d347ada1', 'assigned_at': '2026-04-18T21:34:35.458453Z', 'created_at': '2026-04-18T21:34:35.458453Z'}, {'id': 'd9ffd105-f29f-4669-b2ca-f5568594cc8e', 'hackathon_id': 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'expert_user_id': '22222222-2222-2222-2222-222222222221', 'team_id': 'ed1729a7-4355-42cc-94a1-95c2d347ada1', 'assigned_at': '2026-04-18T21:34:35.458453Z', 'created_at': '2026-04-18T21:34:35.458453Z'}, {'id': '93a783a7-ee15-4c59-9239-1f4c018e8556', 'hackathon_id': 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'expert_user_id': '22222222-2222-2222-2222-222222222222', 'team_id': '2f49b5b0-7deb-4304-9e0d-c0caf01fbff9', 'assigned_at': '2026-04-18T21:34:35.458453Z', 'created_at': '2026-04-18T21:34:35.458453Z'}, {'id': '843f4839-7e17-43a1-a3b8-6b1545ee5fd3', 'hackathon_id': 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'expert_user_id': '22222222-2222-2222-2222-222222222223', 'team_id': '2f49b5b0-7deb-4304-9e0d-c0caf01fbff9', 'assigned_at': '2026-04-18T21:34:35.458453Z', 'created_at': '2026-04-18T21:34:35.458453Z'}, {'id': 'a271aca4-3618-477f-accc-188158c7626c', 'hackathon_id': 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'expert_user_id': '22222222-2222-2222-2222-222222222224', 'team_id': '20bb64f7-bd18-4599-b8b3-428f26af77a3', 'assigned_at': '2026-04-18T21:34:35.458453Z', 'created_at': '2026-04-18T21:34:35.458453Z'}, {'id': '66896b3b-f358-4b9d-b991-6bd536437637', 'hackathon_id': 'a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11', 'expert_user_id': '22222222-2222-2222-2222-222222222225', 'team_id': '20bb64f7-bd18-4599-b8b3-428f26af77a3', 'assigned_at': '2026-04-18T21:34:35.458453Z', 'created_at': '2026-04-18T21:34:35.458453Z'}]
 [INFO] Found 20 assignments
@@ -596,7 +596,7 @@
 ============================================================
 >>> 8. EXPERT EVALUATIONS
 ============================================================
-> Request: POST http://192.168.5.46:8000/api/v1/auth/login
+> Request: POST http://94.141.160.86:8000/api/v1/auth/login
 > Body: {
   "login": "expert1",
   "password": "Expert123!"
@@ -616,7 +616,7 @@
   }
 }
 [SUCCESS] Expert logged in: expert1
-> Request: GET http://192.168.5.46:8000/api/v1/hackathons/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/my/assigned-teams
+> Request: GET http://94.141.160.86:8000/api/v1/hackathons/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/my/assigned-teams
 < Response (HTTP 200):
 {
   "items": [
@@ -658,7 +658,7 @@
 ============================================================
 >>> 9. RESULTS & LEADERBOARD
 ============================================================
-> Request: GET http://192.168.5.46:8000/api/v1/hackathons/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/results/leaderboard
+> Request: GET http://94.141.160.86:8000/api/v1/hackathons/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/results/leaderboard
 < Response (HTTP 200):
 {
   "published": true,
@@ -758,7 +758,7 @@
   "updated_at": "2026-04-18T22:04:47.734910Z"
 }
 [INFO] Leaderboard has 10 teams
-> Request: GET http://192.168.5.46:8000/api/v1/hackathons/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/results/winners?top=3
+> Request: GET http://94.141.160.86:8000/api/v1/hackathons/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/results/winners?top=3
 < Response (HTTP 200):
 {
   "items": [
@@ -788,7 +788,7 @@
 ============================================================
 >>> 10. PUBLIC ENDPOINTS
 ============================================================
-> Request: GET http://192.168.5.46:8000/api/v1/public/hackathons/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/leaderboard
+> Request: GET http://94.141.160.86:8000/api/v1/public/hackathons/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/leaderboard
 < Response (HTTP 200):
 {
   "published": true,
@@ -847,7 +847,7 @@
   "updated_at": "2026-04-18T22:04:47.734910Z"
 }
 [INFO] Public leaderboard accessible
-> Request: GET http://192.168.5.46:8000/api/v1/public/hackathons/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/timer
+> Request: GET http://94.141.160.86:8000/api/v1/public/hackathons/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/timer
 < Response (HTTP 200):
 {
   "hackathon_status": "active",
@@ -857,7 +857,7 @@
   "seconds_remaining": 84457
 }
 [INFO] Public timer accessible
-> Request: GET http://192.168.5.46:8000/api/v1/public/hackathons/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/winners
+> Request: GET http://94.141.160.86:8000/api/v1/public/hackathons/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/winners
 < Response (HTTP 200):
 {
   "top_3": [
@@ -884,7 +884,7 @@
 ============================================================
 >>> 11. TEAM CABINET
 ============================================================
-> Request: POST http://192.168.5.46:8000/api/v1/auth/login
+> Request: POST http://94.141.160.86:8000/api/v1/auth/login
 > Body: {
   "login": "team_code_wizards",
   "password": "Team123!"
@@ -908,7 +908,7 @@
 ============================================================
 >>> 12. LOGOUT
 ============================================================
-> Request: POST http://192.168.5.46:8000/api/v1/auth/logout
+> Request: POST http://94.141.160.86:8000/api/v1/auth/logout
 > Body: {
   "refresh_token": "BoMNS5CvxcDm-fIuCs9EuI6vIs7XjrZK8epOMRF012G1_5sG01mJD9Gn9uTh-HmMCIOhFLJZCmZFSpQgo5sn1g"
 }
@@ -940,4 +940,4 @@ Test Data:
   Criterion IDs: ['c885b60a-20d2-4745-9624-e85832bf947c', '4341efbb-af47-49b8-a481-a76817b05eb0', '1a716df1-97ba-49a5-8601-25215896ba59']
 
 WebSocket endpoint (manual test):
-  wscat -c ws://192.168.5.46:8000/api/v1/ws/public/hackathons/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/leaderboard
+  wscat -c ws://94.141.160.86:8000/api/v1/ws/public/hackathons/a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11/leaderboard

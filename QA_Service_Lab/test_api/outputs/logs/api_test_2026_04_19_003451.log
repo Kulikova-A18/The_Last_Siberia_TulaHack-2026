@@ -3,13 +3,13 @@
 >>> HACKATHON API TEST EXECUTION
 ============================================================
 [INFO] Started at: 2026-04-19 00:34:51
-[INFO] Base URL: http://192.168.5.46:8000/api/v1
+[INFO] Base URL: http://94.141.160.86:8000/api/v1
 [INFO] Log file: /home/vboxuser/The_Last_Siberia_TulaHack-2026/QA_Service_Lab/test_api/outputs/logs/api_test_2026_04_19_003451.log
 
 ============================================================
 >>> 0. HEALTH CHECK
 ============================================================
-> Request: GET http://192.168.5.46:8000/api/v1/../../health
+> Request: GET http://94.141.160.86:8000/api/v1/../../health
 < Response (HTTP 200):
 {
   "status": "ok"
@@ -19,7 +19,7 @@
 ============================================================
 >>> 1. AUTHENTICATION
 ============================================================
-> Request: POST http://192.168.5.46:8000/api/v1/auth/login
+> Request: POST http://94.141.160.86:8000/api/v1/auth/login
 > Body: {
   "login": "admin",
   "password": "Admin123!"
@@ -39,7 +39,7 @@
   }
 }
 [SUCCESS] Access Token obtained: eyJhbGciOiJIUzI1NiIs...
-> Request: POST http://192.168.5.46:8000/api/v1/auth/refresh
+> Request: POST http://94.141.160.86:8000/api/v1/auth/refresh
 > Body: {
   "refresh_token": "r0rgkENPD_aGjzelNCEBJBxto2KYN0HhiFiMK31Fv12ibx15O1aP0cQpFf6IL66y4Lbs0bdAbSdTsqm7B3jK8w"
 }
@@ -62,7 +62,7 @@
 ============================================================
 >>> 1b. CHANGE PASSWORD
 ============================================================
-> Request: POST http://192.168.5.46:8000/api/v1/auth/change-password
+> Request: POST http://94.141.160.86:8000/api/v1/auth/change-password
 > Body: {
   "old_password": "Admin123!",
   "new_password": "NewAdmin456!"
@@ -71,7 +71,7 @@
 {
   "message": "Password changed successfully"
 }
-> Request: POST http://192.168.5.46:8000/api/v1/auth/change-password
+> Request: POST http://94.141.160.86:8000/api/v1/auth/change-password
 > Body: {
   "old_password": "NewAdmin456!",
   "new_password": "Admin123!"
@@ -85,7 +85,7 @@
 ============================================================
 >>> 2. CURRENT USER INFO
 ============================================================
-> Request: GET http://192.168.5.46:8000/api/v1/auth/me
+> Request: GET http://94.141.160.86:8000/api/v1/auth/me
 < Response (HTTP 200):
 {
   "access_token": "",
@@ -105,7 +105,7 @@
 ============================================================
 >>> 3. USERS MANAGEMENT
 ============================================================
-> Request: GET http://192.168.5.46:8000/api/v1/users/?page=1&page_size=20
+> Request: GET http://94.141.160.86:8000/api/v1/users/?page=1&page_size=20
 < Response (HTTP 200):
 {
   "items": [
@@ -311,7 +311,7 @@
 ============================================================
 >>> 4. HACKATHONS
 ============================================================
-> Request: GET http://192.168.5.46:8000/api/v1/hackathons/active
+> Request: GET http://94.141.160.86:8000/api/v1/hackathons/active
 < Response (HTTP 200):
 {
   "id": "d3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44",
@@ -326,7 +326,7 @@
   "updated_at": "2026-04-18T21:34:27.791156Z"
 }
 [SUCCESS] Active hackathon found: d3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44
-> Request: GET http://192.168.5.46:8000/api/v1/hackathons/d3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44
+> Request: GET http://94.141.160.86:8000/api/v1/hackathons/d3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44
 < Response (HTTP 200):
 {
   "id": "d3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44",
@@ -345,7 +345,7 @@
 ============================================================
 >>> 5. TEAMS MANAGEMENT
 ============================================================
-> Request: GET http://192.168.5.46:8000/api/v1/hackathons/d3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44/teams?page=1&page_size=20
+> Request: GET http://94.141.160.86:8000/api/v1/hackathons/d3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44/teams?page=1&page_size=20
 < Response (HTTP 200):
 {
   "items": [],
@@ -358,7 +358,7 @@
 ============================================================
 >>> 6. CRITERIA MANAGEMENT
 ============================================================
-> Request: GET http://192.168.5.46:8000/api/v1/hackathons/d3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44/criteria
+> Request: GET http://94.141.160.86:8000/api/v1/hackathons/d3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44/criteria
 < Response (HTTP 200):
 {
   "items": [
@@ -404,7 +404,7 @@
 ============================================================
 >>> 7. EXPERT ASSIGNMENTS
 ============================================================
-> Request: GET http://192.168.5.46:8000/api/v1/hackathons/d3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44/assignments
+> Request: GET http://94.141.160.86:8000/api/v1/hackathons/d3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44/assignments
 < Response (HTTP 200):
 []
 [INFO] Found 0 assignments
@@ -412,7 +412,7 @@
 ============================================================
 >>> 8. EXPERT EVALUATIONS
 ============================================================
-> Request: POST http://192.168.5.46:8000/api/v1/auth/login
+> Request: POST http://94.141.160.86:8000/api/v1/auth/login
 > Body: {
   "login": "expert1",
   "password": "Expert123!"
@@ -432,7 +432,7 @@
   }
 }
 [SUCCESS] Expert logged in: expert1
-> Request: GET http://192.168.5.46:8000/api/v1/hackathons/d3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44/my/assigned-teams
+> Request: GET http://94.141.160.86:8000/api/v1/hackathons/d3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44/my/assigned-teams
 < Response (HTTP 200):
 {
   "items": [],
@@ -445,7 +445,7 @@
 ============================================================
 >>> 9. RESULTS & LEADERBOARD
 ============================================================
-> Request: GET http://192.168.5.46:8000/api/v1/hackathons/d3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44/results/leaderboard
+> Request: GET http://94.141.160.86:8000/api/v1/hackathons/d3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44/results/leaderboard
 < Response (HTTP 200):
 {
   "published": false,
@@ -454,7 +454,7 @@
   "updated_at": null
 }
 [INFO] Leaderboard has 0 teams
-> Request: GET http://192.168.5.46:8000/api/v1/hackathons/d3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44/results/winners?top=3
+> Request: GET http://94.141.160.86:8000/api/v1/hackathons/d3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44/results/winners?top=3
 < Response (HTTP 200):
 {
   "items": [],
@@ -465,7 +465,7 @@
 ============================================================
 >>> 10. PUBLIC ENDPOINTS
 ============================================================
-> Request: GET http://192.168.5.46:8000/api/v1/public/hackathons/d3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44/leaderboard
+> Request: GET http://94.141.160.86:8000/api/v1/public/hackathons/d3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44/leaderboard
 < Response (HTTP 200):
 {
   "published": false,
@@ -473,7 +473,7 @@
   "updated_at": "2026-04-18T21:34:27.791156Z"
 }
 [INFO] Public leaderboard accessible
-> Request: GET http://192.168.5.46:8000/api/v1/public/hackathons/d3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44/timer
+> Request: GET http://94.141.160.86:8000/api/v1/public/hackathons/d3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44/timer
 < Response (HTTP 200):
 {
   "hackathon_status": "active",
@@ -483,7 +483,7 @@
   "seconds_remaining": null
 }
 [INFO] Public timer accessible
-> Request: GET http://192.168.5.46:8000/api/v1/public/hackathons/d3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44/winners
+> Request: GET http://94.141.160.86:8000/api/v1/public/hackathons/d3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44/winners
 < Response (HTTP 200):
 {
   "top_3": [],
@@ -494,7 +494,7 @@
 ============================================================
 >>> 11. TEAM CABINET
 ============================================================
-> Request: POST http://192.168.5.46:8000/api/v1/auth/login
+> Request: POST http://94.141.160.86:8000/api/v1/auth/login
 > Body: {
   "login": "team_code_wizards",
   "password": "Team123!"
@@ -518,7 +518,7 @@
 ============================================================
 >>> 12. LOGOUT
 ============================================================
-> Request: POST http://192.168.5.46:8000/api/v1/auth/logout
+> Request: POST http://94.141.160.86:8000/api/v1/auth/logout
 > Body: {
   "refresh_token": "r0rgkENPD_aGjzelNCEBJBxto2KYN0HhiFiMK31Fv12ibx15O1aP0cQpFf6IL66y4Lbs0bdAbSdTsqm7B3jK8w"
 }
@@ -550,4 +550,4 @@ Test Data:
   Criterion IDs: ['c2222222-2222-2222-2222-222222222221', 'c2222222-2222-2222-2222-222222222222', 'c2222222-2222-2222-2222-222222222223']
 
 WebSocket endpoint (manual test):
-  wscat -c ws://192.168.5.46:8000/api/v1/ws/public/hackathons/d3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44/leaderboard
+  wscat -c ws://94.141.160.86:8000/api/v1/ws/public/hackathons/d3eebc99-9c0b-4ef8-bb6d-6bb9bd380a44/leaderboard
